@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.9
+- Restore the full CH | CP pill on YouTube video cards.
+
 ## 3.0.8
 - Add an options-page switch to disable/enable keyboard shortcut actions and in-options remapping where supported by the browser.
 

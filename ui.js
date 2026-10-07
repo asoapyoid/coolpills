@@ -421,8 +421,6 @@
   background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 52%)}
 .cq-seg>span{position:relative;z-index:1}
 .cq-seg-ch{border-right:1px solid rgba(0,0,0,.25)}
-.cq-pill.cq-single .cq-seg-cp{display:none}
-.cq-pill.cq-single .cq-seg-ch{border-right:0}
 .cq-seg-ch:hover{background:var(--cq-chh);color:var(--cq-chhfg);box-shadow:var(--cq-chhsh);text-shadow:none}
 .cq-seg-cp:hover{background:var(--cq-cph);color:var(--cq-cphfg);box-shadow:var(--cq-cphsh);text-shadow:none}
 .cq-pill.cq-colored .cq-seg-ch{background:var(--cq-ch);color:var(--cq-chfg);box-shadow:var(--cq-chsh);text-shadow:none}
@@ -598,10 +596,9 @@
               (ctx && ctx.supported === 'no' ? ' (site may not be playable on Coolhole)' : '');
         pill.dataset.support = ctx ? ctx.supported || '' : '';
       },
-      show(rect, where, singleButton = false) {
+      show(rect, where) {
         clearTimeout(hideT);
         applySettings();
-        pill.classList.toggle('cq-single', singleButton);
         const wasHidden = !pill.classList.contains('cq-visible');
         place(rect, where);
         rollGold(ctx ? ctx.url : null);

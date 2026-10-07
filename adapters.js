@@ -278,7 +278,6 @@
           key: card,
           rect: () => ytAnchor(card).getBoundingClientRect(),
           place: 'below-right',
-          singleButton: true,
           ctx: () => ytCtx(id, ytCardTitle(card), ytCardDuration(card)),
         };
       }

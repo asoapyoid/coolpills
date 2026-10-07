@@ -66,7 +66,7 @@
       this.cur = { ...t, ctxValue: ctx };
       this.pill.setContext(ctx);
       this.refreshMode();
-      this.pill.show(t.rect(), t.place, t.singleButton === true);
+      this.pill.show(t.rect(), t.place);
     };
 
     scheduleHide() {
