@@ -859,22 +859,40 @@
 /* ── CQ colors: Default / Steam / Cobra / Battle.net (isolated from site CSS) ── */
 #cq-float:not(.cq-match-site) button,#cq-float:not(.cq-match-site) input{background-image:none;border:0;box-shadow:none;
   text-shadow:none;font-family:var(--cq-font);filter:none;margin:0;outline:none}
-#cq-float:not(.cq-match-site) #cq-float-pill{background:var(--cq-shell);box-shadow:var(--cq-shadow);border-radius:var(--cq-radius)}
-#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist,#cq-float:not(.cq-match-site) #cq-float-restore{background:var(--cq-idlech);color:var(--cq-chfg);border-radius:0}
-#cq-float:not(.cq-match-site) #cq-float-restore{border-radius:var(--cq-radius)}
-#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q{background:var(--cq-idlecp);color:var(--cq-cpfg);border-radius:0}
-#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist:hover,#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist.cq-active{background:var(--cq-chh);color:var(--cq-chhfg);box-shadow:var(--cq-chhsh)}
-#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q:hover,#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q.cq-active{background:var(--cq-cph);color:var(--cq-cphfg);box-shadow:var(--cq-cphsh)}
+#cq-float:not(.cq-match-site) #cq-float-pill{background:var(--cq-holeshell,var(--cq-shell));box-shadow:var(--cq-holeshadow,var(--cq-shadow));
+  border:1px solid var(--cq-holeedge,var(--cq-edge));border-radius:var(--cq-holeradius,var(--cq-radius))}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist,#cq-float:not(.cq-match-site) #cq-float-restore{background:var(--cq-holech,var(--cq-idlech));
+  color:var(--cq-holechfg,var(--cq-chfg));border-radius:0}
+#cq-float:not(.cq-match-site) #cq-float-restore{border-radius:var(--cq-holeradius,var(--cq-radius))}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q{background:var(--cq-holeidlecp,var(--cq-idlecp));
+  color:var(--cq-holeidlecpfg,var(--cq-cpfg));border-radius:0;border:var(--cq-holecphborder,0)}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist:hover{background:var(--cq-holechh,var(--cq-chh));color:var(--cq-holechhfg,var(--cq-chhfg));
+  box-shadow:var(--cq-holechhsh,none)}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-hist.cq-active{background:var(--cq-holecha,var(--cq-chh));color:var(--cq-holechafg,var(--cq-chhfg));
+  box-shadow:var(--cq-holechash,none)}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q:hover{background:var(--cq-holecph,var(--cq-cph));color:var(--cq-holecphfg,var(--cq-cphfg));
+  box-shadow:var(--cq-holecphsh,none)}
+#cq-float:not(.cq-match-site) #cq-float-pill .cq-seg-q.cq-active{background:var(--cq-holecpa,var(--cq-cph));color:var(--cq-holecpafg,var(--cq-cphfg));
+  box-shadow:var(--cq-holecpash,none)}
 /* ── Match Coolhole: pack only tints; site .btn CSS keeps its textures/borders ── */
-#cq-float.cq-match-site #cq-float-pill{border-radius:var(--cq-radius)}
-#cq-float.cq-match-site #cq-float-pill .cq-seg-hist,#cq-float.cq-match-site #cq-float-restore{background-color:var(--cq-chs);color:var(--cq-chfg)}
-#cq-float.cq-match-site #cq-float-pill .cq-seg-q{background-color:var(--cq-cps);color:var(--cq-cpfg)}
-#cq-float.cq-match-site #cq-float-pill .cq-seg-hist:hover,#cq-float.cq-match-site #cq-float-pill .cq-seg-hist.cq-active{background-color:var(--cq-chh);color:var(--cq-chhfg)}
-#cq-float.cq-match-site #cq-float-pill .cq-seg-q:hover,#cq-float.cq-match-site #cq-float-pill .cq-seg-q.cq-active{background-color:var(--cq-cph);color:var(--cq-cphfg)}
+#cq-float.cq-match-site #cq-float-pill{background:var(--cq-holeshell,var(--cq-shell));box-shadow:var(--cq-holeshadow,var(--cq-shadow));
+  border:1px solid var(--cq-holeedge,var(--cq-edge));border-radius:var(--cq-holeradius,var(--cq-radius))}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-hist,#cq-float.cq-match-site #cq-float-restore{background-color:var(--cq-holechs,var(--cq-chs));color:var(--cq-holechfg,var(--cq-chfg))}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-q{background-color:var(--cq-holecps,var(--cq-cps));color:var(--cq-holecpfg,var(--cq-cpfg));
+  border:var(--cq-holecphborder,0)}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-hist:hover{background-color:var(--cq-holechh,var(--cq-chh));color:var(--cq-holechhfg,var(--cq-chhfg));
+  box-shadow:var(--cq-holechhsh,none)}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-hist.cq-active{background-color:var(--cq-holecha,var(--cq-chh));color:var(--cq-holechafg,var(--cq-chhfg));
+  box-shadow:var(--cq-holechash,none)}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-q:hover{background-color:var(--cq-holecph,var(--cq-cph));color:var(--cq-holecphfg,var(--cq-cphfg));
+  box-shadow:var(--cq-holecphsh,none)}
+#cq-float.cq-match-site #cq-float-pill .cq-seg-q.cq-active{background-color:var(--cq-holecpa,var(--cq-cph));color:var(--cq-holecpafg,var(--cq-cphfg));
+  box-shadow:var(--cq-holecpash,none)}
 /* ── panel ── */
 #cq-float #cq-panel{display:none;flex-direction:column;width:max(260px,100%);min-width:260px;max-width:320px;margin-top:4px;
   box-sizing:border-box;overflow:hidden;font:12px/1.3 var(--cq-font);background:var(--cq-panel);color:var(--cq-panelfg);
-  border:1px solid var(--cq-edge);border-radius:var(--cq-rad);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  border:1px solid var(--cq-holepaneledge,var(--cq-edge));border-radius:var(--cq-holepanelradius,var(--cq-rad));
+  box-shadow:var(--cq-holepanelshadow,0 8px 24px rgba(0,0,0,.5))}
 #cq-float #cq-panel.open{display:flex}
 #cq-panel-body{max-height:96px;overflow-y:auto}
 .cq-row{display:flex;align-items:center;gap:4px;padding:3px 6px;min-height:24px;box-sizing:border-box;border-bottom:1px solid var(--cq-edge)}

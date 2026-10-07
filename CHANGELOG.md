@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.5
+- Match the Coolhole floating pill and panel to the supplied userscript’s theme-specific shells, borders, active states, and shadows.
+
 ## 3.0.4
 - Align pill and Coolhole theme styling with the supplied YouTube userscript, including phase colors, gray mode, progress fills, and theme-specific typography.
 
