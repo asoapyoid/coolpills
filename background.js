@@ -820,6 +820,12 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const s = await getSettings();
         return relayToHole('cq:work', {}, { focus: s.autoFocus !== false });
       }
+      case 'cq:focus-hole': {
+        const tab = await pickHoleTab(); // only focuses an already-open tab; never opens one
+        if (!tab) return { ok: false, via: 'none' };
+        await focusTab(tab);
+        return { ok: true, via: 'tab' };
+      }
       case 'cq:unafk': {
         const tab = await pickHoleTab(); // never opens or focuses a tab: only acts if Coolhole is already open
         if (!tab) return { ok: false, via: 'none' };
