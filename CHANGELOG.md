@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.7
+- Detect Coolhole's active theme from its `data-theme` attribute so Black Spring is recognized reliably.
+
 ## 3.0.6
 - Improve Black Spring day/night/bloodmoon detection and keep the cycle synchronized when Coolhole updates or inserts its phase indicator.
 

@@ -793,6 +793,15 @@
   // ══ site-theme detection (Match Coolhole) ════════════════════════
   function detectSiteTheme() {
     try {
+      const rootTheme = (
+        document.documentElement.getAttribute('data-theme') ||
+        (document.body && document.body.getAttribute('data-theme')) ||
+        ''
+      ).trim().toLowerCase();
+      if (/battle|battlenet|wc2/.test(rootTheme)) return 'wc2';
+      if (/cinema/.test(rootTheme)) return 'cinema';
+      if (/black\s*spring|coolhole[\s_-]*v2|\bv2\b/.test(rootTheme)) return 'v2';
+      if (/classic|default|coolhole/.test(rootTheme)) return 'coolhole';
       for (const sel of document.querySelectorAll('select')) {
         const opts = Array.from(sel.options || []).map((o) => o.textContent || '').join(' ');
         if (!/cinema|battle\.net|black spring|coolhole v2|default \(coolhole\)|classic/i.test(opts)) continue;
