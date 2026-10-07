@@ -453,6 +453,288 @@ async function resolveRedditVideo(postUrl) {
   return { ok: false, error: 'Reddit video lookup failed: ' + failures.join('; ') + '.' };
 }
 
+function trustedFacebookVideoUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    return url.protocol === 'https:' && (host === 'fbcdn.net' || host.endsWith('.fbcdn.net')) &&
+      /\.mp4$/i.test(url.pathname) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function trustedInstagramVideoUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const trustedHost = host === 'fbcdn.net' || host.endsWith('.fbcdn.net') ||
+      host === 'cdninstagram.com' || host.endsWith('.cdninstagram.com');
+    return url.protocol === 'https:' && trustedHost && /\.mp4$/i.test(url.pathname) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function trustedTikTokVideoUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const trustedHost = ['tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokv.com', 'byteoversea.com', 'ibytedtos.com']
+      .some((suffix) => host === suffix || host.endsWith('.' + suffix));
+    const isMp4 = /\.mp4$/i.test(url.pathname) || /^(?:video_mp4|video\/mp4)$/i.test(url.searchParams.get('mime_type') || '');
+    return url.protocol === 'https:' && trustedHost && isMp4 ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function trustedTwitchClipUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    return url.protocol === 'https:' &&
+      (host === 'clips-media-assets.twitch.tv' || host.endsWith('.clips-media-assets.twitch.tv')) &&
+      /\.mp4$/i.test(url.pathname) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function socialHtml(value) {
+  return decode(String(value || ''))
+    .replace(/\\u002f/gi, '/')
+    .replace(/\\u0026/gi, '&')
+    .replace(/\\\//g, '/')
+    .replace(/&amp;/gi, '&')
+    .replace(/&#x2f;/gi, '/');
+}
+
+function linksFromHtml(html) {
+  const source = socialHtml(html);
+  const values = [];
+  for (const match of source.matchAll(/(?:href|src|content)\s*=\s*["']([^"']+)["']/gi)) {
+    values.push(match[1]);
+  }
+  for (const match of source.matchAll(/https?:\/\/[^\s"'<>\\]+/gi)) {
+    values.push(match[0].replace(/[),.;]+$/, ''));
+  }
+  return [...new Set(values)];
+}
+
+async function fetchSocialText(url, init = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...init,
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    return { response, text: (await response.text()).slice(0, 1500000) };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function validPublicPost(value, platform) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch (_) {
+    return null;
+  }
+  if (url.protocol !== 'https:' || url.username || url.password) return null;
+  const host = url.hostname.toLowerCase();
+  const matches = {
+    facebook: ['facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'mbasic.facebook.com', 'fb.watch'].includes(host),
+    instagram: ['instagram.com', 'www.instagram.com', 'm.instagram.com', 'ddinstagram.com', 'www.ddinstagram.com',
+      'kkinstagram.com', 'www.kkinstagram.com'].includes(host),
+    tiktok: ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'].includes(host),
+    twitch: ['twitch.tv', 'www.twitch.tv', 'm.twitch.tv', 'clips.twitch.tv'].includes(host),
+  };
+  return matches[platform] ? url : null;
+}
+
+async function resolveFacebookVideo(postUrl) {
+  const post = validPublicPost(postUrl, 'facebook');
+  if (!post) return { ok: false, error: 'Only public Facebook video links can be resolved.' };
+  const failures = [];
+  try {
+    const { response, text } = await fetchSocialText('https://fbdown.net/download.php', {
+      method: 'POST',
+      headers: {
+        Accept: 'text/html',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Referer: 'https://fbdown.net/',
+      },
+      body: new URLSearchParams({ URLz: post.href }),
+    });
+    if (!response.ok) {
+      failures.push('FBDown returned HTTP ' + response.status);
+    } else {
+      const url = linksFromHtml(text).map(trustedFacebookVideoUrl).find(Boolean);
+      if (url) return { ok: true, url };
+      failures.push('FBDown did not return a direct MP4');
+    }
+  } catch (error) {
+    failures.push('FBDown request failed (' + (
+      error && error.name === 'AbortError' ? 'timed out' : 'service unavailable'
+    ) + ')');
+  }
+  return { ok: false, error: 'Facebook video lookup failed: ' + failures.join('; ') + '.' };
+}
+
+async function resolveInstagramVideo(postUrl) {
+  const post = validPublicPost(postUrl, 'instagram');
+  if (!post || !/\/(?:p|reel|reels|tv)\//i.test(post.pathname)) {
+    return { ok: false, error: 'Only public Instagram post and reel links can be resolved.' };
+  }
+  const mirror = new URL(post.href);
+  mirror.hostname = 'ddinstagram.com';
+  mirror.search = '';
+  try {
+    const { response, text } = await fetchSocialText(mirror.href, {
+      headers: { Accept: 'text/html,application/xhtml+xml' },
+    });
+    if (!response.ok) {
+      return { ok: false, error: 'Instagram mirror returned HTTP ' + response.status + '.' };
+    }
+    const links = linksFromHtml(text);
+    const url = links.map(trustedInstagramVideoUrl).find(Boolean);
+    if (!url) return { ok: false, error: 'Instagram mirror did not expose a direct MP4.' };
+    return { ok: true, url, title: titleFromHtml(text) };
+  } catch (error) {
+    return {
+      ok: false,
+      error: 'Instagram video lookup failed (' + (
+        error && error.name === 'AbortError' ? 'timed out' : 'mirror unavailable'
+      ) + ').',
+    };
+  }
+}
+
+async function resolveTikTokVideo(postUrl) {
+  const post = validPublicPost(postUrl, 'tiktok');
+  if (!post) return { ok: false, error: 'Only TikTok video links can be resolved.' };
+  const failures = [];
+
+  try {
+    const { response, text } = await fetchSocialText('https://tikwm.com/api/', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ url: post.href, hd: '1' }),
+    });
+    if (!response.ok) {
+      failures.push('TikWM returned HTTP ' + response.status);
+    } else {
+      const result = JSON.parse(text);
+      const data = result && result.code === 0 && result.data;
+      const url = data && [data.hdplay, data.play, data.wmplay].map(trustedTikTokVideoUrl).find(Boolean);
+      if (url) {
+        return {
+          ok: true,
+          url,
+          title: typeof data.title === 'string' ? data.title.slice(0, 120) : null,
+          duration: Number.isFinite(Number(data.duration)) && Number(data.duration) > 0
+            ? Math.round(Number(data.duration)) : null,
+          thumbnail: typeof data.cover === 'string' ? data.cover : data.origin_cover || null,
+        };
+      }
+      failures.push(result && result.msg ? 'TikWM: ' + String(result.msg).slice(0, 100) : 'TikWM found no trusted MP4');
+    }
+  } catch (error) {
+    failures.push('TikWM request failed (' + (
+      error && error.name === 'AbortError' ? 'timed out' : 'service or response error'
+    ) + ')');
+  }
+
+  try {
+    const { response, text } = await fetchSocialText('https://musicaldown.com/en', {
+      headers: { Accept: 'text/html' },
+    });
+    if (!response.ok) {
+      failures.push('MusicalDown returned HTTP ' + response.status);
+    } else {
+      const tokenFields = new URLSearchParams();
+      let urlField = null;
+      for (const input of text.matchAll(/<input\b[^>]*>/gi)) {
+        const tag = input[0];
+        const name = tag.match(/\bname=["']([^"']+)["']/i);
+        const value = tag.match(/\bvalue=["']([^"']*)["']/i);
+        if (!name) continue;
+        const fieldName = decode(name[1]);
+        if (/(?:url|link|_syr)/i.test(fieldName)) {
+          urlField = fieldName;
+        } else if (value) {
+          tokenFields.set(fieldName, decode(value[1]));
+        }
+      }
+      if (urlField) tokenFields.set(urlField, post.href);
+      else tokenFields.set('id', post.href);
+      const { response: result, text: html } = await fetchSocialText('https://musicaldown.com/download', {
+        method: 'POST',
+        headers: {
+          Accept: 'text/html',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Referer: 'https://musicaldown.com/en',
+        },
+        body: tokenFields,
+      });
+      if (!result.ok) {
+        failures.push('MusicalDown returned HTTP ' + result.status);
+      } else {
+        const url = linksFromHtml(html).map(trustedTikTokVideoUrl).find(Boolean);
+        if (url) return { ok: true, url };
+        failures.push('MusicalDown found no trusted MP4');
+      }
+    }
+  } catch (error) {
+    failures.push('MusicalDown request failed (' + (
+      error && error.name === 'AbortError' ? 'timed out' : 'service or response error'
+    ) + ')');
+  }
+  return { ok: false, error: 'TikTok video lookup failed: ' + failures.join('; ') + '.' };
+}
+
+async function resolveTwitchClip(postUrl) {
+  const post = validPublicPost(postUrl, 'twitch');
+  if (!post) return { ok: false, error: 'Only Twitch clip links can be resolved.' };
+  const match = post.pathname.match(/\/clip\/([^/]+)/i) || post.hostname === 'clips.twitch.tv' && post.pathname.match(/^\/([^/]+)/);
+  if (!match) return { ok: false, error: 'Could not find a clip ID in that Twitch link.' };
+  try {
+    const { response, text } = await fetchSocialText('https://clipr.io/' + encodeURIComponent(match[1]), {
+      headers: { Accept: 'text/html,application/xhtml+xml' },
+    });
+    if (!response.ok) return { ok: false, error: 'Clipr returned HTTP ' + response.status + '.' };
+    const url = linksFromHtml(text).map(trustedTwitchClipUrl).find(Boolean);
+    if (!url) return { ok: false, error: 'Clipr did not expose a direct Twitch MP4.' };
+    return { ok: true, url, title: titleFromHtml(text) };
+  } catch (error) {
+    return {
+      ok: false,
+      error: 'Twitch clip lookup failed (' + (
+        error && error.name === 'AbortError' ? 'timed out' : 'Clipr unavailable'
+      ) + ').',
+    };
+  }
+}
+
+async function resolveSocialVideo(platform, postUrl) {
+  if (platform === 'x') return resolveXVideo(postUrl);
+  if (platform === 'reddit') return resolveRedditVideo(postUrl);
+  if (platform === 'facebook') return resolveFacebookVideo(postUrl);
+  if (platform === 'instagram') return resolveInstagramVideo(postUrl);
+  if (platform === 'tiktok') return resolveTikTokVideo(postUrl);
+  if (platform === 'twitch') return resolveTwitchClip(postUrl);
+  return { ok: false, error: 'No resolver is available for that site.' };
+}
+
 // ── auto-queue lock (only one Coolhole tab drains Q+ at a time) ─────
 let lock = { tabId: null, until: 0 };
 
@@ -487,10 +769,8 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case 'cq:fetch-meta':
         return fetchMeta(msg.url);
-      case 'cq:resolve-x-video':
-        return resolveXVideo(msg.postUrl);
-      case 'cq:resolve-reddit-video':
-        return resolveRedditVideo(msg.postUrl);
+      case 'cq:resolve-social-video':
+        return resolveSocialVideo(msg.platform, msg.postUrl);
       case 'cq:lock': {
         const id = sender.tab ? sender.tab.id : -1;
         const now = Date.now();

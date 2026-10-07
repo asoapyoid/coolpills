@@ -371,9 +371,20 @@
     context(v) {
       const stream = textOf('[data-a-target="stream-title"]');
       const channel = textOf('[data-a-target="user-display-name"]') || textOf('h1');
-      const url = location.origin + location.pathname;
-      const title = stream ? (channel ? channel + ' — ' + stream : stream) : pageTitle();
-      return base(v, url, title, 'yes');
+      const clipLink = linkIn(v, 'article, [data-a-target="clips-card"], [data-a-target="clip-card"]',
+        'a[href*="/clip/"], a[href*="clips.twitch.tv/"]');
+      const url = /\/clip\//i.test(location.pathname) || location.hostname === 'clips.twitch.tv'
+        ? location.href : clipLink || location.origin + location.pathname;
+      const isClip = /\/clip\/[^/]+/i.test(new URL(url).pathname) || new URL(url).hostname === 'clips.twitch.tv';
+      const title = textOf('[data-a-target="video-title"]') ||
+        (stream ? (channel ? channel + ' — ' + stream : stream) : pageTitle());
+      const direct = directVideoUrl(v);
+      const context = base(v, direct || url, title, direct ? 'yes' : isClip ? 'no' : 'yes');
+      if (!direct && isClip) {
+        context.platform = 'twitch';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 
@@ -384,17 +395,27 @@
       const url = /\/video\//.test(location.pathname) ? location.href : link || location.href;
       const desc = textOf('[data-e2e="browse-video-desc"]') || textOf('[data-e2e="video-desc"]');
       const direct = directVideoUrl(v);
-      return base(v, direct || url, desc || meta('meta[property="og:title"]'), direct ? 'yes' : 'no');
+      const context = base(v, direct || url, desc || meta('meta[property="og:title"]'), direct ? 'yes' : 'no');
+      if (!direct) {
+        context.platform = 'tiktok';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 
   const instagram = {
     id: 'instagram', label: 'Instagram', hosts: /(^|\.)(instagram|kkinstagram|ddinstagram)\.com$/i, supported: 'no',
     context(v) {
-      const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"]');
+      const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]');
       const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;
       const direct = directVideoUrl(v);
-      return base(v, direct || url, pageTitle(), direct ? 'yes' : 'no');
+      const context = base(v, direct || url, pageTitle(), direct ? 'yes' : 'no');
+      if (!direct) {
+        context.platform = 'instagram';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 
@@ -464,13 +485,22 @@
   };
 
   const facebook = {
-    id: 'facebook', label: 'Facebook', hosts: /(^|\.)facebook\.com$/i, supported: 'no',
+    id: 'facebook', label: 'Facebook', hosts: /(^|\.)facebook\.com$|^fb\.watch$/i, supported: 'no',
     context(v) {
       const post = closestDeep(v, '[role="article"], article');
-      const link = post && post.querySelector('a[href*="/reel/"], a[href*="/watch/"], a[href*="/videos/"]');
+      const link = post && post.querySelector(
+        'a[href*="/reel/"], a[href*="/watch/"], a[href*="/videos/"], a[href*="/posts/"], ' +
+        'a[href*="/permalink/"], a[href*="/share/v/"], a[href*="story.php"], a[href*="fb.watch"]'
+      );
       const direct = directVideoUrl(v);
       const title = post && textOf('[data-ad-preview="message"]', post);
-      return base(v, direct || (link && abs(link.getAttribute('href'))) || location.href, title, direct ? 'yes' : 'no');
+      const url = (link && abs(link.getAttribute('href'))) || location.href;
+      const context = base(v, direct || url, title, direct ? 'yes' : 'no');
+      if (!direct) {
+        context.platform = 'facebook';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 

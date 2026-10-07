@@ -38,10 +38,8 @@
       this.lastRun = 0;
       this.hideT = 0;
       this.snap = { room: [], pending: [] };
-      this.resolvedX = new Map();
-      this.resolvingX = new Map();
-      this.resolvedReddit = new Map();
-      this.resolvingReddit = new Map();
+      this.resolvedMedia = new Map();
+      this.resolvingMedia = new Map();
       this.pill = ui.createPill({
         onCH: (ctx) => this.queue(ctx),
         onUN: (ctx) => this.unqueue(ctx),
@@ -122,9 +120,8 @@
     }
 
     withResolvedMedia(ctx) {
-      if (!ctx || !ctx.postUrl) return ctx;
-      const cache = ctx.platform === 'reddit' ? this.resolvedReddit : this.resolvedX;
-      const resolved = cache.get(ctx.postUrl);
+      if (!ctx || !ctx.platform || !ctx.postUrl) return ctx;
+      const resolved = this.resolvedMedia.get(ctx.platform + ':' + ctx.postUrl);
       return resolved ? { ...ctx, ...resolved, postUrl: ctx.postUrl } : ctx;
     }
 
@@ -164,37 +161,47 @@
     async queue(ctx, extra) {
       let c = this.withResolvedMedia(this.fresh(ctx));
       if (!c || !c.url) return;
-      if (c.postUrl && (c.platform === 'x' || c.platform === 'reddit')) {
-        const isReddit = c.platform === 'reddit';
-        const resolving = isReddit ? this.resolvingReddit : this.resolvingX;
-        const resolvedCache = isReddit ? this.resolvedReddit : this.resolvedX;
-        const type = isReddit ? 'cq:resolve-reddit-video' : 'cq:resolve-x-video';
-        const siteName = isReddit ? 'Reddit' : 'X';
-        let pending = resolving.get(c.postUrl);
+      const cacheKey = c.platform + ':' + c.postUrl;
+      if (c.postUrl && ['x', 'reddit', 'facebook', 'instagram', 'tiktok', 'twitch'].includes(c.platform) &&
+        !this.resolvedMedia.has(cacheKey)) {
+        const siteName = {
+          x: 'X', reddit: 'Reddit', facebook: 'Facebook',
+          instagram: 'Instagram', tiktok: 'TikTok', twitch: 'Twitch',
+        }[c.platform];
+        let pending = this.resolvingMedia.get(cacheKey);
         if (!pending) {
-          pending = CQ.send({ type, postUrl: c.postUrl });
-          resolving.set(c.postUrl, pending);
+          ui.toast('Looking up a direct ' + siteName + ' media link...', 'queue');
+          pending = CQ.send({ type: 'cq:resolve-social-video', platform: c.platform, postUrl: c.postUrl });
+          this.resolvingMedia.set(cacheKey, pending);
         }
-        const resolution = await pending;
-        resolving.delete(c.postUrl);
-        if (!resolution || !resolution.ok) {
-          ui.toast('Could not queue ' + siteName + ' video: ' + (resolution && resolution.error || siteName + ' lookup did not respond.'), 'error');
-          return;
+        let resolution;
+        try {
+          resolution = await pending;
+        } catch (error) {
+          resolution = { ok: false, error: String(error && error.message || error) };
+        } finally {
+          if (this.resolvingMedia.get(cacheKey) === pending) this.resolvingMedia.delete(cacheKey);
         }
-        const resolved = {
-          url: resolution.url,
-          title: resolution.title || c.title,
-          duration: resolution.duration != null ? resolution.duration : c.duration,
-          durationLabel: resolution.duration != null ? CQ.formatDuration(resolution.duration) : c.durationLabel,
-          thumbnail: resolution.thumbnail || c.thumbnail,
-          supported: 'yes',
-        };
-        resolvedCache.set(c.postUrl, resolved);
-        c = { ...c, ...resolved };
-        if (this.cur && this.cur.ctxValue && this.cur.ctxValue.postUrl === c.postUrl) {
-          this.cur.ctxValue = c;
-          this.pill.setContext(c);
-          this.refreshMode();
+        if (!resolution || !resolution.ok || !/^https:\/\//i.test(String(resolution.url || ''))) {
+          ui.toast(siteName + ' direct-link lookup failed; trying the original post link. ' +
+            (resolution && resolution.error || 'The resolver did not respond.'), 'queue');
+          c = { ...c, url: c.postUrl, supported: 'maybe' };
+        } else {
+          const resolved = {
+            url: resolution.url,
+            title: resolution.title || c.title,
+            duration: resolution.duration != null ? resolution.duration : c.duration,
+            durationLabel: resolution.duration != null ? CQ.formatDuration(resolution.duration) : c.durationLabel,
+            thumbnail: resolution.thumbnail || c.thumbnail,
+            supported: 'yes',
+          };
+          this.resolvedMedia.set(cacheKey, resolved);
+          c = { ...c, ...resolved };
+          if (this.cur && this.cur.ctxValue && this.cur.ctxValue.postUrl === c.postUrl) {
+            this.cur.ctxValue = c;
+            this.pill.setContext(c);
+            this.refreshMode();
+          }
         }
       }
       const result = await CQ.send({ type: 'cq:queue', payload: this.payload(c, extra) });

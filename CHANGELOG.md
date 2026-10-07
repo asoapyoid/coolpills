@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.20
+- Resolve TikTok videos through TikWM and MusicalDown, Facebook videos through FBDown, and Instagram posts through the ddinstagram mirror; failed lookups continue with the original post so Coolhost recovery can still run.
+- Resolve Twitch clips through Clipr and queue its verified Twitch CDN MP4; ordinary Twitch streams continue to use their existing flow.
+
 ## 3.0.19
 - Resolve Reddit videos through RapidSave's merged download link so split audio/video streams retain sound.
 - Do not silently queue a Reddit video-only DASH stream when an audio-merged link cannot be found.
