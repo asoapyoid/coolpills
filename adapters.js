@@ -425,18 +425,24 @@
   };
 
   const reddit = {
-    id: 'reddit', label: 'Reddit', hosts: /(^|\.)reddit\.com$/i, supported: 'no',
+    id: 'reddit', label: 'Reddit', hosts: /(^|\.)reddit\.com$|(^|\.)redd\.it$/i, supported: 'no',
     context(v) {
-      const post = closestDeep(v, 'shreddit-post, article, [data-testid="post-container"]');
+      const post = closestDeep(v, 'shreddit-post, article, [data-testid="post-container"], .thing');
       let url = location.href;
       let title = null;
       if (post) {
-        const perma = post.getAttribute('permalink') || post.getAttribute('content-href');
+        const perma = post.getAttribute('permalink') || post.getAttribute('content-href') ||
+          (post.querySelector('a[data-click-id="comments"], a[href*="/comments/"]') || {}).getAttribute('href');
         if (perma) url = abs(perma);
         title = clean(post.getAttribute('post-title')) || textOf('[slot="title"], h1, h3', post);
       }
       const direct = directVideoUrl(v);
-      return base(v, direct || url, title, direct ? 'yes' : 'no');
+      const context = base(v, direct || url, title, direct ? 'yes' : 'no');
+      if (!direct) {
+        context.platform = 'reddit';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 

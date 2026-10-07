@@ -40,6 +40,8 @@
       this.snap = { room: [], pending: [] };
       this.resolvedX = new Map();
       this.resolvingX = new Map();
+      this.resolvedReddit = new Map();
+      this.resolvingReddit = new Map();
       this.pill = ui.createPill({
         onCH: (ctx) => this.queue(ctx),
         onUN: (ctx) => this.unqueue(ctx),
@@ -94,7 +96,7 @@
       if (this.cur && this.cur.key === t.key) return;
       let ctx = null;
       try {
-        ctx = this.withResolvedX(t.ctx());
+        ctx = this.withResolvedMedia(t.ctx());
       } catch (e) {
         console.warn('[CoolPills] context failed', e);
       }
@@ -119,9 +121,10 @@
       this.hideT = 0;
     }
 
-    withResolvedX(ctx) {
+    withResolvedMedia(ctx) {
       if (!ctx || !ctx.postUrl) return ctx;
-      const resolved = this.resolvedX.get(ctx.postUrl);
+      const cache = ctx.platform === 'reddit' ? this.resolvedReddit : this.resolvedX;
+      const resolved = cache.get(ctx.postUrl);
       return resolved ? { ...ctx, ...resolved, postUrl: ctx.postUrl } : ctx;
     }
 
@@ -153,24 +156,29 @@
     /** Re-read volatile fields (Shorts / late-loading durations) right at click time */
     fresh(ctx) {
       try {
-        const live = this.cur && this.cur.ctx && this.withResolvedX(this.cur.ctx());
+        const live = this.cur && this.cur.ctx && this.withResolvedMedia(this.cur.ctx());
         if (live && live.url === ctx.url) return live;
       } catch (_) { /* ignore */ }
       return ctx;
     }
     async queue(ctx, extra) {
-      let c = this.withResolvedX(this.fresh(ctx));
+      let c = this.withResolvedMedia(this.fresh(ctx));
       if (!c || !c.url) return;
-      if (c && c.platform === 'x' && c.postUrl) {
-        let pending = this.resolvingX.get(c.postUrl);
+      if (c.postUrl && (c.platform === 'x' || c.platform === 'reddit')) {
+        const isReddit = c.platform === 'reddit';
+        const resolving = isReddit ? this.resolvingReddit : this.resolvingX;
+        const resolvedCache = isReddit ? this.resolvedReddit : this.resolvedX;
+        const type = isReddit ? 'cq:resolve-reddit-video' : 'cq:resolve-x-video';
+        const siteName = isReddit ? 'Reddit' : 'X';
+        let pending = resolving.get(c.postUrl);
         if (!pending) {
-          pending = CQ.send({ type: 'cq:resolve-x-video', postUrl: c.postUrl });
-          this.resolvingX.set(c.postUrl, pending);
+          pending = CQ.send({ type, postUrl: c.postUrl });
+          resolving.set(c.postUrl, pending);
         }
         const resolution = await pending;
-        this.resolvingX.delete(c.postUrl);
+        resolving.delete(c.postUrl);
         if (!resolution || !resolution.ok) {
-          ui.toast('Could not queue X video: ' + (resolution && resolution.error || 'VxTwitter did not respond.'), 'error');
+          ui.toast('Could not queue ' + siteName + ' video: ' + (resolution && resolution.error || siteName + ' lookup did not respond.'), 'error');
           return;
         }
         const resolved = {
@@ -181,7 +189,7 @@
           thumbnail: resolution.thumbnail || c.thumbnail,
           supported: 'yes',
         };
-        this.resolvedX.set(c.postUrl, resolved);
+        resolvedCache.set(c.postUrl, resolved);
         c = { ...c, ...resolved };
         if (this.cur && this.cur.ctxValue && this.cur.ctxValue.postUrl === c.postUrl) {
           this.cur.ctxValue = c;
@@ -215,7 +223,7 @@
       if (this.cur && this.cur.ctxValue) return this.fresh(this.cur.ctxValue);
       try {
         if (this.adapter.watchContext) {
-          const c = this.withResolvedX(this.adapter.watchContext());
+          const c = this.withResolvedMedia(this.adapter.watchContext());
           if (c) return c;
         }
       } catch (_) { /* ignore */ }
@@ -226,7 +234,7 @@
         const vis = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)) * Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
         if (vis > area) { area = vis; best = v; }
       });
-      return best ? this.withResolvedX(this.adapter.context(best)) : null;
+      return best ? this.withResolvedMedia(this.adapter.context(best)) : null;
     }
 
     // ── wiring ──

@@ -4,8 +4,8 @@
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.16.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.16.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.17.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.17.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -67,7 +67,7 @@ Browsers may reserve a shortcut. Remap it in the browser's extension shortcut se
 
 Cool Pills runs on pages where it looks for videos, so the browser asks to allow access to sites you visit. It uses browser storage for your settings and queue-related data, and communicates with Coolhole to carry out queue and Work actions. When you choose to queue or schedule, the selected video link and its available metadata are sent to Coolhole. The extension may fetch public page metadata such as a title, duration or thumbnail so queued items are recognizable.
 
-When queuing an X/Twitter video, Cool Pills first tries the public VxTwitter API, then falls back to FxTwitter if that service fails or has no MP4. Both receive the public post link; neither receives your X login cookies. If neither can find an MP4, Cool Pills reports the failure instead of queuing a post page that Coolhole cannot play. On other sites, when the hovered HTML5 player exposes a direct MP4/WebM URL, Cool Pills queues that media file rather than the surrounding page. TikTok, Instagram, Reddit and Kick links that do not expose a direct file may still not play on Coolhole.
+When queuing an X/Twitter video, Cool Pills first tries the public VxTwitter API, then falls back to FxTwitter if that service fails or has no MP4. Both receive the public post link; neither receives your X login cookies. For Reddit videos without an exposed MP4, Cool Pills checks Reddit's public post metadata and then tries RedditSave (RapidSave) as a fallback. RedditSave receives the public post link only if Reddit's metadata does not provide a direct video URL; no Reddit login cookies are sent. Only direct HTTPS MP4s hosted on `v.redd.it` are queued. If a resolver cannot find a direct video, Cool Pills reports the failure instead of queuing a post page that Coolhole cannot play. On other sites, when the hovered HTML5 player exposes a direct MP4/WebM URL, Cool Pills queues that media file rather than the surrounding page. TikTok, Instagram and Kick links that do not expose a direct file may still not play on Coolhole.
 
 ## License
 

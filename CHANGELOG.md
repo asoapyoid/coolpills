@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.17
+- Resolve Reddit posts to direct v.redd.it MP4 links using Reddit post metadata, with RedditSave as a fallback.
+
 ## 3.0.16
 - Detect smaller social-feed videos and video-post thumbnails when sites use custom post cards instead of standard video elements.
 - Add Facebook and Threads adapters and recognize Instagram mirror domains.

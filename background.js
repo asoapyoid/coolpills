@@ -257,6 +257,120 @@ async function resolveXVideo(postUrl) {
   };
 }
 
+function trustedRedditVideoUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'v.redd.it' &&
+      /\.mp4$/i.test(url.pathname) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function extractRedditMedia(data) {
+  const candidates = [];
+  const seen = new Set();
+  let title = null;
+  let thumbnail = null;
+  let duration = null;
+  const visit = (value) => {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    const video = value.secure_media && value.secure_media.reddit_video ||
+      value.media && value.media.reddit_video ||
+      value.reddit_video || value.reddit_video_preview;
+    if (video) {
+      const url = trustedRedditVideoUrl(video.fallback_url || video.url);
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        candidates.push(url);
+        if (Number.isFinite(Number(video.duration)) && Number(video.duration) > 0) {
+          duration = Math.round(Number(video.duration));
+        }
+      }
+    }
+    if (!title && value.permalink && typeof value.title === 'string') title = value.title;
+    if (!thumbnail && typeof value.thumbnail === 'string' && /^https?:/i.test(value.thumbnail)) {
+      thumbnail = value.thumbnail;
+    }
+    if (!thumbnail && value.preview && Array.isArray(value.preview.images)) {
+      const source = value.preview.images[0] && value.preview.images[0].source;
+      if (source && typeof source.url === 'string') thumbnail = source.url.replace(/&amp;/g, '&');
+    }
+    Object.values(value).forEach(visit);
+  };
+  visit(data);
+  return candidates.length ? { url: candidates[0], title, thumbnail, duration } : null;
+}
+
+async function resolveRedditVideo(postUrl) {
+  let post;
+  try {
+    post = new URL(postUrl);
+  } catch (_) {
+    return { ok: false, error: 'Invalid Reddit post URL.' };
+  }
+  const host = post.hostname.toLowerCase();
+  if (host !== 'reddit.com' && !host.endsWith('.reddit.com') && host !== 'redd.it' && !host.endsWith('.redd.it')) {
+    return { ok: false, error: 'Only Reddit post links can be resolved.' };
+  }
+  const match = post.pathname.match(/\/comments\/([a-z0-9]+)/i) || post.pathname.match(/^\/([a-z0-9]+)\/?$/i);
+  if (!match) return { ok: false, error: 'Could not find a Reddit post ID in that link.' };
+
+  const postId = match[1];
+  const publicPostUrl = post.origin + post.pathname;
+  const providers = [
+    {
+      name: 'Reddit',
+      url: 'https://www.reddit.com/comments/' + encodeURIComponent(postId) + '.json?raw_json=1',
+      parse: extractRedditMedia,
+    },
+    {
+      name: 'RedditSave',
+      url: 'https://rapidsave.com/info?url=' + encodeURIComponent(publicPostUrl),
+      parse: (html) => {
+        const source = String(html || '').replace(/\\\//g, '/').replace(/\\u0026/gi, '&').replace(/&amp;/gi, '&');
+        const links = source.match(/https?:\/\/v\.redd\.it\/[^"'<>\\\s]+?\.mp4(?:\?[^"'<>\\\s]*)?/gi) || [];
+        const url = links.map(trustedRedditVideoUrl).find(Boolean);
+        return url ? { url, title: null, thumbnail: null, duration: null } : null;
+      },
+      text: true,
+    },
+  ];
+  const failures = [];
+
+  for (const provider of providers) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(provider.url, {
+        credentials: 'omit',
+        headers: { Accept: provider.text ? 'text/html' : 'application/json' },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        failures.push(provider.name + ' returned HTTP ' + response.status);
+        continue;
+      }
+      const data = provider.text ? await response.text() : await response.json();
+      const media = provider.parse(data);
+      if (media) return { ok: true, ...media };
+      failures.push(provider.name + ' found no direct MP4');
+    } catch (error) {
+      failures.push(provider.name + ' failed (' + (
+        error && error.name === 'AbortError' ? 'timed out' : 'network or response error'
+      ) + ')');
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  return { ok: false, error: 'Reddit video lookup failed: ' + failures.join('; ') + '.' };
+}
+
 // ── auto-queue lock (only one Coolhole tab drains Q+ at a time) ─────
 let lock = { tabId: null, until: 0 };
 
@@ -276,6 +390,8 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return fetchMeta(msg.url);
       case 'cq:resolve-x-video':
         return resolveXVideo(msg.postUrl);
+      case 'cq:resolve-reddit-video':
+        return resolveRedditVideo(msg.postUrl);
       case 'cq:lock': {
         const id = sender.tab ? sender.tab.id : -1;
         const now = Date.now();
