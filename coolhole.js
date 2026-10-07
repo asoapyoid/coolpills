@@ -1576,6 +1576,7 @@
         break;
       }
       case 'cq:unqueue': handleUnqueue(msg.payload || {}); respond({ ok: true }); break;
+      case 'cq:unafk': unAfkIfNeeded(); respond({ ok: true }); break;
       case 'cq:custom': doCustom(msg.payload || {}); respond({ ok: true }); break;
       case 'cq:work': doWork(); respond({ ok: true }); break;
       case 'cq:try-auto': scheduleAutoCheck(); respond({ ok: true }); break;

@@ -293,6 +293,8 @@
     }
     cpClick(ctx) {
       const mode = CQ.settings.cur.cpMode;
+      // Un-AFK applies to every CP action; Fishing/Custom do it themselves on the Coolhole tab.
+      if (CQ.settings.cur.unAfk && mode !== 'work' && mode !== 'custom') CQ.send({ type: 'cq:unafk' });
       if (ctx && mode === 'schedule') return this.pill.openSchedule(ctx);
       if (ctx && mode === 'qplus') return this.queue(ctx, { forceQPlus: true });
       if (mode === 'none') return;
