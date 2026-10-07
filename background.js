@@ -72,6 +72,43 @@ async function relayToHole(type, payload, { focus = false } = {}) {
   return { ok: true, via: 'hash' };
 }
 
+async function startCoolhostUpload(payload) {
+  const source = new URL(String(payload && payload.url || ''));
+  if (!['http:', 'https:'].includes(source.protocol)) {
+    return { ok: false, error: 'Coolhost only accepts HTTP or HTTPS video links.' };
+  }
+  if (source.username || source.password) {
+    return { ok: false, error: 'Links containing embedded login credentials cannot be sent to Coolhost.' };
+  }
+  if (source.hostname === 'coolhost.ca' || source.hostname === 'www.coolhost.ca') {
+    return { ok: false, error: 'This link is already hosted on Coolhost.' };
+  }
+
+  const request = {
+    url: source.href,
+    title: String(payload.title || '').slice(0, 200),
+  };
+  const tabs = await api.tabs.query({ url: ['https://coolhost.ca/*', 'https://www.coolhost.ca/*'] });
+  tabs.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (b.lastAccessed || 0) - (a.lastAccessed || 0));
+  for (const tab of tabs) {
+    for (let i = 0; i < 3; i++) {
+      try {
+        await api.tabs.sendMessage(tab.id, { type: 'cq:coolhost-upload', payload: request });
+        return { ok: true, via: 'tab' };
+      } catch (_) {
+        await sleep(450);
+      }
+    }
+  }
+
+  const hash = new URLSearchParams({
+    cq_upload: request.url,
+    cq_title: request.title,
+  });
+  await api.tabs.create({ url: 'https://coolhost.ca/#' + hash.toString(), active: false });
+  return { ok: true, via: 'new-tab' };
+}
+
 // ── metadata fetch (CORS-free thanks to host_permissions) ───────────
 const ytId = (u) => {
   const m = String(u || '').match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
@@ -380,6 +417,23 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     switch (msg.type) {
       case 'cq:queue':
         return relayToHole('cq:queue', msg.payload);
+      case 'cq:coolhost-upload': {
+        const origin = sender.url || sender.tab && sender.tab.url || '';
+        if (!/^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin)) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole.' };
+        }
+        return startCoolhostUpload(msg.payload || {});
+      }
+      case 'cq:coolhost-status': {
+        const origin = sender.url || sender.tab && sender.tab.url || '';
+        if (!/^https:\/\/(?:www\.)?coolhost\.ca\//i.test(origin)) {
+          return { ok: false, error: 'Invalid Coolhost status sender.' };
+        }
+        const tab = await pickHoleTab();
+        if (!tab) return { ok: false, error: 'No Coolhole tab is open to show the upload result.' };
+        await api.tabs.sendMessage(tab.id, { type: 'cq:coolhost-status', payload: msg.payload || {} });
+        return { ok: true };
+      }
       case 'cq:unqueue':
         return relayToHole('cq:unqueue', msg.payload);
       case 'cq:work': {

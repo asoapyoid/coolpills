@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.18
+- Automatically send links Coolhole rejects to Coolhost for processing, then queue the completed MP4; show toast warnings when Coolhost cannot process or deliver it.
+- Add a CH button beside active Coolhost upload links to send them to Coolhole; expired uploads do not get a button.
+
 ## 3.0.17
 - Resolve Reddit posts to direct v.redd.it MP4 links using Reddit post metadata, with RedditSave as a fallback.
 

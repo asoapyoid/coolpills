@@ -462,6 +462,33 @@
     return t || 'Raw Video';
   };
 
+  function isCoolhostUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return (parsed.hostname === 'coolhost.ca' || parsed.hostname === 'www.coolhost.ca') &&
+        parsed.pathname.toLowerCase().startsWith('/f/') &&
+        parsed.pathname.toLowerCase().endsWith('.mp4');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function sendToCoolhost(item, reason) {
+    toast('Coolhole could not add ' + displayTitle(item) + ' (' + reason + '). Sending the link to Coolhost to process…', 'queue');
+    try {
+      const result = await bg({
+        type: 'cq:coolhost-upload',
+        payload: { url: item.mediaUrl, title: displayTitle(item) },
+      });
+      if (!result || result.ok === false) {
+        throw new Error(result && result.error || 'the extension could not start the upload.');
+      }
+    } catch (error) {
+      console.error('[CoolPills] could not start Coolhost recovery', error);
+      toast('Could not send this video to Coolhost: ' + String(error && error.message || error), 'error');
+    }
+  }
+
   /** Fill in a missing title / duration through the background worker */
   async function enrich(item) {
     const needTitle = !item.title || /^(raw video|coolhost)$/i.test(item.title);
@@ -569,6 +596,10 @@
         if (fromPending) {
           removePending(item.videoId);
           renderIfOpen();
+        }
+        if (!isCoolhostUrl(item.mediaUrl)) {
+          await sendToCoolhost(item, reason);
+        } else if (fromPending) {
           toast('Removed from Q+: ' + name() + ' — ' + reason, 'error');
         } else toast(reason, 'error');
       }
@@ -1485,6 +1516,12 @@
       case 'cq:queue': {
         const p = msg.payload || {};
         queueItem(p, { forceQPlus: p.forceQPlus === true, scheduledAt: p.scheduledAt });
+        respond({ ok: true });
+        break;
+      }
+      case 'cq:coolhost-status': {
+        const message = String(msg.payload && msg.payload.message || '').trim();
+        if (message) toast(message, 'error');
         respond({ ok: true });
         break;
       }

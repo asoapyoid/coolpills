@@ -11,6 +11,7 @@ FILES = (
     "adapters.js",
     "background.js",
     "bridge-main.js",
+    "coolhost.js",
     "coolhole.js",
     "detector.js",
     "manifest.json",
