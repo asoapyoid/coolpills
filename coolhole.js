@@ -28,10 +28,6 @@
     'Yoink — "{title}" is yours now', 'Slid "{title}" onto the runway', 'The hole accepts "{title}"',
     'Stashed "{title}" for later', 'One more for the road: {title}', 'Coolhole ate "{title}"',
   ];
-  const FAIL = [
-    'Could not auto-queue — open the Add panel and try again.', 'Queue miss. Open Library / Add and retry.',
-    'The hole spat it back out. Try the Add panel.', 'Filters shrugged. Try Add manually.',
-  ];
   const Q_ADDED = [
     'Parked in Q+ — next free slot is yours', 'Holding in Q+ until the hole has room',
     'Q+ caught it — auto-queues when a slot opens', 'Stashed in Q+ (top of the list goes in first)',
@@ -310,6 +306,16 @@
     if (buf) Array.from(buf.querySelectorAll('div, span, p, li')).slice(-15).forEach((n) => { const t = n.textContent.trim(); if (t) chunks.push(t); });
     return chunks.join('\n');
   }
+  const newErrorText = (before, after) => {
+    const previous = new Set(String(before || '').split('\n').filter(Boolean));
+    return String(after || '').split('\n').filter((line) => line && !previous.has(line)).join('\n');
+  };
+  const usefulQueueError = (text) => {
+    const line = String(text || '').split('\n').find((part) =>
+      /(invalid|unsupported|not supported|not playable|unrecognized|unknown media|unable to|could not|couldn't|cannot|can't|failed|failure|not found|unavailable|expired|blocked|not a video|no video|no media|does not exist|rejected|parse error)/i.test(part)
+    );
+    return line ? line.replace(/\s+/g, ' ').trim().slice(0, 180) : '';
+  };
   const isMaxErr = (t) =>
     !!t && (/already have \d+\s+items?\s+queued/i.test(t) || /wait for one to play/i.test(t) ||
       (/limit\s*\d+/i.test(t) && /queued/i.test(t)) || /queue(?:d)?\s*(?:is\s*)?(?:full|limit)/i.test(t) ||
@@ -363,14 +369,23 @@
       throw new Error('Queue button is disabled');
     }
     const before = recentErrorText();
+    const rowsBefore = queueRows().length;
     setNativeInput(input, mediaUrl);
     await sleep(80);
     btn.click();
     await sleep(700);
-    const after = recentErrorText();
-    const fresh = after.length > before.length ? after.slice(before.length) : after;
-    if (isMaxErr(fresh) || isMaxErr(after)) { learnLimit(fresh || after); return 'max'; }
-    return 'ok';
+    let errors = newErrorText(before, recentErrorText());
+    if (isMaxErr(errors)) { learnLimit(errors); return 'max'; }
+    const reason = usefulQueueError(errors);
+    if (reason) throw new Error(reason);
+    if (inRoom(mediaUrl) || queueRows().length > rowsBefore) return 'ok';
+    await sleep(700);
+    errors = newErrorText(before, recentErrorText());
+    if (isMaxErr(errors)) { learnLimit(errors); return 'max'; }
+    const delayedReason = usefulQueueError(errors);
+    if (delayedReason) throw new Error(delayedReason);
+    if (inRoom(mediaUrl) || queueRows().length > rowsBefore) return 'ok';
+    throw new Error('Coolhole did not add this media link. It may be unsupported or temporarily unavailable.');
   }
 
   // ══ list operations ══════════════════════════════════════════════
@@ -469,9 +484,16 @@
 
   // ══ queueing (CH / Frc / auto-queue) ═════════════════════════════
   async function queueItem(raw, opts = {}) {
-    const item = normItem(raw);
-    if (!item) { toast('Could not read that link', 'error'); return; }
     const fromPending = !!opts.fromPending;
+    const item = normItem(raw);
+    if (!item) {
+      if (fromPending && raw && raw.videoId) {
+        removePending(String(raw.videoId));
+        renderIfOpen();
+        toast('Removed an invalid item from Q+: Coolhole could not read its media link.', 'error');
+      } else toast('Could not read that link', 'error');
+      return;
+    }
     if (!loggedIn()) { toast('Log in on Coolhole to queue', 'account'); return; }
     const now = Date.now();
     if (S.lastQueued.id === item.videoId && now - S.lastQueued.at < 2000) return;
@@ -516,7 +538,11 @@
     try {
       if (!item.title || item.duration == null) await enrich(item);
       const res = await roomAdd(item.mediaUrl);
-      if (res === 'max') { if (!fromPending) await overflow(); return; }
+      if (res === 'max') {
+        if (!fromPending) await overflow();
+        else toast('Still in Q+: Coolhole is at its queue limit.', 'qplus');
+        return;
+      }
       if (fromPending) removePending(item.videoId);
       addToHistory(item);
       setTimeout(() => { const c = getMyQueuedCount(); if (c > getRoomLimit()) setRoomLimit(c); updateSlots(); publishSnapshot(); }, 450);
@@ -531,9 +557,20 @@
       renderIfOpen();
     } catch (err) {
       console.error('[CoolPills] queue failed', err);
-      const t = String(err && err.message) + '\n' + recentErrorText();
-      if (isMaxErr(t)) { learnLimit(t); if (!fromPending) await overflow(); }
-      else toast(pick(FAIL), 'error');
+      const message = String(err && err.message || err);
+      if (isMaxErr(message)) {
+        learnLimit(message);
+        if (!fromPending) await overflow();
+        else toast('Still in Q+: Coolhole is at its queue limit.', 'qplus');
+      }
+      else {
+        const reason = usefulQueueError(message) || message || 'Coolhole rejected the media link or did not add it to the room queue.';
+        if (fromPending) {
+          removePending(item.videoId);
+          renderIfOpen();
+          toast('Removed from Q+: ' + name() + ' — ' + reason, 'error');
+        } else toast(reason, 'error');
+      }
     }
   }
 

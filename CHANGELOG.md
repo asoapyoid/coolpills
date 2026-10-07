@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.13
+- Report Coolhole queue rejections with a useful toast and remove failed items from Q+ instead of retrying them indefinitely.
+
 ## 3.0.12
 - Prefer direct video-file URLs on sites where Coolhole cannot consume the page link, and resolve X post videos to MP4 through VxTwitter when queued.
 
