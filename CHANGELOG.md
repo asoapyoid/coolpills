@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.7
+- Replace Work (Earn CP) with Fishing: CP, the Fishing shortcut and the CP mode option now cast your line on Coolhole and automatically hook the catch when the prompt appears. Existing CP settings and shortcuts carry over.
+
 ## 3.1.6
 - Make the Queue option 'If no Coolhole tab is open, create one' work; when off, show a toast asking you to open a Coolhole tab instead of opening one.
 - Avoid opening another Coolhost tab when an existing tab is unresponsive; retry the most recently used tab and report an actionable error if it still does not respond.

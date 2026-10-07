@@ -1,6 +1,6 @@
 /* Cool Pills — coolhole.js  (coolhole.org / new.coolhole.org only)
  * Floating Hist / Q+ UI, account-scoped storage, queueing into the room, auto-queue watcher,
- * Work, Gold Collector, schedule + +Link popovers, theme detection (Match Coolhole).
+ * Fishing, Gold Collector, schedule + +Link popovers, theme detection (Match Coolhole).
  */
 (async () => {
   'use strict';
@@ -701,7 +701,16 @@
   })();
 
   // ══ Work ═════════════════════════════════════════════════════════
-  const workBtn = () => $('#job-actions button.job-action-work') || $('button.job-action-work') || $('button[title="Earn CP"]');
+  const FISH_RE = /fish/i;
+  const HOOK_RE = /\b(hook|reel|catch|pull)\b/i;
+  const btnLabel = (b) => ((b.textContent || '') + ' ' + (b.getAttribute('title') || '') + ' ' + (b.className || '') + ' ' + (b.id || '')).replace(/\s+/g, ' ');
+  const jobBtns = () => [...document.querySelectorAll('#job-actions button, button[class*="job-action"], button[class*="fish"], button[id*="fish"]')];
+  const workBtn = () =>
+    $('#job-actions button.job-action-fish') || $('button.job-action-fish') || $('button[title*="fish" i]') ||
+    jobBtns().find((b) => FISH_RE.test(btnLabel(b)) && !HOOK_RE.test(btnLabel(b))) || null;
+  const hookBtn = () =>
+    $('button.job-action-hook') || $('button.job-action-reel') ||
+    [...document.querySelectorAll('button')].find((b) => HOOK_RE.test(btnLabel(b)) && !b.disabled && b.offsetParent !== null && (FISH_RE.test(btnLabel(b)) || b.closest('#job-actions, [class*="fish"], [id*="fish"]'))) || null;
   const sysTexts = (limit = 8) => {
     const out = [];
     const lines = document.querySelectorAll('#messagebuffer .server-whisper, #messagebuffer .chat-line');
@@ -715,7 +724,7 @@
     return out;
   };
   const workBlocked = (t) =>
-    /can[’']?t work|cannot work|sun saps your strength|wait for nightfall|work by day|not allowed to work|unable to work|work failed/i.test(t) ||
+    /can[’']?t fish|cannot fish|not allowed to fish|unable to fish|fishing failed|need a (fishing )?rod/i.test(t) ||
     /you are (dead|a ghost|ghost|jailed)/i.test(t);
 
   async function doWork() {
@@ -729,26 +738,51 @@
     }
     let btn = workBtn();
     for (let i = 0; i < 20 && !btn; i++) { await sleep(250); btn = workBtn(); }
-    if (!btn) return toast('Work button not found — are you logged in with a job?', 'error');
-    if (btn.disabled || btn.classList.contains('work-cooling')) {
-      return toast(`Work is on cooldown (${(btn.textContent || '').replace(/\s+/g, ' ').trim() || 'cooling down'})`, 'error');
+    if (!btn) return toast('Fishing button not found — are you logged in?', 'error');
+    if (btn.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(btn.className)) {
+      return toast(`Fishing is on cooldown (${(btn.textContent || '').replace(/\s+/g, ' ').trim() || 'cooling down'})`, 'error');
     }
     const before = new Set(sysTexts());
     btn.click();
-    toast('Work — earning CP', 'queue');
+    toast('Fishing — line cast', 'queue');
+    autoHook();
     for (let i = 0; i < 10; i++) {
       await sleep(300);
       const hit = sysTexts().find((m) => !before.has(m) && workBlocked(m));
       if (hit) {
-        toast('Work failed — ' + (hit.length > 100 ? hit.slice(0, 97) + '…' : hit), 'error');
+        toast('Fishing failed — ' + (hit.length > 100 ? hit.slice(0, 97) + '…' : hit), 'error');
         store.set(KEYS.workCd, { ready: true, remainingMs: 0, totalMs: 0, startedAt: Date.now(), ts: Date.now(), blocked: true });
         return;
       }
       const b2 = workBtn();
-      if (b2 && (b2.disabled || b2.classList.contains('work-cooling'))) break;
+      if (b2 && (b2.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(b2.className))) break;
     }
     setTimeout(captureCooldown, 400);
     setTimeout(captureCooldown, 1000);
+  }
+  /** After casting, watch for the hook/reel prompt and press it automatically (up to 90s). */
+  let hooking = false;
+  async function autoHook() {
+    if (hooking) return;
+    hooking = true;
+    try {
+      const deadline = Date.now() + 90000;
+      let clicked = 0;
+      while (Date.now() < deadline) {
+        await sleep(150);
+        const hb = hookBtn();
+        if (hb && !hb.disabled) {
+          hb.click();
+          clicked++;
+          toast('Fishing — hooked', 'queue');
+          await sleep(1500);
+          if (!hookBtn()) break;
+        }
+      }
+      if (clicked) setTimeout(captureCooldown, 400);
+    } finally {
+      hooking = false;
+    }
   }
   const parseCd = (text) => {
     const m = String(text || '').replace(/\s+/g, ' ').match(/(?:(\d+)\s*:\s*)?(\d+)\s*s?\b/i);
@@ -756,8 +790,8 @@
   };
   function captureCooldown() {
     const btn = workBtn();
-    const cdEl = $('#jcd-work');
-    const cooling = btn && (btn.disabled || btn.classList.contains('work-cooling') || (cdEl && /\d/.test(cdEl.textContent || '')));
+    const cdEl = $('#jcd-fish') || $('#jcd-work');
+    const cooling = btn && (btn.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(btn.className) || (cdEl && /\d/.test(cdEl.textContent || '')));
     if (!cooling) return;
     let ms = 0;
     for (const src of [cdEl && cdEl.textContent, btn.textContent, btn.getAttribute('title')]) { ms = parseCd(src); if (ms > 0) break; }

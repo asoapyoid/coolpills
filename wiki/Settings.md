@@ -11,9 +11,9 @@ Open Cool Pills from the browser's extensions page to reach its settings. Most s
 - **Gray buttons:** show gray buttons until hover.
 - **Disable Cinema idle-fade:** keep the panel from fading while matching the Cinema theme.
 
-## CP button and Work
+## CP button and Fishing
 
-Choose whether CP runs Work, adds the video to Q+, or schedules it. **Un-AFK before Work** and **Auto-focus Coolhole tab** affect Work behavior.
+Choose whether CP goes Fishing, adds the video to Q+, or schedules it. **Un-AFK before Fishing** and **Auto-focus Coolhole tab** affect Fishing behavior.
 
 ## Queue options
 
@@ -41,7 +41,7 @@ The default shortcuts are:
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
-| `Ctrl+Shift+W` | Focus Coolhole and run Work |
+| `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
 
 Use **Enable keyboard shortcut actions** to turn shortcut actions on or off. Firefox allows remapping from the settings page. Chrome-based browsers require remapping through the browser's extension shortcut manager. Browsers may reserve a combination; choose another if it cannot be assigned.

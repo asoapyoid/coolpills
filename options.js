@@ -144,7 +144,7 @@
   // Keyboard shortcuts are updated through the browser commands API.
   const SHORTCUTS = [
     ['queue-current', 'Queue current or hovered video'],
-    ['work', 'Focus Coolhole and run Work'],
+    ['work', 'Focus Coolhole and go Fishing'],
     ['toggle-panel', 'Toggle the Hist / Q+ panel'],
   ];
   const canUpdateShortcuts = typeof api.commands.update === 'function';
