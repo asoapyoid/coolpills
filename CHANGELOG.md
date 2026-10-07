@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.22
+- Do not queue RedditSave's `download.php` download endpoint as if it were playable media; only accept a direct MP4, otherwise continue through the original Reddit link and Coolhost recovery.
+
 ## 3.0.21
 - Add a black outline and subtle shadow to text in gold and gold Q+ toasts for better contrast.
 
