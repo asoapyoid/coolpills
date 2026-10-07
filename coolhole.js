@@ -700,32 +700,16 @@
     publishSnapshot();
   })();
 
-  // ══ Work ═════════════════════════════════════════════════════════
-  const FISH_RE = /fish/i;
-  const HOOK_RE = /\b(hook|reel|catch|pull)\b/i;
-  const btnLabel = (b) => ((b.textContent || '') + ' ' + (b.getAttribute('title') || '') + ' ' + (b.className || '') + ' ' + (b.id || '')).replace(/\s+/g, ' ');
-  const jobBtns = () => [...document.querySelectorAll('#job-actions button, button[class*="job-action"], button[class*="fish"], button[id*="fish"]')];
-  const workBtn = () =>
-    $('#job-actions button.job-action-fish') || $('button.job-action-fish') || $('button[title*="fish" i]') ||
-    jobBtns().find((b) => FISH_RE.test(btnLabel(b)) && !HOOK_RE.test(btnLabel(b))) || null;
-  const hookBtn = () =>
-    $('button.job-action-hook') || $('button.job-action-reel') ||
-    [...document.querySelectorAll('button')].find((b) => HOOK_RE.test(btnLabel(b)) && !b.disabled && b.offsetParent !== null && (FISH_RE.test(btnLabel(b)) || b.closest('#job-actions, [class*="fish"], [id*="fish"]'))) || null;
-  const sysTexts = (limit = 8) => {
-    const out = [];
-    const lines = document.querySelectorAll('#messagebuffer .server-whisper, #messagebuffer .chat-line');
-    for (let i = lines.length - 1; i >= 0 && out.length < limit; i--) {
-      const n = lines[i];
-      const sys = n.classList.contains('server-whisper') || (n.querySelector('.chat-user') || {}).textContent === 'System';
-      if (!sys) continue;
-      const t = ((n.querySelector('.chat-text') || n).textContent || '').replace(/\s+/g, ' ').trim();
-      if (t) out.push(t);
-    }
-    return out;
-  };
-  const workBlocked = (t) =>
-    /can[’']?t fish|cannot fish|not allowed to fish|unable to fish|fishing failed|need a (fishing )?rod/i.test(t) ||
-    /you are (dead|a ghost|ghost|jailed)/i.test(t);
+  // ══ Fishing ══════════════════════════════════════════════════════
+  // Coolhole's single #fishing-action button casts, and (during a bite) hooks. #fishing-water, the
+  // button's data-phase / data-strike attributes and #fishing-readout describe the state.
+  const fishBtn = () => $('#fishing-action');
+  const fishPhase = (b) => String((b && b.dataset.phase) || '').toLowerCase();
+  const fishLabel = (b) => (((b && ($('#fishing-action-label') || b).textContent) || '') + ' ' + ((b && b.title) || '')).replace(/\s+/g, ' ').trim();
+  const fishStrike = (b) => !!b && (!!b.dataset.strike || /bite|strike|hook|reel|pull|set the hook/i.test(fishPhase(b) + ' ' + fishLabel(b)));
+  const fishIdle = (b) => !!b && !fishStrike(b) && (fishPhase(b) === 'idle' || /^(fish|cast)\b/i.test(fishLabel(b)));
+  const fishReady = (b) => !!b && !b.disabled && b.getAttribute('aria-disabled') !== 'true';
+  const readout = () => (($('#fishing-readout') || {}).textContent || '').replace(/\s+/g, ' ').trim();
 
   async function doWork() {
     const s = cfg();
@@ -736,67 +720,48 @@
         if (afk && me && me.classList.contains('user-afk')) { afk.click(); await sleep(200); }
       } catch (_) { /* ignore */ }
     }
-    let btn = workBtn();
-    for (let i = 0; i < 20 && !btn; i++) { await sleep(250); btn = workBtn(); }
+    let btn = fishBtn();
+    for (let i = 0; i < 20 && !btn; i++) { await sleep(250); btn = fishBtn(); }
     if (!btn) return toast('Fishing button not found — are you logged in?', 'error');
-    if (btn.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(btn.className)) {
-      return toast(`Fishing is on cooldown (${(btn.textContent || '').replace(/\s+/g, ' ').trim() || 'cooling down'})`, 'error');
+    if (!fishReady(btn)) return toast('Fishing is not available right now' + (readout() ? ' — ' + readout() : ''), 'error');
+    if (fishStrike(btn)) {
+      btn.click();
+      toast('Fishing — hooked', 'queue');
+      return;
     }
-    const before = new Set(sysTexts());
+    if (!fishIdle(btn)) {
+      toast('Already fishing — will hook automatically', 'queue');
+      autoHook();
+      return;
+    }
     btn.click();
     toast('Fishing — line cast', 'queue');
     autoHook();
-    for (let i = 0; i < 10; i++) {
-      await sleep(300);
-      const hit = sysTexts().find((m) => !before.has(m) && workBlocked(m));
-      if (hit) {
-        toast('Fishing failed — ' + (hit.length > 100 ? hit.slice(0, 97) + '…' : hit), 'error');
-        store.set(KEYS.workCd, { ready: true, remainingMs: 0, totalMs: 0, startedAt: Date.now(), ts: Date.now(), blocked: true });
-        return;
-      }
-      const b2 = workBtn();
-      if (b2 && (b2.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(b2.className))) break;
-    }
-    setTimeout(captureCooldown, 400);
-    setTimeout(captureCooldown, 1000);
   }
-  /** After casting, watch for the hook/reel prompt and press it automatically (up to 90s). */
+
+  /** After casting, press the button again the moment a bite arrives (up to 2 minutes). */
   let hooking = false;
   async function autoHook() {
     if (hooking) return;
     hooking = true;
     try {
-      const deadline = Date.now() + 90000;
-      let clicked = 0;
+      const deadline = Date.now() + 120000;
+      let seenLine = false;
       while (Date.now() < deadline) {
-        await sleep(150);
-        const hb = hookBtn();
-        if (hb && !hb.disabled) {
-          hb.click();
-          clicked++;
+        await sleep(100);
+        const b = fishBtn();
+        if (!b) break;
+        if (fishStrike(b) && fishReady(b)) {
+          b.click();
           toast('Fishing — hooked', 'queue');
-          await sleep(1500);
-          if (!hookBtn()) break;
+          return;
         }
+        if (!fishIdle(b)) seenLine = true;
+        else if (seenLine) return; // line is back in: the cast ended without a bite we could hook
       }
-      if (clicked) setTimeout(captureCooldown, 400);
     } finally {
       hooking = false;
     }
-  }
-  const parseCd = (text) => {
-    const m = String(text || '').replace(/\s+/g, ' ').match(/(?:(\d+)\s*:\s*)?(\d+)\s*s?\b/i);
-    return m ? ((m[1] ? +m[1] : 0) * 60 + (+m[2] || 0)) * 1000 : 0;
-  };
-  function captureCooldown() {
-    const btn = workBtn();
-    const cdEl = $('#jcd-fish') || $('#jcd-work');
-    const cooling = btn && (btn.disabled || /(?:^|\s)(?:work|fish)-cooling(?:\s|$)/.test(btn.className) || (cdEl && /\d/.test(cdEl.textContent || '')));
-    if (!cooling) return;
-    let ms = 0;
-    for (const src of [cdEl && cdEl.textContent, btn.textContent, btn.getAttribute('title')]) { ms = parseCd(src); if (ms > 0) break; }
-    if (ms <= 0) ms = 30000;
-    store.set(KEYS.workCd, { ready: false, remainingMs: ms, totalMs: ms, startedAt: Date.now(), ts: Date.now() });
   }
 
   // ══ Gold Collector (.text-lottery chat lines) ════════════════════

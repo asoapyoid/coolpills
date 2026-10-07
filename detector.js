@@ -273,10 +273,6 @@
       CQ.send({ type: 'cq:unqueue', payload: { url: ctx.url, videoId: ctx.videoId || null } });
     }
     async work() {
-      const cd = await store.get(KEYS.workCd, null);
-      if (cd && cd.ready === false && cd.remainingMs > 0 && cd.startedAt) {
-        if (cd.startedAt + Math.max(cd.totalMs || 0, cd.remainingMs) > Date.now() + 500) return; // cooling
-      }
       CQ.send({ type: 'cq:work' });
     }
     cpClick(ctx) {
