@@ -120,6 +120,8 @@
     goldChatHist: true,
     disableCinemaIdleHide: false,
     genericEnabled: true,
+    keyboardShortcutsEnabled: true,
+    keyboardShortcuts: {},
     disabledSites: [],
   });
 
@@ -146,6 +148,12 @@
     s.ytOpacity = clamp(s.ytOpacity, 0.1, 1, 0.38);
     s.maxQueued = Math.floor(clamp(s.maxQueued, 1, 99, CQ.DEFAULT_ROOM_LIMIT));
     s.disabledSites = Array.isArray(s.disabledSites) ? s.disabledSites.map(String) : [];
+    s.keyboardShortcutsEnabled = s.keyboardShortcutsEnabled !== false;
+    s.keyboardShortcuts = s.keyboardShortcuts && typeof s.keyboardShortcuts === 'object' && !Array.isArray(s.keyboardShortcuts)
+      ? Object.fromEntries(Object.entries(s.keyboardShortcuts)
+        .filter(([name, shortcut]) => ['queue-current', 'work', 'toggle-panel'].includes(name) && typeof shortcut === 'string')
+        .map(([name, shortcut]) => [name, shortcut.slice(0, 40)]))
+      : {};
     ['matchCoolholeTheme', 'grayButtons', 'unAfk', 'autoFocus', 'autoQueue', 'qPlusEnabled',
       'collapsed', 'forceIgnoreLimit', 'goldChatHist', 'disableCinemaIdleHide', 'genericEnabled',
     ].forEach((k) => (s[k] = s[k] === true));

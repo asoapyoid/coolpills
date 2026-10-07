@@ -67,13 +67,6 @@
     </section>
 
     <section>
-      <h2>Keyboard shortcuts</h2>
-      <ul id="shortcuts"></ul>
-      <p class="hint">Change them at <code>chrome://extensions/shortcuts</code> (Firefox: Add-ons → ⚙ → Manage Extension Shortcuts).
-        Some browsers reserve Ctrl+Shift+Q.</p>
-    </section>
-
-    <section>
       <h2>Updates</h2>
       <div class="row">
         <button id="checkUpdates" type="button">Check for updates</button>
@@ -81,6 +74,15 @@
       </div>
       <p class="hint">If an update is available, download the ZIP and install it manually. Chrome, Edge and Brave require replacing the unpacked files and clicking Reload on the extensions page. Firefox temporary add-ons must be loaded again from the new ZIP.</p>
       <div id="updateLink"></div>
+    </section>
+
+    <section>
+      <h2>Keyboard shortcuts</h2>
+      <label class="check"><input type="checkbox" id="keyboardShortcutsEnabled"> Enable keyboard shortcut actions</label>
+      <div id="shortcutControls"></div>
+      <p id="shortcutStatus" class="hint" role="status" aria-live="polite"></p>
+      <p class="hint" id="shortcutHelp">Firefox can remap shortcuts here. In Chrome-based browsers, use the browser shortcut manager; this switch turns shortcut actions on or off.</p>
+      <a id="shortcutManager" target="_blank" rel="noopener">Open browser shortcut settings</a>
     </section>
 
     <section>

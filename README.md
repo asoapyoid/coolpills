@@ -4,8 +4,8 @@
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.7.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.7.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.8.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.8.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -52,6 +52,8 @@ Open the extension's settings page from your browser's extensions menu to:
 Settings, pending items, history and pins are saved in the browser's local extension storage. Queue data is scoped to the Coolhole account detected in the current tab.
 
 ## Keyboard shortcuts
+
+Use **Settings → Keyboard shortcuts** to turn shortcut actions on or off. Firefox also lets you record custom key combinations there. Chrome-based browsers do not let extensions change shortcut assignments programmatically, so use the browser shortcut-settings link in that section to remap them; the switch still controls whether Cool Pills responds to them. The defaults are:
 
 | Shortcut | Action |
 | --- | --- |

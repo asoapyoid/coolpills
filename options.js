@@ -141,16 +141,185 @@
     CQ.settings.save({ disabledSites: [...new Set([...CQ.settings.cur.disabledSites, h])] }).then(renderSites);
   });
 
-  // shortcuts (live bindings)
-  try {
-    const cmds = await api.commands.getAll();
-    const ul = $('shortcuts');
-    cmds.filter((c) => c.name !== '_execute_action').forEach((c) => {
-      const li = el('li', null, c.description || c.name);
-      li.append(el('code', null, c.shortcut || 'unassigned'));
-      ul.append(li);
+  // Keyboard shortcuts are updated through the browser commands API.
+  const SHORTCUTS = [
+    ['queue-current', 'Queue current or hovered video'],
+    ['work', 'Focus Coolhole and run Work'],
+    ['toggle-panel', 'Toggle the Hist / Q+ panel'],
+  ];
+  const canUpdateShortcuts = typeof api.commands.update === 'function';
+  let recordingHandler = null;
+  let recordingCleanup = null;
+  const cancelShortcutRecording = () => {
+    if (recordingHandler) document.removeEventListener('keydown', recordingHandler, true);
+    recordingHandler = null;
+    if (recordingCleanup) recordingCleanup();
+    recordingCleanup = null;
+  };
+  const shortcutSettings = () => CQ.settings.cur.keyboardShortcuts || {};
+  const shortcutLabel = (shortcut) => shortcut || 'Unassigned';
+  const renderShortcuts = () => {
+    const box = $('shortcutControls');
+    box.replaceChildren();
+    const enabled = CQ.settings.cur.keyboardShortcutsEnabled;
+    SHORTCUTS.forEach(([name, label]) => {
+      const row = el('div', 'shortcut-row');
+      row.append(el('span', null, label));
+      const button = el('button', 'shortcut-button', shortcutLabel(shortcutSettings()[name]));
+      button.type = 'button';
+      button.disabled = !enabled;
+      button.addEventListener('click', () => {
+        if (!canUpdateShortcuts) {
+          $('shortcutStatus').textContent = 'This browser does not allow extensions to remap shortcuts here. Use the browser shortcut settings link below.';
+          return;
+        }
+        cancelShortcutRecording();
+        button.classList.add('recording');
+        button.textContent = 'Press shortcut… (Esc to cancel)';
+        button.focus();
+        $('shortcutStatus').textContent = '';
+        const stopRecording = () => button.classList.remove('recording');
+        recordingCleanup = () => {
+          stopRecording();
+          button.textContent = shortcutLabel(shortcutSettings()[name]);
+        };
+        const onKeyDown = async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.key === 'Escape') {
+            document.removeEventListener('keydown', onKeyDown, true);
+            recordingHandler = null;
+            recordingCleanup = null;
+            stopRecording();
+            button.textContent = shortcutLabel(shortcutSettings()[name]);
+            return;
+          }
+          if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) return;
+          const modifiers = [];
+          const isMac = /mac/i.test(navigator.platform);
+          if (event.ctrlKey) modifiers.push(isMac ? 'MacCtrl' : 'Ctrl');
+          if (event.metaKey) modifiers.push(isMac ? 'Command' : 'Ctrl');
+          if (event.altKey) modifiers.push(isMac ? 'Option' : 'Alt');
+          if (event.shiftKey) modifiers.push('Shift');
+          let key = event.key;
+          if (key === ' ') key = 'Space';
+          else if (key.startsWith('Arrow')) key = key.slice(5);
+          else if (/^[a-z]$/i.test(key)) key = key.toUpperCase();
+          if (!modifiers.some((modifier) => ['Ctrl', 'Alt', 'MacCtrl', 'Command', 'Option'].includes(modifier)) ||
+              !/^(?:[A-Z0-9]|F(?:[1-9]|1[0-2])|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Delete|Comma|Period)$/.test(key)) {
+            $('shortcutStatus').textContent = 'Use Ctrl or Alt (Command or Option on Mac) with a letter, number, function or navigation key.';
+            return;
+          }
+          const shortcut = [...modifiers, key].join('+');
+          if (SHORTCUTS.some(([other]) => other !== name && shortcutSettings()[other] === shortcut)) {
+            $('shortcutStatus').textContent = 'That shortcut is already assigned to another Cool Pills action.';
+            return;
+          }
+          document.removeEventListener('keydown', onKeyDown, true);
+          recordingHandler = null;
+          recordingCleanup = null;
+          stopRecording();
+          button.disabled = true;
+          try {
+            await api.commands.update({ name, shortcut });
+            const saved = { ...shortcutSettings(), [name]: shortcut };
+            await CQ.settings.save({ keyboardShortcuts: saved });
+            $('shortcutStatus').textContent = 'Shortcut saved. The browser may reject combinations it reserves.';
+          } catch (error) {
+            $('shortcutStatus').textContent = 'Could not set shortcut: ' + (error.message || String(error));
+          } finally {
+            button.disabled = !CQ.settings.cur.keyboardShortcutsEnabled;
+            renderShortcuts();
+          }
+        };
+        recordingHandler = onKeyDown;
+        document.addEventListener('keydown', onKeyDown, true);
+      });
+      row.append(button);
+      box.append(row);
     });
-  } catch (_) { /* ignore */ }
+  };
+
+  $('keyboardShortcutsEnabled').addEventListener('change', async () => {
+    const checkbox = $('keyboardShortcutsEnabled');
+    const nextEnabled = checkbox.checked;
+    if (!nextEnabled && recordingHandler) {
+      cancelShortcutRecording();
+      renderShortcuts();
+    }
+    checkbox.disabled = true;
+    $('shortcutStatus').textContent = nextEnabled ? 'Enabling shortcuts…' : 'Disabling shortcuts…';
+    try {
+      const saved = { ...shortcutSettings() };
+      if (canUpdateShortcuts) {
+        const commands = await api.commands.getAll();
+        const previous = Object.fromEntries(commands.map((command) => [command.name, command.shortcut || '']));
+        if (!nextEnabled) {
+          SHORTCUTS.forEach(([name]) => {
+            if (previous[name]) saved[name] = previous[name];
+          });
+        }
+        const target = nextEnabled ? saved : Object.fromEntries(SHORTCUTS.map(([name]) => [name, '']));
+        const changed = [];
+        try {
+          for (const [name, shortcut] of Object.entries(target)) {
+            await api.commands.update({ name, shortcut });
+            changed.push(name);
+          }
+        } catch (error) {
+          const rollbackErrors = [];
+          for (const name of changed.reverse()) {
+            try {
+              await api.commands.update({ name, shortcut: previous[name] || '' });
+            } catch (rollbackError) {
+              rollbackErrors.push(name + ': ' + (rollbackError.message || String(rollbackError)));
+            }
+          }
+          if (rollbackErrors.length) {
+            error.message += ' Rollback was incomplete for ' + rollbackErrors.join('; ') + '.';
+          }
+          throw error;
+        }
+      }
+      await CQ.settings.save({ keyboardShortcutsEnabled: nextEnabled, keyboardShortcuts: saved });
+      $('shortcutStatus').textContent = canUpdateShortcuts
+        ? (nextEnabled ? 'Keyboard shortcuts enabled.' : 'Keyboard shortcuts disabled.')
+        : (nextEnabled ? 'Keyboard shortcut actions enabled.' : 'Keyboard shortcut actions disabled. The browser bindings remain assigned.');
+    } catch (error) {
+      checkbox.checked = CQ.settings.cur.keyboardShortcutsEnabled;
+      $('shortcutStatus').textContent = 'Could not update shortcuts: ' + (error.message || String(error));
+    } finally {
+      checkbox.disabled = false;
+      renderShortcuts();
+    }
+  });
+  try {
+    const commands = await api.commands.getAll();
+    const actual = Object.fromEntries(commands.map((command) => [command.name, command.shortcut || '']));
+    const saved = shortcutSettings();
+    const configured = Object.fromEntries(SHORTCUTS.map(([name]) => [
+      name,
+      actual[name] || (!CQ.settings.cur.keyboardShortcutsEnabled ? saved[name] : '') || '',
+    ]));
+    if (Object.entries(configured).some(([name, shortcut]) => shortcut && shortcut !== saved[name])) {
+      await CQ.settings.save({ keyboardShortcuts: { ...saved, ...configured } });
+    }
+  } catch (error) {
+    $('shortcutStatus').textContent = 'Could not load keyboard shortcuts: ' + (error.message || String(error));
+  }
+  $('keyboardShortcutsEnabled').checked = CQ.settings.cur.keyboardShortcutsEnabled;
+  $('shortcutManager').href = /firefox/i.test(navigator.userAgent)
+    ? 'about:addons'
+    : /edg/i.test(navigator.userAgent)
+      ? 'edge://extensions/shortcuts'
+      : /brave/i.test(navigator.userAgent)
+        ? 'brave://extensions/shortcuts'
+        : 'chrome://extensions/shortcuts';
+  renderShortcuts();
+  CQ.settings.onChange(() => {
+    $('keyboardShortcutsEnabled').checked = CQ.settings.cur.keyboardShortcutsEnabled;
+    renderShortcuts();
+  });
 
   // export / import (everything prefixed cq_, incl. per-account Q+/history/pins)
   $('export').addEventListener('click', async () => {

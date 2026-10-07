@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.8
+- Add an options-page switch to disable/enable keyboard shortcut actions and in-options remapping where supported by the browser.
+
 ## 3.0.7
 - Detect Coolhole's active theme from its `data-theme` attribute so Black Spring is recognized reliably.
 

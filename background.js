@@ -197,6 +197,8 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // ── keyboard shortcuts ───────────────────────────────────────────────
 api.commands.onCommand.addListener(async (cmd) => {
   try {
+    const settings = await getSettings();
+    if (settings.keyboardShortcutsEnabled === false) return;
     if (cmd === 'queue-current') {
       const [tab] = await api.tabs.query({ active: true, currentWindow: true });
       if (tab && tab.id != null) await api.tabs.sendMessage(tab.id, { type: 'cq:queue-current' }).catch(() => null);

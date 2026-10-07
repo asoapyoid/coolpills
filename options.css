@@ -23,3 +23,9 @@ li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;b
 li button{padding:2px 8px}
 code{background:rgba(128,128,128,.2);padding:1px 5px;border-radius:4px}
 #sites{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px}
+#shortcutControls{display:grid;gap:6px;margin:10px 0}
+.shortcut-row{display:flex;align-items:center;gap:10px}
+.shortcut-row>span{flex:1}
+.shortcut-row button{min-width:150px}
+.shortcut-row button.recording{background:var(--red)}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
