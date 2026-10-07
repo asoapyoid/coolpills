@@ -28,34 +28,51 @@ footer{text-align:center;opacity:.6;font-size:.85rem;margin-top:30px}
   <h1>Cool Pills</h1>
   <p class="lead">A tiny <b>CH | CP</b> pill on any video. One click queues it to Coolhole.</p>
   <div class="btns">
-    <a class="btn c" href="https://github.com/OWNER/REPO/releases/latest">⬇ Chrome / Edge / Brave</a>
-    <a class="btn f" href="https://github.com/OWNER/REPO/releases/latest">⬇ Firefox</a>
-    <a class="btn g" href="https://github.com/OWNER/REPO">View on GitHub</a>
+    <a class="btn c" href="https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.0.zip" download>Download for Chrome / Edge / Brave</a>
+    <a class="btn f" href="https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.0.zip" download>Download for Firefox</a>
+    <a class="btn g" href="https://github.com/asoapyoid/coolpills">View source on GitHub</a>
   </div>
+  <p class="lead">Version 3.0.0 · Free and open source · Install instructions below</p>
 </header>
 
 <section><h2>What it does</h2><ul>
-  <li><b>CH</b> queues to Coolhole (becomes <b>UN</b> if already queued). Over your limit? It waits in <b>Q+</b> and auto-queues when a slot opens.</li>
-  <li><b>CP</b> focuses Coolhole and hits Work. Hold for settings.</li>
-  <li>Searchable <b>history</b> with pins, drag-reorder <b>Q+</b>, <b>Schedule</b>, multi-link paste, <b>Gold Collector</b>.</li>
+  <li><b>CH</b> sends the video to Coolhole. If it is already queued, the pill becomes <b>UN</b> so you can remove it. When the queue is full, a video can wait in <b>Q+</b>.</li>
+  <li><b>CP</b> runs your chosen action: focus Coolhole and Work, add to Q+, or schedule. Hold the pill to open quick settings.</li>
+  <li><b>Q+</b> is a waiting list: reorder items, force or schedule an item, paste several links with <b>+Link</b>, and let auto-queue send the next item when a queue slot opens.</li>
+  <li><b>Hist</b> is searchable queue history; pin videos you want to keep handy and queue them again later.</li>
+  <li><b>Gold Collector</b> helps collect lottery chat lines on Coolhole.</li>
   <li>Works on YouTube, Vimeo, Twitch, TikTok, Instagram, X, Reddit, Dailymotion, Kick and any HTML5 video.</li>
-  <li>Themes: Default, Old Steam, King Cobra, or Match Coolhole (incl. Cinema, Black Spring and Battle.net).</li>
+  <li>Choose Default, Old Steam or King Cobra themes, or match Coolhole's supported themes. Turn the pill off for individual sites in settings.</li>
 </ul></section>
 
 <div class="grid">
 <section><h2>Install on Chrome / Edge / Brave</h2><ol>
-  <li>Download the Chrome zip and <b>unzip</b> it.</li>
+  <li>Click <b>Download for Chrome / Edge / Brave</b> above and <b>unzip</b> the downloaded file.</li>
   <li>Go to <code>chrome://extensions</code> and enable <b>Developer mode</b>.</li>
-  <li><b>Load unpacked</b> and choose the folder.</li></ol></section>
+  <li>Click <b>Load unpacked</b> and choose the extracted folder containing <code>manifest.json</code>.</li>
+  <li>Open <a href="https://coolhole.org">Coolhole</a> and log in. The extension is ready to use.</li></ol></section>
 <section><h2>Install on Firefox</h2><ol>
-  <li>Download the Firefox zip.</li>
+  <li>Click <b>Download for Firefox</b> above.</li>
   <li>Open <code>about:debugging#/runtime/this-firefox</code>.</li>
-  <li><b>Load Temporary Add-on</b> and pick the zip.</li></ol>
-  <p style="opacity:.7;font-size:.9rem;margin:0">Temporary add-ons reset when Firefox restarts.</p></section>
+  <li>Click <b>Load Temporary Add-on</b> and select the downloaded ZIP.</li>
+  <li>Open <a href="https://coolhole.org">Coolhole</a> and log in. Firefox temporary add-ons must be loaded again after Firefox restarts.</li></ol></section>
 </div>
+
+<section><h2>How it works</h2><ol>
+  <li>The extension checks pages for HTML5 videos and known video links, then shows a small <b>CH | CP</b> pill when you point at a video.</li>
+  <li>Clicking <b>CH</b> sends that video's link (and available title, duration and thumbnail) to a Coolhole tab. If no Coolhole tab is open, it opens one and passes the queue request.</li>
+  <li>Coolhole adds the video to its queue when there is room. Otherwise, it can be kept in the extension's <b>Q+</b> waiting list; with auto-queue enabled, one Coolhole tab sends the next item when a slot becomes available.</li>
+  <li>Your settings, waiting list, history and pins are saved in your browser. Queue data is separated by the Coolhole account detected in the current tab.</li>
+  <li>Open the extension's settings page from your browser's extensions menu to change themes, site toggles, queue behavior, opacity and data export/import.</li>
+</ol></section>
 
 <section><h2>Shortcuts</h2>
 <ul><li><kbd>Ctrl+Shift+Q</kbd> queue current video</li><li><kbd>Ctrl+Shift+W</kbd> focus Coolhole + Work</li><li><kbd>Ctrl+Shift+H</kbd> toggle Hist / Q+ panel</li></ul></section>
+
+<section><h2>Privacy and permissions</h2>
+<p>The extension needs access to pages you visit so it can find videos and show the pill. Video details are sent to Coolhole only when you choose to queue or schedule a video. It may fetch public page metadata (such as a title, duration or thumbnail) to label that item. Settings and queue history stay in browser storage, separated by Coolhole account. The extension also needs access to Coolhole to pass queue and Work actions between tabs.</p>
+<p>Videos from TikTok, Instagram, X, Reddit and Kick may not play on Coolhole; those links are marked with an asterisk.</p>
+</section>
 
 <footer>MIT licensed · by aSoapyoid · not affiliated with Coolhole</footer>
 </main></body></html>
