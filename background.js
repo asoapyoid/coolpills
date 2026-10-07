@@ -172,46 +172,88 @@ async function resolveXVideo(postUrl) {
   const match = post.pathname.match(/^\/([^/]+)\/status\/(\d+)/i);
   if (!match) return { ok: false, error: 'Could not find a post ID in the X link.' };
 
-  const apiUrl = 'https://api.vxtwitter.com/' + encodeURIComponent(match[1]) + '/status/' + match[2];
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
-  let response;
-  try {
-    response = await fetch(apiUrl, {
-      credentials: 'omit',
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeout);
+  const postPath = '/' + encodeURIComponent(match[1]) + '/status/' + match[2];
+  const providers = [
+    { name: 'VxTwitter', url: 'https://api.vxtwitter.com' + postPath },
+    { name: 'FxTwitter', url: 'https://api.fxtwitter.com' + postPath },
+  ];
+  const failures = [];
+
+  for (const provider of providers) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(provider.url, {
+        credentials: 'omit',
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        failures.push(provider.name + ' returned HTTP ' + response.status);
+        continue;
+      }
+
+      const data = await response.json();
+      const candidates = [];
+      const seen = new Set();
+      const visit = (value) => {
+        if (typeof value === 'string') {
+          const url = trustedXVideoUrl(value);
+          if (url && !seen.has(url)) {
+            seen.add(url);
+            candidates.push({ url, thumbnail: null, duration: null });
+          }
+          return;
+        }
+        if (!value || typeof value !== 'object') return;
+        if (Array.isArray(value)) {
+          value.forEach(visit);
+          return;
+        }
+        const url = trustedXVideoUrl(value.url || value.src || value.video_url || value.download_url);
+        if (url && !seen.has(url)) {
+          seen.add(url);
+          const durationMillis = value.duration_millis != null ? value.duration_millis
+            : value.duration_ms != null ? value.duration_ms : value.durationMs;
+          const durationNumber = Number(durationMillis != null ? durationMillis : value.duration);
+          const duration = Number.isFinite(durationNumber) && durationNumber > 0
+            ? Math.round(durationMillis != null || durationNumber > 1000 ? durationNumber / 1000 : durationNumber)
+            : null;
+          candidates.push({
+            url,
+            thumbnail: value.thumbnail_url || value.thumbnail || value.poster || null,
+            duration,
+          });
+        }
+        Object.values(value).forEach(visit);
+      };
+      visit(data);
+
+      const media = candidates[0];
+      if (media) {
+        const tweet = data.tweet && typeof data.tweet === 'object' ? data.tweet : data;
+        return {
+          ok: true,
+          url: media.url,
+          title: typeof tweet.text === 'string' ? tweet.text.slice(0, 120) : null,
+          thumbnail: media.thumbnail,
+          duration: media.duration,
+        };
+      }
+      failures.push(provider.name + ' found no downloadable MP4');
+    } catch (error) {
+      failures.push(provider.name + ' failed (' + (
+        error && error.name === 'AbortError' ? 'timed out' : 'network or response error'
+      ) + ')');
+    } finally {
+      clearTimeout(timeout);
+    }
   }
-  if (!response.ok) {
-    return { ok: false, error: 'VxTwitter could not read that post (HTTP ' + response.status + ').' };
-  }
-  const data = await response.json();
-  const media = Array.isArray(data.media_extended) ? data.media_extended : [];
-  const mp4 = media
-    .filter((item) => item && item.type === 'video')
-    .map((item) => ({
-      url: trustedXVideoUrl(item.url),
-      thumbnail: item.thumbnail_url || null,
-      duration: Number.isFinite(Number(item.duration_millis)) && Number(item.duration_millis) > 0
-        ? Math.round(Number(item.duration_millis) / 1000)
-        : null,
-    }))
-    .find((item) => item.url);
-  const fallbackUrl = mp4 ? null : (Array.isArray(data.mediaURLs) ? data.mediaURLs : [])
-    .map(trustedXVideoUrl)
-    .find(Boolean);
-  const url = mp4 ? mp4.url : fallbackUrl;
-  if (!url) return { ok: false, error: 'No downloadable MP4 video was found in that X post.' };
+
   return {
-    ok: true,
-    url,
-    title: typeof data.text === 'string' ? data.text.slice(0, 120) : null,
-    thumbnail: mp4 ? mp4.thumbnail : null,
-    duration: mp4 ? mp4.duration : null,
+    ok: false,
+    error: 'X video lookup failed: ' + failures.join('; ') + '.',
   };
 }
 

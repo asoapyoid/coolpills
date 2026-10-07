@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.14
+- Fall back to FxTwitter when VxTwitter cannot resolve an X/Twitter video.
+
 ## 3.0.13
 - Report Coolhole queue rejections with a useful toast and remove failed items from Q+ instead of retrying them indefinitely.
 
