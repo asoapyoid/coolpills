@@ -10,7 +10,7 @@ Detection depends on the page markup and the media being exposed by the site. A 
 
 When you choose CH or queue an item with a shortcut, Cool Pills sends the selected media link to a Coolhole tab, along with available title, duration, and thumbnail metadata. It reuses a matching open tab when possible, or opens Coolhole to handle the request.
 
-If no Coolhole tab is open, the **If no Coolhole tab is open, create one** setting controls whether a tab opens for queue requests. With the option off, Cool Pills reports that you should open a Coolhole tab. If an existing tab does not respond, the extension reports an error rather than opening another tab.
+If no Coolhole tab is open, the **If no Coolhole tab is open, create one** setting controls whether CH, Fishing, and Open Coolhole actions open a tab. With the option off, Cool Pills asks you to open one yourself. If an existing tab does not respond, the extension reports an error rather than opening another tab.
 
 ## CP actions
 
