@@ -504,7 +504,7 @@
     );
     mbody.append(el('div', 'cq-pop-sep'));
     const checks = {};
-    [['unAfk', 'Un-AFK before Fishing'], ['autoFocus', 'Auto-focus Coolhole tab']].forEach(([k, text]) => {
+    [['unAfk', 'Un-AFK'], ['autoFocus', 'Auto-focus Coolhole tab']].forEach(([k, text]) => {
       const lab = el('label');
       const c = el('input', null, null, { type: 'checkbox' });
       checks[k] = c;

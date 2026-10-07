@@ -711,15 +711,18 @@
   const fishReady = (b) => !!b && !b.disabled && b.getAttribute('aria-disabled') !== 'true';
   const readout = () => (($('#fishing-readout') || {}).textContent || '').replace(/\s+/g, ' ').trim();
 
+  /** Un-AFK option: clicking CP takes you out of AFK on Coolhole before the CP action runs */
+  async function unAfkIfNeeded() {
+    if (!cfg().unAfk) return;
+    try {
+      const afk = $('button.job-action-afk') || $('#job-actions button[title*="AFK" i]');
+      const me = $('#username');
+      if (afk && me && me.classList.contains('user-afk')) { afk.click(); await sleep(200); }
+    } catch (_) { /* ignore */ }
+  }
+
   async function doWork() {
-    const s = cfg();
-    if (s.unAfk) {
-      try {
-        const afk = $('button.job-action-afk') || $('#job-actions button[title*="AFK" i]');
-        const me = $('#username');
-        if (afk && me && me.classList.contains('user-afk')) { afk.click(); await sleep(200); }
-      } catch (_) { /* ignore */ }
-    }
+    await unAfkIfNeeded();
     let btn = fishBtn();
     for (let i = 0; i < 20 && !btn; i++) { await sleep(250); btn = fishBtn(); }
     if (!btn) return toast('Fishing button not found — are you logged in?', 'error');
@@ -777,6 +780,7 @@
   // ══ Custom CP (experimental) ═════════════════════════════════════
   // No code execution (extension CSP forbids it): each step is a CSS selector, clicked in order.
   async function doCustom(p) {
+    await unAfkIfNeeded();
     const steps = Array.isArray(p.steps) ? p.steps : [];
     let done = 0;
     for (const sel of steps) {
