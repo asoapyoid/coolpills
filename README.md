@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.1.3](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.3) |
+| **Current release** | [v3.1.4](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.4) |
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
@@ -17,8 +17,8 @@ See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the f
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.3.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.3.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.4.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.4.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -43,7 +43,7 @@ Firefox's temporary add-on is removed when Firefox closes; load it again after r
 
 1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube, Vimeo, Twitch, TikTok, Instagram and its mirror domains, X/Twitter, Reddit, Dailymotion, Kick, Facebook, Threads and generic HTML5 videos. For social feeds, it can also recognize smaller videos and thumbnails inside marked video posts. If it cannot find a title, the item is labeled "Raw Video".
 2. **Send it to Coolhole.** Click **CH** to queue the current video. Cool Pills passes the video link and available metadata (title, duration and thumbnail) to an open Coolhole tab. If there is no Coolhole tab, it opens one with the queue request. If the video is already queued, the control becomes **UN** so you can remove it.
-3. **Handle a full queue.** Items that cannot be added yet can wait in **Q+**, the local waiting list. Reorder items by dragging, force or schedule an item, or paste multiple links with **+Link**. With auto-queue enabled, Coolhole adds the next waiting item when a slot opens. A lock prevents multiple Coolhole tabs from sending the same item at once. If Coolhole rejects a media link, Cool Pills sends it to Coolhost for processing and queues the finished MP4; a toast reports the handoff or any failure. Items rejected from Q+ are still removed rather than retried indefinitely.
+3. **Handle a full queue.** Items that cannot be added yet can wait in **Q+**, the local waiting list. Reorder items by dragging, force or schedule an item, or paste multiple links with **+Link**. With auto-queue enabled, Coolhole adds the next waiting item when a slot opens. Before Q+ sends a direct media-file link, Cool Pills checks whether it is still reachable. Confirmed expired links are removed with a toast and sent to Coolhost to try recovery; provider page links are not pre-checked. A lock prevents multiple Coolhole tabs from sending the same item at once. If Coolhole rejects a media link, Cool Pills sends it to Coolhost for processing and queues the finished MP4; a toast reports the handoff or any failure. Items rejected from Q+ are still removed rather than retried indefinitely.
 4. **Choose what CP does.** Click **CP** to focus Coolhole and run Work by default. In settings, change CP to add to Q+ or schedule instead. Hold the pill for quick settings.
 5. **Use history and themes.** The Coolhole panel includes searchable **Hist** with pins and one-click re-queue, plus the Q+ list. Choose Default, Old Steam or King Cobra, or match supported Coolhole themes. **Gold Collector** assists with lottery chat lines.
 

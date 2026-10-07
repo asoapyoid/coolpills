@@ -484,9 +484,11 @@
       if (!result || result.ok === false) {
         throw new Error(result && result.error || 'the extension could not start the upload.');
       }
+      return true;
     } catch (error) {
       console.error('[CoolPills] could not start Coolhost recovery', error);
       toast('Could not send this video to Coolhost: ' + String(error && error.message || error), 'error');
+      return false;
     }
   }
 
@@ -563,8 +565,26 @@
       if (!fromPending) return overflow();
       if (!cfg().forceIgnoreLimit) { toast(FORCE_MSG, 'error'); return; }
     }
-
     try {
+      if (fromPending) {
+        try {
+          const check = await bg({ type: 'cq:check-media-link', url: item.mediaUrl });
+          if (check && check.checked && check.active === false) {
+            removePending(item.videoId);
+            renderIfOpen();
+            toast('Expired media link removed from Q+: ' + name() + '. Trying Coolhost recovery…', 'error');
+            if (!await sendToCoolhost(item, 'the media link has expired')) {
+              toast('The expired link was removed from Q+; Coolhost recovery could not start.', 'error');
+            }
+            return;
+          }
+          if (check && check.active == null && check.error) {
+            console.warn('[CoolPills] could not verify Q+ media link; continuing with Coolhole queue', check.error);
+          }
+        } catch (error) {
+          console.warn('[CoolPills] Q+ media link check failed; continuing with Coolhole queue', error);
+        }
+      }
       if (!item.title || item.duration == null) await enrich(item);
       const res = await roomAdd(item.mediaUrl);
       if (res === 'max') {
@@ -627,7 +647,7 @@
     if (now - S.lastAutoAt < 1200) return;
     S.autoBusy = true;
     try {
-      const lock = await bg({ type: 'cq:lock', ttl: 4000 });
+      const lock = await bg({ type: 'cq:lock', ttl: 25000 });
       if (lock && lock.granted === false) return; // another Coolhole tab is draining Q+
       S.lastAutoAt = Date.now();
       if (isDue) toast('Posting scheduled: ' + displayTitle(next), 'qplus');

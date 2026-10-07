@@ -14,6 +14,8 @@ Check the on-page toast for the reason. Cool Pills may try Coolhost recovery whe
 
 If the room queue is full, Q+ can hold the item. A queue-limit error does not trigger media recovery.
 
+Before Q+ sends a direct media-file URL, it makes a lightweight availability check. Confirmed unavailable links are removed from Q+ and sent to Coolhost to try recovery. If the check times out or the server does not provide a conclusive response, the item continues through the regular Coolhole queue flow.
+
 ## Reddit recovery fails
 
 Make sure the Reddit tab is signed in and that the post can be played there. The signed-in page must expose a valid Reddit DASH manifest. Cool Pills does not send Reddit cookies to Coolhost. Reddit's separate video and audio tracks must be processed into a playable result; a video-only file is not a successful recovery for a regular video.

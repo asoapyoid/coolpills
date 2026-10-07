@@ -22,6 +22,8 @@ Q+ is the extension's local waiting list for items that should be added later. I
 
 The queue drain uses a shared lock so multiple Coolhole tabs do not intentionally process the same Q+ item simultaneously. Items rejected as invalid or unplayable are removed rather than retried forever. An item may be sent to Coolhost after a genuine playback rejection; a queue-limit response is not treated as a playback failure.
 
+Immediately before sending a Q+ item, Cool Pills checks direct media-file links (such as MP4 or WebM) with a small byte-range request. Provider pages such as YouTube links are not pre-checked. If a direct media URL is confirmed expired or unavailable, Cool Pills removes it from Q+, tells you with a toast, and tries Coolhost recovery instead of submitting the dead URL to Coolhole. If the network check itself times out or cannot determine the status, the link continues through the normal Coolhole flow to avoid false rejections.
+
 ## History and pins
 
 Hist stores recently handled queue items in the extension's local storage. Search history, pin frequently used items, or re-queue an item. Q+ items and history are available from the floating Coolhole panel.

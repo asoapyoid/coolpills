@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.4
+- Check direct media links from Q+ just before queueing; try Coolhost recovery and remove links that are confirmed expired.
+
 ## 3.1.3
 - Detect X's visible `GIF` badge within the media area and suppress the pill for those posts.
 

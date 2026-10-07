@@ -212,6 +212,46 @@ async function fetchMeta(url) {
   return out;
 }
 
+function isDirectMediaLink(value) {
+  try {
+    const url = new URL(String(value || ''));
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return false;
+    return /\.(?:mp4|webm|mov|flv|mkv|ogg|ogv|m4v|m3u8|mpd)$/i.test(url.pathname) ||
+      /^(?:video|audio)\//i.test(url.searchParams.get('mime_type') || '');
+  } catch (_) {
+    return false;
+  }
+}
+
+async function checkDirectMediaLink(value) {
+  if (!isDirectMediaLink(value)) return { checked: false };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+  try {
+    const response = await fetch(value, {
+      method: 'GET',
+      headers: { Range: 'bytes=0-0' },
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (response.body) response.body.cancel().catch(() => {});
+    const inactive = [401, 403, 404, 410].includes(response.status) ||
+      (/^text\/html\b/i.test(contentType) && response.ok);
+    return { checked: true, active: !inactive, status: response.status };
+  } catch (error) {
+    return {
+      checked: true,
+      active: null,
+      error: String(error && error.name === 'AbortError' ? 'Timed out' : error && error.message || error),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function trustedXVideoUrl(value) {
   try {
     const url = new URL(value);
@@ -752,6 +792,13 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case 'cq:fetch-meta':
         return fetchMeta(msg.url);
+      case 'cq:check-media-link': {
+        const origin = sender.url || sender.tab && sender.tab.url || '';
+        if (!/^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin)) {
+          return { checked: false, error: 'Media link checks can only be requested by Coolhole.' };
+        }
+        return checkDirectMediaLink(msg.url);
+      }
       case 'cq:resolve-social-video':
         return resolveSocialVideo(msg.platform, msg.postUrl);
       case 'cq:lock': {
