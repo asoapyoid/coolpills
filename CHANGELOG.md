@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.10
+- Prevent duplicate extension copies from rendering overlapping pills; the newest Cool Pills pill takes priority.
+
 ## 3.0.9
 - Restore the full CH | CP pill on YouTube video cards.
 

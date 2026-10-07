@@ -460,6 +460,7 @@
   ui.createPill = (h) => {
     const host = el('div');
     host.id = 'cq-pill-host';
+    host.dataset.cqVersion = CQ.api.runtime.getManifest().version;
     host.style.cssText = 'all:initial;position:fixed;top:0;left:0;width:0;height:0;z-index:999999;';
     const shadow = host.attachShadow({ mode: 'closed' });
     const style = el('style');

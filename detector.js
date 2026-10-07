@@ -13,6 +13,19 @@
   await CQ.settings.ready;
   await ui.themeReady;
 
+  const extensionVersion = CQ.api.runtime.getManifest().version;
+  const compareVersions = (left, right) => {
+    const a = String(left || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
+    const b = String(right || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0) ? 1 : -1;
+    }
+    return 0;
+  };
+  const existingPills = Array.from(document.querySelectorAll('[id="cq-pill-host"]'));
+  if (existingPills.some((host) => compareVersions(host.dataset.cqVersion, extensionVersion) >= 0)) return;
+  existingPills.forEach((host) => host.remove());
+
   class VideoDetector {
     constructor() {
       this.adapter = CQ.adapters.forHost(location.hostname);
@@ -31,6 +44,27 @@
         onCP: (ctx) => this.cpClick(ctx),
         onSchedule: (ctx, ts) => this.queue(ctx, { forceQPlus: true, scheduledAt: ts }),
       });
+      this.pill.host.dataset.cqVersion = extensionVersion;
+      const pillObserver = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            const candidates = [];
+            if (node.matches('[id="cq-pill-host"]')) candidates.push(node);
+            candidates.push(...node.querySelectorAll('[id="cq-pill-host"]'));
+            for (const candidate of candidates) {
+              if (candidate === this.pill.host) continue;
+              if (compareVersions(candidate.dataset.cqVersion, extensionVersion) > 0) {
+                this.pill.host.remove();
+                pillObserver.disconnect();
+                return;
+              }
+              candidate.remove();
+            }
+          }
+        }
+      });
+      pillObserver.observe(document.documentElement, { childList: true, subtree: true });
       this.bind();
     }
 
