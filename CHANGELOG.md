@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.23
+- Prefer MP4 links for unrecognized sites and accept non-MP4 links only for CyTube-native providers, raw media files and HLS playlists.
+- Use CyTube-native Twitch clip links instead of resolving them through Clipr.
+
 ## 3.0.22
 - Do not queue RedditSave's `download.php` download endpoint as if it were playable media; only accept a direct MP4, otherwise continue through the original Reddit link and Coolhost recovery.
 

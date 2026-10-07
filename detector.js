@@ -162,11 +162,12 @@
       let c = this.withResolvedMedia(this.fresh(ctx));
       if (!c || !c.url) return;
       const cacheKey = c.platform + ':' + c.postUrl;
-      if (c.postUrl && ['x', 'reddit', 'facebook', 'instagram', 'tiktok', 'twitch'].includes(c.platform) &&
+      if (c.postUrl && ['x', 'reddit', 'facebook', 'instagram', 'tiktok'].includes(c.platform) &&
+        !CQ.isNativeCoolholeUrl(c.postUrl) &&
         !this.resolvedMedia.has(cacheKey)) {
         const siteName = {
           x: 'X', reddit: 'Reddit', facebook: 'Facebook',
-          instagram: 'Instagram', tiktok: 'TikTok', twitch: 'Twitch',
+          instagram: 'Instagram', tiktok: 'TikTok',
         }[c.platform];
         let pending = this.resolvingMedia.get(cacheKey);
         if (!pending) {

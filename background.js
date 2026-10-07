@@ -479,18 +479,6 @@ function trustedTikTokVideoUrl(value) {
   }
 }
 
-function trustedTwitchClipUrl(value) {
-  try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    return url.protocol === 'https:' &&
-      (host === 'clips-media-assets.twitch.tv' || host.endsWith('.clips-media-assets.twitch.tv')) &&
-      /\.mp4$/i.test(url.pathname) ? url.href : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 function socialHtml(value) {
   return decode(String(value || ''))
     .replace(/\\u002f/gi, '/')
@@ -543,7 +531,6 @@ function validPublicPost(value, platform) {
     instagram: ['instagram.com', 'www.instagram.com', 'm.instagram.com', 'ddinstagram.com', 'www.ddinstagram.com',
       'kkinstagram.com', 'www.kkinstagram.com'].includes(host),
     tiktok: ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'].includes(host),
-    twitch: ['twitch.tv', 'www.twitch.tv', 'm.twitch.tv', 'clips.twitch.tv'].includes(host),
   };
   return matches[platform] ? url : null;
 }
@@ -692,36 +679,12 @@ async function resolveTikTokVideo(postUrl) {
   return { ok: false, error: 'TikTok video lookup failed: ' + failures.join('; ') + '.' };
 }
 
-async function resolveTwitchClip(postUrl) {
-  const post = validPublicPost(postUrl, 'twitch');
-  if (!post) return { ok: false, error: 'Only Twitch clip links can be resolved.' };
-  const match = post.pathname.match(/\/clip\/([^/]+)/i) || post.hostname === 'clips.twitch.tv' && post.pathname.match(/^\/([^/]+)/);
-  if (!match) return { ok: false, error: 'Could not find a clip ID in that Twitch link.' };
-  try {
-    const { response, text } = await fetchSocialText('https://clipr.io/' + encodeURIComponent(match[1]), {
-      headers: { Accept: 'text/html,application/xhtml+xml' },
-    });
-    if (!response.ok) return { ok: false, error: 'Clipr returned HTTP ' + response.status + '.' };
-    const url = linksFromHtml(text).map(trustedTwitchClipUrl).find(Boolean);
-    if (!url) return { ok: false, error: 'Clipr did not expose a direct Twitch MP4.' };
-    return { ok: true, url, title: titleFromHtml(text) };
-  } catch (error) {
-    return {
-      ok: false,
-      error: 'Twitch clip lookup failed (' + (
-        error && error.name === 'AbortError' ? 'timed out' : 'Clipr unavailable'
-      ) + ').',
-    };
-  }
-}
-
 async function resolveSocialVideo(platform, postUrl) {
   if (platform === 'x') return resolveXVideo(postUrl);
   if (platform === 'reddit') return resolveRedditVideo(postUrl);
   if (platform === 'facebook') return resolveFacebookVideo(postUrl);
   if (platform === 'instagram') return resolveInstagramVideo(postUrl);
   if (platform === 'tiktok') return resolveTikTokVideo(postUrl);
-  if (platform === 'twitch') return resolveTwitchClip(postUrl);
   return { ok: false, error: 'No resolver is available for that site.' };
 }
 

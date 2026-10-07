@@ -9,14 +9,14 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.0.22](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.22) |
+| **Current release** | [v3.0.23](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.23) |
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.22.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.22.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.23.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.23.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -39,7 +39,7 @@ Firefox's temporary add-on is removed when Firefox closes; load it again after r
 
 ## How it works
 
-1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube, Vimeo, Twitch, TikTok, Instagram and its mirror domains, X/Twitter, Reddit, Dailymotion, Kick, Facebook, Threads and generic HTML5 videos. Twitch clips use Clipr to look for a direct MP4; Twitch streams keep their existing flow. For social feeds, it can also recognize smaller videos and thumbnails inside marked video posts. If it cannot find a title, the item is labeled "Raw Video".
+1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube, Vimeo, Twitch, TikTok, Instagram and its mirror domains, X/Twitter, Reddit, Dailymotion, Kick, Facebook, Threads and generic HTML5 videos. For social feeds, it can also recognize smaller videos and thumbnails inside marked video posts. If it cannot find a title, the item is labeled "Raw Video".
 2. **Send it to Coolhole.** Click **CH** to queue the current video. Cool Pills passes the video link and available metadata (title, duration and thumbnail) to an open Coolhole tab. If there is no Coolhole tab, it opens one with the queue request. If the video is already queued, the control becomes **UN** so you can remove it.
 3. **Handle a full queue.** Items that cannot be added yet can wait in **Q+**, the local waiting list. Reorder items by dragging, force or schedule an item, or paste multiple links with **+Link**. With auto-queue enabled, Coolhole adds the next waiting item when a slot opens. A lock prevents multiple Coolhole tabs from sending the same item at once. If Coolhole rejects a media link, Cool Pills sends it to Coolhost for processing and queues the finished MP4; a toast reports the handoff or any failure. Items rejected from Q+ are still removed rather than retried indefinitely.
 4. **Choose what CP does.** Click **CP** to focus Coolhole and run Work by default. In settings, change CP to add to Q+ or schedule instead. Hold the pill for quick settings.
@@ -91,7 +91,9 @@ Browsers may reserve a shortcut. Remap it in the browser's extension shortcut se
 
 Cool Pills runs on pages where it looks for videos, so the browser asks to allow access to sites you visit. It uses browser storage for your settings and queue-related data, and communicates with Coolhole to carry out queue and Work actions. When you choose to queue or schedule, the selected video link and its available metadata are sent to Coolhole. The extension may fetch public page metadata such as a title, duration or thumbnail so queued items are recognizable.
 
-When queuing a social post without an exposed media file, Cool Pills tries a site-specific public resolver: X uses VxTwitter then FxTwitter; Reddit checks RapidSave only for a direct MP4 file; TikTok tries TikWM then MusicalDown; Facebook tries FBDown; Instagram tries the ddinstagram mirror; Twitch clips try Clipr. A Reddit `download.php` endpoint is a download action, not a playable media URL, so Cool Pills will not queue it. Reddit video-only streams are also not used for regular videos because that can remove the audio. Resolver results are accepted only from the expected media hosts (for example Twitch's `clips-media-assets.twitch.tv` or TikTok's video CDN), and no source-site login cookies are sent. These services receive the public post URL when you click to queue it. If a lookup fails, Cool Pills continues with the original post URL rather than stopping, so Coolhole can try it and Coolhost recovery can run if Coolhole rejects it. On other sites, when the hovered HTML5 player exposes a direct MP4/WebM URL, Cool Pills queues that media file rather than the surrounding page. Private, region-restricted, expired, or login-gated media may still fail both a resolver and Coolhost.
+Cool Pills prefers a direct MP4 for sites that Coolhole does not recognize. If the player only exposes another format, it keeps the page link rather than passing an unverified non-MP4 stream; native HLS playlists and direct raw-media URLs are exceptions. Known native links are retained for CyTube's built-in players, based on [CyTube's URL parser](https://github.com/calzoneman/sync/blob/master/www/js/util.js) and [player map](https://github.com/calzoneman/sync/blob/master/player/update.coffee). That list includes YouTube, Vimeo, Dailymotion, Google Drive, SoundCloud, Livestream, Twitch (including clips), Streamable, PeerTube, Bandcamp tracks, BitChute, Odysee, and NicoNico.
+
+When queuing a social post without an exposed MP4, Cool Pills tries a site-specific public resolver: X uses VxTwitter then FxTwitter; Reddit checks RapidSave only for a direct MP4 file; TikTok tries TikWM then MusicalDown; Facebook tries FBDown; Instagram tries the ddinstagram mirror. A Reddit `download.php` endpoint is a download action, not a playable media URL, so Cool Pills will not queue it. Reddit video-only streams are also not used for regular videos because that can remove the audio. Resolver results are accepted only from the expected media hosts, and no source-site login cookies are sent. These services receive the public post URL when you click to queue it. If a lookup fails, Cool Pills continues with the original post URL rather than stopping, so Coolhole can try it and Coolhost recovery can run if Coolhole rejects it. Private, region-restricted, expired, or login-gated media may still fail both a resolver and Coolhost.
 
 If Coolhole rejects a selected link as unplayable, Cool Pills automatically sends that link and its title to Coolhost (`coolhost.ca`) for processing. The browser uses your Coolhost session for this request if you are signed in; the original site's cookies are not sent by Cool Pills. Coolhost receives the submitted URL and may need to fetch the media from its source. The finished Coolhost MP4 is then sent to Coolhole; it is not queued before processing completes. This does not happen when Coolhole is merely at its queue limit or when the link is already hosted on Coolhost. A **CH** button beside each active Coolhost upload link also lets you queue it manually; expired uploads are not given a button.
 

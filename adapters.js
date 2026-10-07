@@ -27,6 +27,37 @@
       return null;
     }
   };
+  const isNativeCoolholeUrl = (value) => {
+    try {
+      const url = new URL(value);
+      const host = url.hostname.toLowerCase().replace(/^www\./, '');
+      const path = url.pathname;
+      if (url.protocol === 'rtmp:' || /\.m3u8$/i.test(path) || /\.json$/i.test(path)) return true;
+      if ([
+        'youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com', 'soundcloud.com',
+        'twitch.tv', 'clips.twitch.tv', 'livestream.com', 'streamable.com',
+        'docs.google.com', 'drive.google.com', 'bitchute.com', 'nicovideo.jp', 'odysee.com',
+      ].includes(host)) {
+        if (host === 'livestream.com') return /^\/accounts\/\d+\/events\/\d+(?:\/|$)/.test(path);
+        if (host === 'docs.google.com' || host === 'drive.google.com') {
+          return path.startsWith('/file/') || path === '/open';
+        }
+        if (host === 'bitchute.com') return path.startsWith('/video/');
+        if (host === 'nicovideo.jp') return path.startsWith('/watch/');
+        if (host === 'odysee.com') return /^\/@[^/]+(?:\/|:)[^/]+/.test(path);
+        return true;
+      }
+      if (host.endsWith('.bandcamp.com') && path.startsWith('/track/')) return true;
+      const peerTubePath = path.match(/^\/(?:w|videos\/watch)\/([^/]+)/);
+      if (peerTubePath && (/^[a-zA-Z0-9]{22}$/.test(peerTubePath[1]) ||
+        /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(peerTubePath[1]))) return true;
+      return /\.(?:mp4|mov|flv|webm|mkv|ogg|ogv|m4v)$/i.test(path);
+    } catch (_) {
+      return false;
+    }
+  };
+  // Native link rules mirror CyTube's parser and player map; unknown sites must expose MP4 first.
+  CQ.isNativeCoolholeUrl = isNativeCoolholeUrl;
   const textOf = (sel, root = document) => {
     const el = root.querySelector(sel);
     return el ? clean(el.getAttribute('data-title') || el.textContent) : null;
@@ -36,13 +67,25 @@
   const directVideoUrl = (video) => {
     if (!video) return null;
     const sources = [video.currentSrc, video.src, ...Array.from(video.querySelectorAll('source[src]'), (source) => source.src)];
+    const hls = [];
     for (const source of sources) {
       if (!source || /^blob:/i.test(source)) continue;
       const url = abs(source);
-      if (url && /^https?:/i.test(url) && /\.(mp4|webm|mov|mkv|ogv|m4v)(?:$|[?#])/i.test(url)) return url;
+      if (!url || !/^https?:/i.test(url)) continue;
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch (_) {
+        continue;
+      }
+      if (/\.mp4$/i.test(parsed.pathname) ||
+        /^(?:video_mp4|video\/mp4)$/i.test(parsed.searchParams.get('mime_type') || '')) return url;
+      if (/\.m3u8$/i.test(parsed.pathname)) hls.push(url);
     }
-    return null;
+    return hls[0] || null;
   };
+  const nativeOrDirect = (video, pageUrl) =>
+    isNativeCoolholeUrl(pageUrl) ? pageUrl : directVideoUrl(video) || pageUrl;
 
   /** closest() that crosses shadow-DOM boundaries */
   const closestDeep = (node, sel) => {
@@ -362,7 +405,7 @@
     context(v) {
       const link = linkIn(v, 'article, li, [data-clip-id], .clip_grid_item', 'a[href*="vimeo.com/"], a[href^="/"]');
       const url = /vimeo\.com\/(\d+|channels|groups)/.test(location.href) ? location.href : link || location.href;
-      return base(v, url, textOf('[data-title]') || pageTitle(), 'yes');
+      return base(v, nativeOrDirect(v, url), textOf('[data-title]') || pageTitle(), 'yes');
     },
   };
 
@@ -375,16 +418,9 @@
         'a[href*="/clip/"], a[href*="clips.twitch.tv/"]');
       const url = /\/clip\//i.test(location.pathname) || location.hostname === 'clips.twitch.tv'
         ? location.href : clipLink || location.origin + location.pathname;
-      const isClip = /\/clip\/[^/]+/i.test(new URL(url).pathname) || new URL(url).hostname === 'clips.twitch.tv';
       const title = textOf('[data-a-target="video-title"]') ||
         (stream ? (channel ? channel + ' — ' + stream : stream) : pageTitle());
-      const direct = directVideoUrl(v);
-      const context = base(v, direct || url, title, direct ? 'yes' : isClip ? 'no' : 'yes');
-      if (!direct && isClip) {
-        context.platform = 'twitch';
-        context.postUrl = url;
-      }
-      return context;
+      return base(v, nativeOrDirect(v, url), title, 'yes');
     },
   };
 
@@ -395,7 +431,7 @@
       const url = /\/video\//.test(location.pathname) ? location.href : link || location.href;
       const desc = textOf('[data-e2e="browse-video-desc"]') || textOf('[data-e2e="video-desc"]');
       const direct = directVideoUrl(v);
-      const context = base(v, direct || url, desc || meta('meta[property="og:title"]'), direct ? 'yes' : 'no');
+      const context = base(v, nativeOrDirect(v, url), desc || meta('meta[property="og:title"]'), direct ? 'yes' : 'no');
       if (!direct) {
         context.platform = 'tiktok';
         context.postUrl = url;
@@ -410,7 +446,7 @@
       const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]');
       const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;
       const direct = directVideoUrl(v);
-      const context = base(v, direct || url, pageTitle(), direct ? 'yes' : 'no');
+      const context = base(v, nativeOrDirect(v, url), pageTitle(), direct ? 'yes' : 'no');
       if (!direct) {
         context.platform = 'instagram';
         context.postUrl = url;
@@ -436,7 +472,7 @@
         }
       }
       const direct = directVideoUrl(v);
-      const context = base(v, direct || url, title && title.slice(0, 120), direct ? 'yes' : 'no');
+      const context = base(v, nativeOrDirect(v, url), title && title.slice(0, 120), direct ? 'yes' : 'no');
       if (!direct) {
         context.platform = 'x';
         context.postUrl = url;
@@ -458,7 +494,7 @@
         title = clean(post.getAttribute('post-title')) || textOf('[slot="title"], h1, h3', post);
       }
       const direct = directVideoUrl(v);
-      const context = base(v, direct || url, title, direct ? 'yes' : 'no');
+      const context = base(v, nativeOrDirect(v, url), title, direct ? 'yes' : 'no');
       if (!direct) {
         context.platform = 'reddit';
         context.postUrl = url;
@@ -472,7 +508,7 @@
     context(v) {
       const link = linkIn(v, 'article, li', 'a[href*="/video/"]');
       const url = /\/video\//.test(location.pathname) ? location.href : link || location.href;
-      return base(v, url, pageTitle(), 'yes');
+      return base(v, nativeOrDirect(v, url), pageTitle(), 'yes');
     },
   };
 
@@ -480,7 +516,8 @@
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
       const direct = directVideoUrl(v);
-      return base(v, direct || location.origin + location.pathname, pageTitle() || clean(document.title), direct ? 'yes' : 'no');
+      const url = location.origin + location.pathname;
+      return base(v, nativeOrDirect(v, url), pageTitle() || clean(document.title), direct ? 'yes' : 'no');
     },
   };
 
@@ -495,7 +532,7 @@
       const direct = directVideoUrl(v);
       const title = post && textOf('[data-ad-preview="message"]', post);
       const url = (link && abs(link.getAttribute('href'))) || location.href;
-      const context = base(v, direct || url, title, direct ? 'yes' : 'no');
+      const context = base(v, nativeOrDirect(v, url), title, direct ? 'yes' : 'no');
       if (!direct) {
         context.platform = 'facebook';
         context.postUrl = url;
@@ -511,7 +548,8 @@
       const link = post && post.querySelector('a[href*="/post/"]');
       const direct = directVideoUrl(v);
       const title = post && textOf('[data-testid="post-text"], [dir="auto"]');
-      return base(v, direct || (link && abs(link.getAttribute('href'))) || location.href, title, direct ? 'yes' : 'no');
+      const url = (link && abs(link.getAttribute('href'))) || location.href;
+      return base(v, nativeOrDirect(v, url), title, direct ? 'yes' : 'no');
     },
   };
 
@@ -519,7 +557,7 @@
     id: 'generic', label: 'Any HTML5 video', hosts: /./, supported: 'maybe',
     context(v) {
       const direct = directVideoUrl(v);
-      return base(v, direct || location.href, pageTitle(), direct ? 'yes' : 'maybe');
+      return base(v, nativeOrDirect(v, location.href), pageTitle(), direct ? 'yes' : 'maybe');
     },
   };
 
