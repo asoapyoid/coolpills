@@ -338,7 +338,7 @@
 
   const findShare = (roots) => {
     for (const root of roots.filter(Boolean)) {
-      const btns = root.querySelectorAll('button, a[role="button"], yt-button-view-model button');
+      const btns = deepQueryAll(root, 'button, a[role="button"], yt-button-view-model button');
       for (const b of btns) {
         const lab = (b.getAttribute('aria-label') || b.getAttribute('title') || b.textContent || '').toLowerCase();
         if (!/\bshare\b/.test(lab)) continue;
@@ -351,7 +351,7 @@
   let shareCache = { at: 0, el: null, shorts: false };
   const currentShare = () => {
     if (Date.now() - shareCache.at < 600) return shareCache;
-    const shorts = onShortsPage();
+    const shorts = /^\/shorts\//i.test(location.pathname);
     const el = shorts
       ? findShare([
           document.querySelector('ytd-reel-video-renderer[is-active]'),
@@ -381,7 +381,7 @@
           ctx: () => ytCtx(id, ytCardTitle(card), ytCardDuration(card)),
         };
       }
-      if (/^\/watch/.test(location.pathname) || onShortsPage()) {
+      if (/^\/watch/.test(location.pathname) || /^\/shorts\//i.test(location.pathname)) {
         const sh = currentShare();
         if (sh.el && stack.some((e) => e === sh.el || sh.el.contains(e))) {
           return {

@@ -2,6 +2,7 @@
 
 ## 3.1.6
 - Avoid opening another Coolhost tab when an existing tab is unresponsive; retry the most recently used tab and report an actionable error if it still does not respond.
+- On YouTube Shorts watch pages, show the pill when hovering the Share control, including when YouTube renders it inside a shadow root.
 
 ## 3.1.5
 - Avoid opening a second Coolhole tab when an existing tab is slow or unresponsive; try other open Coolhole tabs and show an actionable error if none respond.
