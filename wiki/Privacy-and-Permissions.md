@@ -4,6 +4,8 @@ Prefer running the original script with Tampermonkey instead of installing the b
 
 Cool Pills runs on websites so it can detect video players and place controls next to them. The browser therefore asks for permission to access pages where the extension runs. It uses extension storage for settings, Q+, history, pins, and related state.
 
+The Firefox build declares **browsing activity** and **website content** as required data categories because video detection reads the current page URL and page content. Cool Pills uses this information to identify videos; it sends a selected media URL and available metadata to the relevant service only when you use a feature such as queueing or recovery, as described below. It does not collect this information for analytics or advertising.
+
 ## Data sent when you use the extension
 
 - **Coolhole:** when you queue or schedule an item, Cool Pills sends the selected media URL and available title, duration, and thumbnail to Coolhole.
