@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Cool Pills — Settings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="icons/icon32.png">
+  <link rel="icon" href="icon32.png">
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
@@ -71,6 +71,16 @@
       <ul id="shortcuts"></ul>
       <p class="hint">Change them at <code>chrome://extensions/shortcuts</code> (Firefox: Add-ons → ⚙ → Manage Extension Shortcuts).
         Some browsers reserve Ctrl+Shift+Q.</p>
+    </section>
+
+    <section>
+      <h2>Updates</h2>
+      <div class="row">
+        <button id="checkUpdates" type="button">Check for updates</button>
+        <span id="updateStatus" class="hint" role="status" aria-live="polite">Click to check the latest GitHub release.</span>
+      </div>
+      <p class="hint">If an update is available, download the ZIP and install it manually. Chrome, Edge and Brave require replacing the unpacked files and clicking Reload on the extensions page. Firefox temporary add-ons must be loaded again from the new ZIP.</p>
+      <div id="updateLink"></div>
     </section>
 
     <section>

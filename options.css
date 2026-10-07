@@ -15,6 +15,8 @@ input[type=text]{flex:1}
 output{min-width:40px;text-align:right}
 button{border:0;border-radius:6px;padding:6px 12px;background:var(--accent);color:#fff;font:600 13px system-ui;cursor:pointer}
 button.danger{background:var(--red)}
+#updateLink{margin-top:8px}
+#updateLink a{color:var(--accent);font-weight:600}
 ul{list-style:none;padding:0;margin:6px 0}
 li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--edge)}
 li button{padding:2px 8px}

@@ -7,6 +7,72 @@
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const status = (t) => { $('status').textContent = t; setTimeout(() => ($('status').textContent = ''), 4000); };
+  $('updateStatus').textContent = 'Installed version ' + api.runtime.getManifest().version + '.';
+
+  const compareVersions = (left, right) => {
+    const parse = (version) => {
+      const match = String(version).match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+      return match ? match.slice(1).map(Number) : null;
+    };
+    const a = parse(left);
+    const b = parse(right);
+    if (!a || !b) throw new Error('GitHub returned an invalid version number.');
+    for (let i = 0; i < 3; i++) {
+      if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1;
+    }
+    return 0;
+  };
+
+  $('checkUpdates').addEventListener('click', async () => {
+    const button = $('checkUpdates');
+    const message = $('updateStatus');
+    const linkBox = $('updateLink');
+    button.disabled = true;
+    message.textContent = 'Checking GitHub for the latest release…';
+    linkBox.replaceChildren();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch('https://api.github.com/repos/asoapyoid/coolpills/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error('GitHub returned HTTP ' + response.status + '.');
+      const release = await response.json();
+      const currentVersion = api.runtime.getManifest().version;
+      const latestVersion = String(release.tag_name || '').replace(/^v/, '');
+      if (compareVersions(latestVersion, currentVersion) <= 0) {
+        message.textContent = 'You are up to date (v' + currentVersion + ').';
+        return;
+      }
+
+      const browserName = /firefox/i.test(navigator.userAgent) ? 'firefox' : 'chrome';
+      const assetName = 'cool-pills-' + browserName + '-' + latestVersion + '.zip';
+      const asset = Array.isArray(release.assets) && release.assets.find((item) => item.name === assetName);
+      message.textContent = 'Cool Pills v' + latestVersion + ' is available (you have v' + currentVersion + ').';
+      if (asset && /^https:\/\/github\.com\/asoapyoid\/coolpills\/releases\/download\//.test(asset.browser_download_url)) {
+        const download = el('a', null, 'Download update for ' + (browserName === 'firefox' ? 'Firefox' : 'Chrome / Edge / Brave'));
+        download.href = asset.browser_download_url;
+        download.rel = 'noopener';
+        download.setAttribute('download', assetName);
+        linkBox.append(download);
+      } else {
+        const releaseLink = el('a', null, 'Open v' + latestVersion + ' release on GitHub');
+        releaseLink.href = release.html_url;
+        releaseLink.rel = 'noopener';
+        linkBox.append(releaseLink);
+        message.textContent += ' The browser download ZIP is not attached yet.';
+      }
+    } catch (error) {
+      message.textContent = error.name === 'AbortError'
+        ? 'Could not check for updates: the GitHub request timed out.'
+        : 'Could not check for updates: ' + error.message;
+    } finally {
+      clearTimeout(timeout);
+      button.disabled = false;
+    }
+  });
 
   const BOOLS = ['grayButtons', 'disableCinemaIdleHide', 'unAfk', 'autoFocus', 'qPlusEnabled', 'autoQueue', 'forceIgnoreLimit', 'goldChatHist', 'genericEnabled'];
 
