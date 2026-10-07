@@ -333,6 +333,8 @@
   box-shadow:var(--cq-tgsh,0 0 0 0 transparent),var(--cq-tsh,0 4px 18px rgba(0,0,0,.4))}
 #cq-toast.cq-gold-qplus{color:#1a0c00;background:linear-gradient(135deg,#bf360c,#ff8a65 35%,#e65100 70%,#bf360c);
   background-size:200% 200%;animation:cq-gold-shine 1.8s ease-in-out infinite;border-color:rgba(255,171,145,.45)}
+#cq-toast.cq-gold,#cq-toast.cq-gold-qplus{-webkit-text-stroke:.65px #000;paint-order:stroke fill;
+  text-shadow:0 1px 2px rgba(0,0,0,.8)}
 @keyframes cq-gold-shine{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
 @keyframes cq-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){#cq-toast,#cq-toast.cq-fail,#cq-toast.cq-gold,#cq-toast.cq-gold-qplus{animation:none;transition:opacity .15s ease}}
