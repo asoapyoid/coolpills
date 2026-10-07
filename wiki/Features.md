@@ -10,6 +10,12 @@ Detection depends on the page markup and the media being exposed by the site. A 
 
 When you choose CH or queue an item with a shortcut, Cool Pills sends the selected media link to a Coolhole tab, along with available title, duration, and thumbnail metadata. It reuses a matching open tab when possible, or opens Coolhole to handle the request.
 
+If no Coolhole tab is open, the **If no Coolhole tab is open, create one** setting controls whether a tab opens for queue requests. With the option off, Cool Pills reports that you should open a Coolhole tab. If an existing tab does not respond, the extension reports an error rather than opening another tab.
+
+## CP actions
+
+CP goes Fishing by default: it casts a line and automatically clicks to hook when a bite is detected. Settings can instead make CP add the video to Q+, schedule it, copy its link, open or focus Coolhole, do nothing, or run **Custom (experimental)**, which clicks up to 10 configured CSS selectors in order. The Custom action does not execute code.
+
 ## Q+ waiting list
 
 Q+ is the extension's local waiting list for items that should be added later. It is stored in browser extension storage and associated with the Coolhole account detected in the tab.
@@ -19,6 +25,7 @@ Q+ is the extension's local waiting list for items that should be added later. I
 - Schedule an entry to defer it until a chosen time.
 - Use **Frc** to attempt to send an entry immediately.
 - Use **+Link** to add one or more links.
+- Set **Max Queued** to 0 for no personal cap; Coolhole's own room limit still applies.
 
 The queue drain uses a shared lock so multiple Coolhole tabs do not intentionally process the same Q+ item simultaneously. Items rejected as invalid or unplayable are removed rather than retried forever. An item may be sent to Coolhost after a genuine playback rejection; a queue-limit response is not treated as a playback failure.
 

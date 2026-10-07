@@ -4,7 +4,7 @@
 2. Open a supported video page and hover over the video or its card.
 3. Select **CH** to add it to the room queue. If it is already there, the control changes to **UN**.
 4. If the room queue is full, use **Q+** to hold the video for later.
-5. Select **CP** to go Fishing, add the video to Q+, or schedule it, depending on your chosen CP action.
+5. Select **CP** to run your chosen action. By default it focuses Coolhole, casts a Fishing line, and automatically hooks when a fish bites. Other actions include adding to Q+, scheduling, copying the link, opening or focusing Coolhole, doing nothing, or running Custom (experimental).
 
 ## The controls
 
@@ -12,7 +12,7 @@
 | --- | --- |
 | **CH** | Queue the detected video in Coolhole. |
 | **UN** | Remove the video from the room queue. |
-| **CP** | Go Fishing by default; this can be changed in Settings. |
+| **CP** | Go Fishing by default with automatic hooking; choose another action in Settings. |
 | **Q+** | Open the waiting list. Drag entries to reorder them. |
 | **Frc** | Force an item from Q+ into the room queue, subject to the selected settings and room behavior. |
 | **Hist** | Browse previously queued items, search, pin, or re-queue them. |

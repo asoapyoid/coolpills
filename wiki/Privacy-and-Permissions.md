@@ -1,5 +1,7 @@
 # Privacy and permissions
 
+Prefer running the original script with Tampermonkey instead of installing the browser extension? [Get Cool Pills: YouTube / Coolhole Queue Buttons on Greasy Fork](https://greasyfork.org/en/scripts/591925-cool-pills-youtube-coolhole-queue-buttons).
+
 Cool Pills runs on websites so it can detect video players and place controls next to them. The browser therefore asks for permission to access pages where the extension runs. It uses extension storage for settings, Q+, history, pins, and related state.
 
 ## Data sent when you use the extension
