@@ -304,12 +304,24 @@ function trustedRedditVideoUrl(value) {
   }
 }
 
+function trustedRapidSaveVideoUrl(value) {
+  try {
+    const url = new URL(value, 'https://rapidsave.com/');
+    return url.protocol === 'https:' && url.hostname === 'sd.rapidsave.com' &&
+      url.pathname === '/download.php' && url.searchParams.has('video_url') &&
+      url.searchParams.has('audio_url') ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function extractRedditMedia(data) {
   const candidates = [];
   const seen = new Set();
   let title = null;
   let thumbnail = null;
   let duration = null;
+  let isGif = false;
   const visit = (value) => {
     if (!value || typeof value !== 'object') return;
     if (Array.isArray(value)) {
@@ -324,6 +336,7 @@ function extractRedditMedia(data) {
       if (url && !seen.has(url)) {
         seen.add(url);
         candidates.push(url);
+        if (video.is_gif === true || value.is_gif === true) isGif = true;
         if (Number.isFinite(Number(video.duration)) && Number(video.duration) > 0) {
           duration = Math.round(Number(video.duration));
         }
@@ -340,7 +353,13 @@ function extractRedditMedia(data) {
     Object.values(value).forEach(visit);
   };
   visit(data);
-  return candidates.length ? { url: candidates[0], title, thumbnail, duration } : null;
+  return candidates.length ? {
+    url: candidates[0],
+    title,
+    thumbnail,
+    duration,
+    isGif,
+  } : null;
 }
 
 async function resolveRedditVideo(postUrl) {
@@ -370,14 +389,22 @@ async function resolveRedditVideo(postUrl) {
       url: 'https://rapidsave.com/info?url=' + encodeURIComponent(publicPostUrl),
       parse: (html) => {
         const source = String(html || '').replace(/\\\//g, '/').replace(/\\u0026/gi, '&').replace(/&amp;/gi, '&');
-        const links = source.match(/https?:\/\/v\.redd\.it\/[^"'<>\\\s]+?\.mp4(?:\?[^"'<>\\\s]*)?/gi) || [];
-        const url = links.map(trustedRedditVideoUrl).find(Boolean);
+        const buttons = source.match(/<a\b[^>]*class=["'][^"']*\bdownloadbutton\b[^"']*["'][^>]*>/gi) || [];
+        let url = null;
+        for (const button of buttons) {
+          const href = button.match(/\bhref=["']([^"']+)["']/i);
+          if (href) {
+            url = trustedRapidSaveVideoUrl(href[1]);
+            if (url) break;
+          }
+        }
         return url ? { url, title: null, thumbnail: null, duration: null } : null;
       },
       text: true,
     },
   ];
   const failures = [];
+  let redditMedia = null;
 
   for (const provider of providers) {
     const controller = new AbortController();
@@ -395,8 +422,20 @@ async function resolveRedditVideo(postUrl) {
       }
       const data = provider.text ? await response.text() : await response.json();
       const media = provider.parse(data);
-      if (media) return { ok: true, ...media };
-      failures.push(provider.name + ' found no direct MP4');
+      if (media && provider.name === 'Reddit') {
+        redditMedia = media;
+        continue;
+      }
+      if (media) return {
+        ok: true,
+        ...media,
+        ...(redditMedia ? {
+          title: redditMedia.title,
+          thumbnail: redditMedia.thumbnail,
+          duration: redditMedia.duration,
+        } : {}),
+      };
+      failures.push(provider.name + (provider.text ? ' found no merged download link' : ' found no direct MP4'));
     } catch (error) {
       failures.push(provider.name + ' failed (' + (
         error && error.name === 'AbortError' ? 'timed out' : 'network or response error'
@@ -404,6 +443,12 @@ async function resolveRedditVideo(postUrl) {
     } finally {
       clearTimeout(timeout);
     }
+  }
+  if (redditMedia && redditMedia.isGif) {
+    return { ok: true, ...redditMedia };
+  }
+  if (redditMedia) {
+    failures.push('Reddit metadata only provided a video-only stream');
   }
   return { ok: false, error: 'Reddit video lookup failed: ' + failures.join('; ') + '.' };
 }

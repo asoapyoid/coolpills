@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.19
+- Resolve Reddit videos through RapidSave's merged download link so split audio/video streams retain sound.
+- Do not silently queue a Reddit video-only DASH stream when an audio-merged link cannot be found.
+
 ## 3.0.18
 - Automatically send links Coolhole rejects to Coolhost for processing, then queue the completed MP4; show toast warnings when Coolhost cannot process or deliver it.
 - Add a CH button beside active Coolhost upload links to send them to Coolhole; expired uploads do not get a button.
