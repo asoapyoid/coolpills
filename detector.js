@@ -38,6 +38,8 @@
       this.lastRun = 0;
       this.hideT = 0;
       this.snap = { room: [], pending: [] };
+      this.resolvedX = new Map();
+      this.resolvingX = new Map();
       this.pill = ui.createPill({
         onCH: (ctx) => this.queue(ctx),
         onUN: (ctx) => this.unqueue(ctx),
@@ -92,7 +94,7 @@
       if (this.cur && this.cur.key === t.key) return;
       let ctx = null;
       try {
-        ctx = t.ctx();
+        ctx = this.withResolvedX(t.ctx());
       } catch (e) {
         console.warn('[CoolPills] context failed', e);
       }
@@ -115,6 +117,12 @@
     cancelHide() {
       clearTimeout(this.hideT);
       this.hideT = 0;
+    }
+
+    withResolvedX(ctx) {
+      if (!ctx || !ctx.postUrl) return ctx;
+      const resolved = this.resolvedX.get(ctx.postUrl);
+      return resolved ? { ...ctx, ...resolved, postUrl: ctx.postUrl } : ctx;
     }
 
     isQueued(ctx) {
@@ -145,15 +153,45 @@
     /** Re-read volatile fields (Shorts / late-loading durations) right at click time */
     fresh(ctx) {
       try {
-        const live = this.cur && this.cur.ctx && this.cur.ctx();
+        const live = this.cur && this.cur.ctx && this.withResolvedX(this.cur.ctx());
         if (live && live.url === ctx.url) return live;
       } catch (_) { /* ignore */ }
       return ctx;
     }
-    queue(ctx, extra) {
-      const c = this.fresh(ctx);
-      // FUTURE: if (c.supported === 'no' && CQ.hooks.uploadUnsupported) → upload to coolhost.ca first
-      CQ.send({ type: 'cq:queue', payload: this.payload(c, extra) });
+    async queue(ctx, extra) {
+      let c = this.withResolvedX(this.fresh(ctx));
+      if (!c || !c.url) return;
+      if (c && c.platform === 'x' && c.postUrl) {
+        let pending = this.resolvingX.get(c.postUrl);
+        if (!pending) {
+          pending = CQ.send({ type: 'cq:resolve-x-video', postUrl: c.postUrl });
+          this.resolvingX.set(c.postUrl, pending);
+        }
+        const resolution = await pending;
+        this.resolvingX.delete(c.postUrl);
+        if (!resolution || !resolution.ok) {
+          ui.toast('Could not queue X video: ' + (resolution && resolution.error || 'VxTwitter did not respond.'), 'error');
+          return;
+        }
+        const resolved = {
+          url: resolution.url,
+          title: resolution.title || c.title,
+          duration: resolution.duration != null ? resolution.duration : c.duration,
+          durationLabel: resolution.duration != null ? CQ.formatDuration(resolution.duration) : c.durationLabel,
+          thumbnail: resolution.thumbnail || c.thumbnail,
+          supported: 'yes',
+        };
+        this.resolvedX.set(c.postUrl, resolved);
+        c = { ...c, ...resolved };
+        if (this.cur && this.cur.ctxValue && this.cur.ctxValue.postUrl === c.postUrl) {
+          this.cur.ctxValue = c;
+          this.pill.setContext(c);
+          this.refreshMode();
+        }
+      }
+      const result = await CQ.send({ type: 'cq:queue', payload: this.payload(c, extra) });
+      if (!result || result.ok === false) ui.toast('Could not send the video to Coolhole. Check that the extension is enabled and try again.', 'error');
+      return result;
     }
     unqueue(ctx) {
       CQ.send({ type: 'cq:unqueue', payload: { url: ctx.url, videoId: ctx.videoId || null } });
@@ -177,7 +215,7 @@
       if (this.cur && this.cur.ctxValue) return this.fresh(this.cur.ctxValue);
       try {
         if (this.adapter.watchContext) {
-          const c = this.adapter.watchContext();
+          const c = this.withResolvedX(this.adapter.watchContext());
           if (c) return c;
         }
       } catch (_) { /* ignore */ }
@@ -188,7 +226,7 @@
         const vis = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)) * Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
         if (vis > area) { area = vis; best = v; }
       });
-      return best ? this.adapter.context(best) : null;
+      return best ? this.withResolvedX(this.adapter.context(best)) : null;
     }
 
     // ── wiring ──

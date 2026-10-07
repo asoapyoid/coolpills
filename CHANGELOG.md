@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.12
+- Prefer direct video-file URLs on sites where Coolhole cannot consume the page link, and resolve X post videos to MP4 through VxTwitter when queued.
+
 ## 3.0.11
 - Keep the pill anchored to one stable thumbnail corner per YouTube video card to prevent it jumping between card controls.
 

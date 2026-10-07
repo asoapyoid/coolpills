@@ -126,6 +126,7 @@ async function fetchText(url, ms = 12000) {
 async function fetchMeta(url) {
   const out = { title: null, duration: null, thumbnail: null };
   if (!/^https?:\/\//i.test(String(url || ''))) return out;
+  if (/\.(mp4|webm|mov|mkv|ogv|m4v)(?:$|[?#])/i.test(url)) return out;
   const id = ytId(url);
   if (id) {
     try {
@@ -148,6 +149,72 @@ async function fetchMeta(url) {
   return out;
 }
 
+function trustedXVideoUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'video.twimg.com' &&
+      /\.mp4$/i.test(url.pathname) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function resolveXVideo(postUrl) {
+  let post;
+  try {
+    post = new URL(postUrl);
+  } catch (_) {
+    return { ok: false, error: 'Invalid X post URL.' };
+  }
+  if (!['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'].includes(post.hostname)) {
+    return { ok: false, error: 'Only X/Twitter post links can be resolved.' };
+  }
+  const match = post.pathname.match(/^\/([^/]+)\/status\/(\d+)/i);
+  if (!match) return { ok: false, error: 'Could not find a post ID in the X link.' };
+
+  const apiUrl = 'https://api.vxtwitter.com/' + encodeURIComponent(match[1]) + '/status/' + match[2];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  let response;
+  try {
+    response = await fetch(apiUrl, {
+      credentials: 'omit',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!response.ok) {
+    return { ok: false, error: 'VxTwitter could not read that post (HTTP ' + response.status + ').' };
+  }
+  const data = await response.json();
+  const media = Array.isArray(data.media_extended) ? data.media_extended : [];
+  const mp4 = media
+    .filter((item) => item && item.type === 'video')
+    .map((item) => ({
+      url: trustedXVideoUrl(item.url),
+      thumbnail: item.thumbnail_url || null,
+      duration: Number.isFinite(Number(item.duration_millis)) && Number(item.duration_millis) > 0
+        ? Math.round(Number(item.duration_millis) / 1000)
+        : null,
+    }))
+    .find((item) => item.url);
+  const fallbackUrl = mp4 ? null : (Array.isArray(data.mediaURLs) ? data.mediaURLs : [])
+    .map(trustedXVideoUrl)
+    .find(Boolean);
+  const url = mp4 ? mp4.url : fallbackUrl;
+  if (!url) return { ok: false, error: 'No downloadable MP4 video was found in that X post.' };
+  return {
+    ok: true,
+    url,
+    title: typeof data.text === 'string' ? data.text.slice(0, 120) : null,
+    thumbnail: mp4 ? mp4.thumbnail : null,
+    duration: mp4 ? mp4.duration : null,
+  };
+}
+
 // ── auto-queue lock (only one Coolhole tab drains Q+ at a time) ─────
 let lock = { tabId: null, until: 0 };
 
@@ -165,6 +232,8 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       case 'cq:fetch-meta':
         return fetchMeta(msg.url);
+      case 'cq:resolve-x-video':
+        return resolveXVideo(msg.postUrl);
       case 'cq:lock': {
         const id = sender.tab ? sender.tab.id : -1;
         const now = Date.now();

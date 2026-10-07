@@ -33,7 +33,16 @@
   };
   const durOf = (v) =>
     v && Number.isFinite(v.duration) && v.duration > 0 && v.duration < 172800 ? Math.floor(v.duration) : null;
-  const isDirectFile = (u) => /\.(mp4|webm|mov|mkv|ogv|m4v|mp3|m3u8)(\?|#|$)/i.test(String(u || ''));
+  const directVideoUrl = (video) => {
+    if (!video) return null;
+    const sources = [video.currentSrc, video.src, ...Array.from(video.querySelectorAll('source[src]'), (source) => source.src)];
+    for (const source of sources) {
+      if (!source || /^blob:/i.test(source)) continue;
+      const url = abs(source);
+      if (url && /^https?:/i.test(url) && /\.(mp4|webm|mov|mkv|ogv|m4v)(?:$|[?#])/i.test(url)) return url;
+    }
+    return null;
+  };
 
   /** closest() that crosses shadow-DOM boundaries */
   const closestDeep = (node, sel) => {
@@ -343,7 +352,8 @@
       const link = linkIn(v, 'article, [data-e2e="recommend-list-item-container"], [data-e2e="user-post-item"]', 'a[href*="/video/"]');
       const url = /\/video\//.test(location.pathname) ? location.href : link || location.href;
       const desc = textOf('[data-e2e="browse-video-desc"]') || textOf('[data-e2e="video-desc"]');
-      return base(v, url, desc || meta('meta[property="og:title"]'), 'no');
+      const direct = directVideoUrl(v);
+      return base(v, direct || url, desc || meta('meta[property="og:title"]'), direct ? 'yes' : 'no');
     },
   };
 
@@ -352,7 +362,8 @@
     context(v) {
       const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"]');
       const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;
-      return base(v, url, pageTitle(), 'no');
+      const direct = directVideoUrl(v);
+      return base(v, direct || url, pageTitle(), direct ? 'yes' : 'no');
     },
   };
 
@@ -363,8 +374,8 @@
       let url = location.href;
       let title = null;
       if (tweet) {
-        const a = tweet.querySelector('a[href*="/status/"] time');
-        const link = a && a.closest('a');
+        const time = tweet.querySelector('a[href*="/status/"] time');
+        const link = (time && time.closest('a')) || tweet.querySelector('a[href*="/status/"]');
         if (link) url = abs(link.getAttribute('href').split('/video/')[0]);
         title = textOf('[data-testid="tweetText"]', tweet);
         if (!title) {
@@ -372,7 +383,13 @@
           title = user ? 'Post by ' + clean(user.textContent) : null;
         }
       }
-      return base(v, url, title && title.slice(0, 120), 'no');
+      const direct = directVideoUrl(v);
+      const context = base(v, direct || url, title && title.slice(0, 120), direct ? 'yes' : 'no');
+      if (!direct) {
+        context.platform = 'x';
+        context.postUrl = url;
+      }
+      return context;
     },
   };
 
@@ -387,7 +404,8 @@
         if (perma) url = abs(perma);
         title = clean(post.getAttribute('post-title')) || textOf('[slot="title"], h1, h3', post);
       }
-      return base(v, url, title, 'no');
+      const direct = directVideoUrl(v);
+      return base(v, direct || url, title, direct ? 'yes' : 'no');
     },
   };
 
@@ -403,16 +421,16 @@
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
-      return base(v, location.origin + location.pathname, pageTitle() || clean(document.title), 'no');
+      const direct = directVideoUrl(v);
+      return base(v, direct || location.origin + location.pathname, pageTitle() || clean(document.title), direct ? 'yes' : 'no');
     },
   };
 
   const generic = {
     id: 'generic', label: 'Any HTML5 video', hosts: /./, supported: 'maybe',
     context(v) {
-      const src = v && v.currentSrc;
-      const direct = src && /^https?:/i.test(src) && !/^blob:/i.test(src) && isDirectFile(src);
-      return base(v, direct ? src : location.href, pageTitle(), direct ? 'yes' : 'maybe');
+      const direct = directVideoUrl(v);
+      return base(v, direct || location.href, pageTitle(), direct ? 'yes' : 'maybe');
     },
   };
 
