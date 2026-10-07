@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,6 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check tag matches manifest version
+        if: github.ref_type == 'tag'
         run: |
           V=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
           [ "v$V" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} != manifest v$V"; exit 1; }
@@ -20,8 +22,13 @@ jobs:
         run: for f in ./*.js; do node --check "$f"; done
       - name: Package
         run: python3 scripts/package.py
+      - name: Read manifest version
+        id: ver
+        run: echo "tag=v$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")" >> "$GITHUB_OUTPUT"
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: dist/*.zip
           generate_release_notes: true
