@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.24
+- Stop queueing Reddit post pages when direct MP4 lookup fails; send the post to Coolhost and queue only the processed MP4.
+- Resolve Reddit posts even when the page exposes a video-only MP4, so RapidSave can provide an audio-merged file.
+- Allow Coolhost recovery requests only from Coolhole or a verified Reddit post page.
+
 ## 3.0.23
 - Prefer MP4 links for unrecognized sites and accept non-MP4 links only for CyTube-native providers, raw media files and HLS playlists.
 - Use CyTube-native Twitch clip links instead of resolving them through Clipr.

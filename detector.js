@@ -184,8 +184,25 @@
           if (this.resolvingMedia.get(cacheKey) === pending) this.resolvingMedia.delete(cacheKey);
         }
         if (!resolution || !resolution.ok || !/^https:\/\//i.test(String(resolution.url || ''))) {
-          ui.toast(siteName + ' direct-link lookup failed; trying the original post link. ' +
-            (resolution && resolution.error || 'The resolver did not respond.'), 'queue');
+          const error = resolution && resolution.error || 'The resolver did not respond.';
+          if (c.platform === 'reddit') {
+            ui.toast('Reddit MP4 lookup failed. Sending the post to Coolhost to process before queueing. ' + error, 'queue');
+            let fallback;
+            try {
+              fallback = await CQ.send({
+                type: 'cq:coolhost-upload',
+                payload: { url: c.postUrl, title: c.title, platform: 'reddit' },
+              });
+            } catch (uploadError) {
+              fallback = { ok: false, error: String(uploadError && uploadError.message || uploadError) };
+            }
+            if (!fallback || fallback.ok === false) {
+              ui.toast('Could not start Reddit recovery on Coolhost: ' +
+                String(fallback && fallback.error || 'the extension did not respond.'), 'error');
+            }
+            return fallback;
+          }
+          ui.toast(siteName + ' direct-link lookup failed; trying the original post link. ' + error, 'queue');
           c = { ...c, url: c.postUrl, supported: 'maybe' };
         } else {
           const resolved = {

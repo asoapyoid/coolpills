@@ -109,6 +109,22 @@ async function startCoolhostUpload(payload) {
   return { ok: true, via: 'new-tab' };
 }
 
+function isRedditUrl(value, requirePost = false) {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:' || url.username || url.password) return false;
+    const host = url.hostname.toLowerCase();
+    if (!(host === 'reddit.com' || host.endsWith('.reddit.com') || host === 'redd.it' || host.endsWith('.redd.it'))) {
+      return false;
+    }
+    if (!requirePost) return true;
+    return /\/comments\/[a-z0-9]+(?:\/|$)/i.test(url.pathname) ||
+      ((host === 'redd.it' || host.endsWith('.redd.it')) && /^\/[a-z0-9]+\/?$/i.test(url.pathname));
+  } catch (_) {
+    return false;
+  }
+}
+
 // ── metadata fetch (CORS-free thanks to host_permissions) ───────────
 const ytId = (u) => {
   const m = String(u || '').match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
@@ -699,8 +715,11 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return relayToHole('cq:queue', msg.payload);
       case 'cq:coolhost-upload': {
         const origin = sender.url || sender.tab && sender.tab.url || '';
-        if (!/^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin)) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole.' };
+        const fromCoolhole = /^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin);
+        const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
+          isRedditUrl(origin) && isRedditUrl(msg.payload.url, true);
+        if (!fromCoolhole && !fromReddit) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a Reddit video post.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }

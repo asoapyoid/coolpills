@@ -495,10 +495,8 @@
       }
       const direct = directVideoUrl(v);
       const context = base(v, nativeOrDirect(v, url), title, direct ? 'yes' : 'no');
-      if (!direct) {
-        context.platform = 'reddit';
-        context.postUrl = url;
-      }
+      context.platform = 'reddit';
+      context.postUrl = url;
       return context;
     },
   };
