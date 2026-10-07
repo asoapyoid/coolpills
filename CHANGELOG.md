@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.2
+- Improve dropdown text and background contrast in light and dark settings themes.
+
 ## 3.0.1
 - Add a settings-page button to check the latest GitHub release and download the matching browser ZIP.
 - Fix extension icon paths so the unpacked project and release ZIPs load the icons correctly.
