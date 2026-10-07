@@ -149,7 +149,7 @@
     if (!['auto', 'light', 'dark'].includes(s.uiMode)) s.uiMode = 'auto';
     s.holeOpacity = clamp(s.holeOpacity, 0, 1, 0.35);
     s.ytOpacity = clamp(s.ytOpacity, 0.1, 1, 0.38);
-    s.maxQueued = Math.floor(clamp(s.maxQueued, 1, 99, CQ.DEFAULT_ROOM_LIMIT));
+    s.maxQueued = Math.floor(clamp(s.maxQueued, 0, 99, CQ.DEFAULT_ROOM_LIMIT)); // 0 = unlimited (only the room's own limit applies)
     s.disabledSites = Array.isArray(s.disabledSites) ? s.disabledSites.map(String) : [];
     s.keyboardShortcutsEnabled = s.keyboardShortcutsEnabled !== false;
     s.keyboardShortcuts = s.keyboardShortcuts && typeof s.keyboardShortcuts === 'object' && !Array.isArray(s.keyboardShortcuts)

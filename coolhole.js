@@ -219,7 +219,7 @@
 
   // ══ queue limits ═════════════════════════════════════════════════
   const getRoomLimit = () => S.roomLimit;
-  const getMyLimit = () => Math.min(cfg().maxQueued, getRoomLimit());
+  const getMyLimit = () => (cfg().maxQueued > 0 ? Math.min(cfg().maxQueued, getRoomLimit()) : getRoomLimit());
   const setRoomLimit = (n) => {
     const v = Math.floor(Number(n));
     if (!(v >= 2)) return;
@@ -1175,7 +1175,7 @@
   function updateSlots() {
     document.querySelectorAll('.cq-slots').forEach((n) => {
       n.textContent = slotsText();
-      n.title = 'Your videos in the room queue / room max. Personal Max Queued: ' + cfg().maxQueued;
+      n.title = 'Your videos in the room queue / room max. Personal Max Queued: ' + (cfg().maxQueued > 0 ? cfg().maxQueued : 'unlimited');
     });
   }
   function updateBadge() {
