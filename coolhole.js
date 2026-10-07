@@ -739,29 +739,39 @@
     autoHook();
   }
 
-  /** After casting, press the button again the moment a bite arrives (up to 2 minutes). */
+  /** After casting, hook the instant a bite shows. Event-driven: a MutationObserver on the Fish button
+   *  (data-phase / data-strike / label) fires only when it changes; one slow timer is a rare backup. */
   let hooking = false;
-  async function autoHook() {
+  function autoHook() {
     if (hooking) return;
+    const b0 = fishBtn();
+    if (!b0) return;
     hooking = true;
-    try {
-      const deadline = Date.now() + 120000;
-      let seenLine = false;
-      while (Date.now() < deadline) {
-        await sleep(100);
-        const b = fishBtn();
-        if (!b) break;
-        if (fishStrike(b) && fishReady(b)) {
-          b.click();
-          toast('Fishing — hooked', 'queue');
-          return;
-        }
-        if (!fishIdle(b)) seenLine = true;
-        else if (seenLine) return; // line is back in: the cast ended without a bite we could hook
-      }
-    } finally {
+    let seenLine = !fishIdle(b0);
+    let obs = null;
+    let backup = 0;
+    let giveUp = 0;
+    const stop = () => {
+      if (obs) obs.disconnect();
+      clearInterval(backup);
+      clearTimeout(giveUp);
       hooking = false;
-    }
+    };
+    const check = () => {
+      const b = fishBtn();
+      if (!b) return stop();
+      if (fishStrike(b) && fishReady(b)) {
+        stop();
+        b.click();
+        toast('Fishing — hooked', 'queue');
+      } else if (!fishIdle(b)) seenLine = true;
+      else if (seenLine) stop(); // line came back in without a bite we could hook
+    };
+    obs = new MutationObserver(check);
+    obs.observe(b0, { attributes: true, attributeFilter: ['data-phase', 'data-strike', 'disabled', 'class', 'title'], childList: true, subtree: true, characterData: true });
+    backup = setInterval(check, 5000); // safety net only, in case the page swaps the button node
+    giveUp = setTimeout(stop, 120000);
+    check();
   }
 
   // ══ Gold Collector (.text-lottery chat lines) ════════════════════
