@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.29
+- Preserve Reddit post titles and duration from its media metadata through Coolhost processing into Coolhole Q+.
+- Probe the finished Coolhost MP4 for duration when Reddit does not provide one.
+
 ## 3.0.28
 - Run Reddit Coolhost recovery in an inactive background tab so it does not interrupt the current page.
 - Send Coolhost start, progress, and completion notices to the open Coolhole tab.

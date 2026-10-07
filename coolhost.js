@@ -57,6 +57,30 @@
     }
   }
 
+  function readMediaDuration(url) {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      let settled = false;
+      const finish = (duration) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        video.removeAttribute('src');
+        video.load();
+        video.remove();
+        resolve(Number.isFinite(duration) && duration > 0 && duration < 172800
+          ? Math.round(duration) : null);
+      };
+      const timeout = setTimeout(() => finish(null), 8000);
+      video.preload = 'metadata';
+      video.muted = true;
+      video.addEventListener('loadedmetadata', () => finish(video.duration), { once: true });
+      video.addEventListener('error', () => finish(null), { once: true });
+      video.src = url;
+      video.load();
+    });
+  }
+
   async function queueUpload(url, title, button) {
     if (button.disabled) return;
     button.disabled = true;
@@ -222,9 +246,18 @@
         };
       });
 
+      const sourceDuration = Number(payload.duration);
+      const duration = Number.isFinite(sourceDuration) && sourceDuration > 0 && sourceDuration < 172800
+        ? Math.round(sourceDuration) : await readMediaDuration(finalUrl);
+      const title = String(payload.title || '').trim().slice(0, 200) || null;
       const queued = await api.runtime.sendMessage({
         type: 'cq:queue',
-        payload: { url: finalUrl, title: String(payload.title || '').slice(0, 200) || null },
+        payload: {
+          url: finalUrl,
+          title,
+          duration,
+          thumbnail: payload.thumbnail || null,
+        },
       });
       if (!queued || queued.ok === false) {
         throw new Error(queued && queued.error || 'The processed video could not be sent to Coolhole.');

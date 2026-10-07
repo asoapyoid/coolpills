@@ -21,7 +21,7 @@
     }
   }
 
-  function findDashUrl(data) {
+  function findDashMedia(data) {
     const visit = (value) => {
       if (!value || typeof value !== 'object') return null;
       if (Array.isArray(value)) {
@@ -38,7 +38,18 @@
         try {
           const url = new URL(video.dash_url);
           if (url.protocol === 'https:' && url.hostname === 'v.redd.it' &&
-              /\/DASHPlaylist\.mpd$/i.test(url.pathname)) return url.href;
+              /\/DASHPlaylist\.mpd$/i.test(url.pathname)) {
+            const title = typeof value.title === 'string' ? value.title.trim().slice(0, 200) : '';
+            const rawDuration = Number(video.duration);
+            return {
+              dashUrl: url.href,
+              title: title || null,
+              duration: Number.isFinite(rawDuration) && rawDuration > 0 && rawDuration < 172800
+                ? Math.round(rawDuration) : null,
+              thumbnail: typeof value.thumbnail === 'string' && /^https?:\/\//i.test(value.thumbnail)
+                ? value.thumbnail : null,
+            };
+          }
         } catch (_) {
           return null;
         }
@@ -59,7 +70,7 @@
         typeof message.id !== 'string') return;
 
     const postId = postIdFromUrl(message.postUrl);
-    let dashUrl = null;
+    let media = null;
     let error = null;
     if (!postId) {
       error = 'The Reddit post URL is not valid for this page.';
@@ -74,13 +85,13 @@
         if (!response.ok) {
           error = 'Reddit media metadata returned HTTP ' + response.status + '.';
         } else {
-          dashUrl = findDashUrl(await response.json());
-          if (!dashUrl) error = 'Reddit did not expose a direct DASH playlist for this post.';
+          media = findDashMedia(await response.json());
+          if (!media) error = 'Reddit did not expose a direct DASH playlist for this post.';
         }
       } catch (_) {
         error = 'Could not read Reddit media metadata from the signed-in page.';
       }
     }
-    window.postMessage({ channel: CHANNEL, type: 'dash-result', id: message.id, dashUrl, error }, location.origin);
+    window.postMessage({ channel: CHANNEL, type: 'dash-result', id: message.id, ...media, error }, location.origin);
   });
 })();

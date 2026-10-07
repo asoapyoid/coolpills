@@ -9,14 +9,14 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.0.28](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.28) |
+| **Current release** | [v3.0.29](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.29) |
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.28.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.28.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.29.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.29.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -93,7 +93,7 @@ Cool Pills runs on pages where it looks for videos, so the browser asks to allow
 
 Cool Pills prefers a direct MP4 for sites that Coolhole does not recognize. If the player only exposes another format, it keeps the page link rather than passing an unverified non-MP4 stream; native HLS playlists and direct raw-media URLs are exceptions. Known native links are retained for CyTube's built-in players, based on [CyTube's URL parser](https://github.com/calzoneman/sync/blob/master/www/js/util.js) and [player map](https://github.com/calzoneman/sync/blob/master/player/update.coffee). That list includes YouTube, Vimeo, Dailymotion, Google Drive, SoundCloud, Livestream, Twitch (including clips), Streamable, PeerTube, Bandcamp tracks, BitChute, Odysee, and NicoNico.
 
-When queuing a social post without an exposed MP4, Cool Pills tries a site-specific public resolver: X uses VxTwitter then FxTwitter; Reddit checks post metadata and tries RapidSave for a direct, audio-merged MP4 even when Reddit exposes a video-only stream; TikTok tries TikWM then MusicalDown; Facebook tries FBDown; Instagram tries the ddinstagram mirror. A Reddit `download.php` endpoint is a download action, not a playable media URL, so Cool Pills will not queue it. Reddit video-only streams are not used for regular videos because that can remove the audio. Resolver results are accepted only from the expected media hosts, and no source-site login cookies are sent. These services receive the public post URL when you click to queue it. If Reddit lookup fails, Cool Pills reads the DASH playlist URL from Reddit's signed-in page and sends that direct manifest to Coolhost to fetch and combine; it does not send the Reddit post page or Reddit login cookies. If the signed-in page does not expose a manifest, it stops rather than queueing a broken link. Other social-site lookup failures may continue with the original post URL. Private, region-restricted, expired, or login-gated media may still fail.
+When queuing a social post without an exposed MP4, Cool Pills tries a site-specific public resolver: X uses VxTwitter then FxTwitter; Reddit checks post metadata and tries RapidSave for a direct, audio-merged MP4 even when Reddit exposes a video-only stream; TikTok tries TikWM then MusicalDown; Facebook tries FBDown; Instagram tries the ddinstagram mirror. A Reddit `download.php` endpoint is a download action, not a playable media URL, so Cool Pills will not queue it. Reddit video-only streams are not used for regular videos because that can remove the audio. Resolver results are accepted only from the expected media hosts, and no source-site login cookies are sent. These services receive the public post URL when you click to queue it. If Reddit lookup fails, Cool Pills reads the DASH playlist URL from Reddit's signed-in page and sends that direct manifest to Coolhost to fetch and combine; it does not send the Reddit post page or Reddit login cookies. The Reddit post title and duration are carried through to Q+; Cool Pills also attempts to read duration from the finished Coolhost MP4 if needed. If the signed-in page does not expose a manifest, it stops rather than queueing a broken link. Other social-site lookup failures may continue with the original post URL. Private, region-restricted, expired, or login-gated media may still fail.
 
 If Coolhole rejects a selected link as unplayable, Cool Pills automatically sends that link and its title to Coolhost (`coolhost.ca`) for processing. The browser uses your Coolhost session for this request if you are signed in; the original site's cookies are not sent by Cool Pills. Coolhost receives the submitted URL and may need to fetch the media from its source. The finished Coolhost MP4 is then sent to Coolhole; it is not queued before processing completes. This does not happen when Coolhole is merely at its queue limit or when the link is already hosted on Coolhost. A **CH** button beside each active Coolhost upload link also lets you queue it manually; expired uploads are not given a button.
 

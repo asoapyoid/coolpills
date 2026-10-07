@@ -215,11 +215,21 @@
               return { ok: false, error: reason };
             }
             ui.toast('Found Reddit’s audio/video manifest. Sending it to Coolhost to combine and process…', 'queue');
+            const mediaTitle = CQ.cleanTitle(media.title) || CQ.cleanTitle(c.title);
+            const mediaDuration = Number(media.duration);
             let fallback;
             try {
               fallback = await CQ.send({
                 type: 'cq:coolhost-upload',
-                payload: { url: dashUrl, postUrl: c.postUrl, title: c.title, platform: 'reddit' },
+                payload: {
+                  url: dashUrl,
+                  postUrl: c.postUrl,
+                  title: mediaTitle && !/^raw video$/i.test(mediaTitle) ? mediaTitle : null,
+                  duration: Number.isFinite(mediaDuration) && mediaDuration > 0 && mediaDuration < 172800
+                    ? Math.round(mediaDuration) : null,
+                  thumbnail: media.thumbnail || c.thumbnail || null,
+                  platform: 'reddit',
+                },
               });
             } catch (uploadError) {
               fallback = { ok: false, error: String(uploadError && uploadError.message || uploadError) };
