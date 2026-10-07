@@ -457,6 +457,28 @@
 
   const twitter = {
     id: 'twitter', label: 'Twitter / X', hosts: /(^|\.)(twitter|x)\.com$/i, supported: 'no',
+    resolve(stack) {
+      for (const el of stack) {
+        if (!el || !el.tagName) continue;
+        const isMedia = el.tagName === 'VIDEO' || el.tagName === 'IMG' ||
+          el.matches('[data-testid*="video" i], [data-testid*="gif" i], [aria-label*="video" i], [aria-label*="gif" i]');
+        if (!isMedia) continue;
+        const tweet = closestDeep(el, 'article[data-testid="tweet"], article');
+        if (!tweet) continue;
+        const gifLabel = (node) => ['aria-label', 'title', 'alt', 'data-testid']
+          .some((name) => /\bgif\b/i.test(node.getAttribute(name) || ''));
+        let node = el;
+        while (node && node !== tweet) {
+          if (gifLabel(node)) return null;
+          node = node.parentElement;
+        }
+        const player = closestDeep(el, '[data-testid="videoPlayer"], [data-testid*="gif" i]');
+        if (player && Array.from(player.querySelectorAll('[aria-label], [title], [alt], [data-testid]')).some(gifLabel)) {
+          return null;
+        }
+      }
+      return resolveVideo(this, stack) || resolveSocialMedia(this, stack);
+    },
     context(v) {
       const tweet = closestDeep(v, 'article[data-testid="tweet"], article');
       let url = location.href;

@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.2
+- Do not show video pills on X/Twitter GIF media.
+
 ## 3.1.1
 - Show `CH.CA` in Q+ when a Coolhost MP4 has no available duration.
 - Clean up Coolhost URL detection placement in the Q+ list helpers.

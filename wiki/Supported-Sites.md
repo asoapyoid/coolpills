@@ -20,6 +20,7 @@ The extension has site-specific detection for:
 - Generic HTML5 video, when enabled
 
 Per-site controls and the generic detector switch are available under **Settings → Sites**.
+X/Twitter GIF media is excluded from pill detection; regular video posts remain supported.
 
 ## Native players and direct media
 
