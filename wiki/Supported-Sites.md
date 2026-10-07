@@ -20,6 +20,8 @@ The extension has site-specific detection for:
 - Generic HTML5 video, when enabled
 
 Per-site controls and the generic detector switch are available under **Settings → Sites**.
+YouTube Shorts are supported: their video IDs are read from the Shorts URL or active player, then queued using the standard YouTube watch URL. They are labeled `SHRT` because Shorts do not expose a normal duration.
+
 X/Twitter GIF media is excluded from pill detection. The extension also checks for X's visible `GIF` badge over the media, because GIF posts can use the same video player elements as regular videos.
 
 ## Native players and direct media

@@ -201,10 +201,14 @@
     }
     return null;
   };
-  const ytWatchId = () =>
-    location.pathname === '/watch'
-      ? new URLSearchParams(location.search).get('v')
-      : (location.pathname.match(/^\/shorts\/([^/?]+)/) || [])[1] || null;
+  const ytWatchId = () => {
+    if (location.pathname === '/watch') return new URLSearchParams(location.search).get('v');
+    const pathId = (location.pathname.match(/^\/shorts\/([^/?]+)/) || [])[1];
+    if (pathId) return pathId;
+    const activeShort = document.querySelector('ytd-reel-video-renderer[is-active]');
+    const rendererId = activeShort && activeShort.getAttribute('video-id');
+    return rendererId && /^[a-zA-Z0-9_-]{11}$/.test(rendererId) ? rendererId : null;
+  };
   const onShortsPage = () =>
     /\/shorts\//i.test(location.pathname) ||
     !!document.querySelector('ytd-reel-video-renderer[is-active], #shorts-player');
@@ -377,7 +381,7 @@
           ctx: () => ytCtx(id, ytCardTitle(card), ytCardDuration(card)),
         };
       }
-      if (/^\/(watch|shorts)/.test(location.pathname)) {
+      if (/^\/watch/.test(location.pathname) || onShortsPage()) {
         const sh = currentShare();
         if (sh.el && stack.some((e) => e === sh.el || sh.el.contains(e))) {
           return {

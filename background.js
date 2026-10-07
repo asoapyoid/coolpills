@@ -6,7 +6,7 @@
  */
 'use strict';
 const api = typeof browser !== 'undefined' && browser.runtime ? browser : chrome;
-const HOLE_URLS = ['https://coolhole.org/*', 'https://new.coolhole.org/*'];
+const HOLE_URLS = ['https://coolhole.org/*', 'https://www.coolhole.org/*', 'https://new.coolhole.org/*'];
 const SETTINGS_KEY = 'cq_settings';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -20,11 +20,7 @@ const getSettings = async () => {
 };
 
 async function holeTabs() {
-  try {
-    return await api.tabs.query({ url: HOLE_URLS });
-  } catch (_) {
-    return [];
-  }
+  return api.tabs.query({ url: HOLE_URLS });
 }
 /** Prefer the most recently used Coolhole tab so exactly one tab handles each action */
 async function pickHoleTab() {
@@ -53,19 +49,34 @@ async function focusTab(tab) {
   } catch (_) { /* ignore */ }
 }
 
-/** Deliver to a live Coolhole tab; if none (or its script isn't ready), open Coolhole with a hash payload */
+/** Deliver to an existing Coolhole tab; only open one when no Coolhole tab exists */
 async function relayToHole(type, payload, { focus = false } = {}) {
-  const tab = await pickHoleTab();
-  if (tab) {
-    for (let i = 0; i < 3; i++) {
+  const tabs = await holeTabs();
+  if (tabs.length) {
+    tabs.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (b.lastAccessed || 0) - (a.lastAccessed || 0));
+    for (const tab of tabs) {
       try {
         await api.tabs.sendMessage(tab.id, { type, payload });
         if (focus) await focusTab(tab);
         return { ok: true, via: 'tab' };
       } catch (_) {
-        await sleep(450); // content script may still be booting
+        // Try another open Coolhole tab before reporting failure.
       }
     }
+    for (let i = 0; i < 2; i++) {
+      await sleep(450); // the most recently used tab may still be booting
+      try {
+        await api.tabs.sendMessage(tabs[0].id, { type, payload });
+        if (focus) await focusTab(tabs[0]);
+        return { ok: true, via: 'tab' };
+      } catch (_) {
+        // Keep the existing tab; opening another can split the user's session.
+      }
+    }
+    return {
+      ok: false,
+      error: 'Coolhole is already open but did not respond. No extra tab was opened; reload the existing Coolhole tab and try again.',
+    };
   }
   if (type === 'cq:unqueue') return { ok: false, via: 'none' };
   await api.tabs.create({ url: hashUrl(type, payload), active: true });
@@ -91,14 +102,27 @@ async function startCoolhostUpload(payload) {
   const tabs = await api.tabs.query({ url: ['https://coolhost.ca/*', 'https://www.coolhost.ca/*'] });
   tabs.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (b.lastAccessed || 0) - (a.lastAccessed || 0));
   for (const tab of tabs) {
-    for (let i = 0; i < 3; i++) {
+    try {
+      await api.tabs.sendMessage(tab.id, { type: 'cq:coolhost-upload', payload: request });
+      return { ok: true, via: 'tab' };
+    } catch (_) {
+      // Try another open Coolhost tab before reporting failure.
+    }
+  }
+  if (tabs.length) {
+    for (let i = 0; i < 2; i++) {
+      await sleep(450);
       try {
-        await api.tabs.sendMessage(tab.id, { type: 'cq:coolhost-upload', payload: request });
+        await api.tabs.sendMessage(tabs[0].id, { type: 'cq:coolhost-upload', payload: request });
         return { ok: true, via: 'tab' };
       } catch (_) {
-        await sleep(450);
+        // Keep the existing tab; opening another can split the user's session.
       }
     }
+    return {
+      ok: false,
+      error: 'Coolhost is already open but did not respond. No extra tab was opened; reload the existing Coolhost tab and try again.',
+    };
   }
 
   const hash = new URLSearchParams({
@@ -765,7 +789,7 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return relayToHole('cq:queue', msg.payload);
       case 'cq:coolhost-upload': {
         const origin = sender.url || sender.tab && sender.tab.url || '';
-        const fromCoolhole = /^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin);
+        const fromCoolhole = /^https:\/\/(?:(?:www|new)\.)?coolhole\.org\//i.test(origin);
         const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
           isRedditUrl(origin) && isRedditUrl(msg.payload.postUrl, true) &&
           isRedditDashUrl(msg.payload.url);
@@ -794,7 +818,7 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return fetchMeta(msg.url);
       case 'cq:check-media-link': {
         const origin = sender.url || sender.tab && sender.tab.url || '';
-        if (!/^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin)) {
+        if (!/^https:\/\/(?:(?:www|new)\.)?coolhole\.org\//i.test(origin)) {
           return { checked: false, error: 'Media link checks can only be requested by Coolhole.' };
         }
         return checkDirectMediaLink(msg.url);

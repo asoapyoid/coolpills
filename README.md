@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.1.4](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.4) |
+| **Current release** | [v3.1.6](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.6) |
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
@@ -17,8 +17,8 @@ See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the f
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.4.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.4.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.6.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.6.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -41,15 +41,15 @@ Firefox's temporary add-on is removed when Firefox closes; load it again after r
 
 ## How it works
 
-1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube, Vimeo, Twitch, TikTok, Instagram and its mirror domains, X/Twitter, Reddit, Dailymotion, Kick, Facebook, Threads and generic HTML5 videos. For social feeds, it can also recognize smaller videos and thumbnails inside marked video posts. If it cannot find a title, the item is labeled "Raw Video".
-2. **Send it to Coolhole.** Click **CH** to queue the current video. Cool Pills passes the video link and available metadata (title, duration and thumbnail) to an open Coolhole tab. If there is no Coolhole tab, it opens one with the queue request. If the video is already queued, the control becomes **UN** so you can remove it.
+1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube (including Shorts), Vimeo, Twitch, TikTok, Instagram and its mirror domains, X/Twitter, Reddit, Dailymotion, Kick, Facebook, Threads and generic HTML5 videos. Shorts are sent using a standard YouTube watch URL and labeled `SHRT`. For social feeds, it can also recognize smaller videos and thumbnails inside marked video posts. If it cannot find a title, the item is labeled "Raw Video".
+2. **Send it to Coolhole.** Click **CH** to queue the current video. Cool Pills passes the video link and available metadata (title, duration and thumbnail) to an open Coolhole tab. If there is no Coolhole tab, it opens one with the queue request. If an existing tab does not respond, Cool Pills will not open another tab; it shows an error so you can reload the existing tab and retry. If the video is already queued, the control becomes **UN** so you can remove it.
 3. **Handle a full queue.** Items that cannot be added yet can wait in **Q+**, the local waiting list. Reorder items by dragging, force or schedule an item, or paste multiple links with **+Link**. With auto-queue enabled, Coolhole adds the next waiting item when a slot opens. Before Q+ sends a direct media-file link, Cool Pills checks whether it is still reachable. Confirmed expired links are removed with a toast and sent to Coolhost to try recovery; provider page links are not pre-checked. A lock prevents multiple Coolhole tabs from sending the same item at once. If Coolhole rejects a media link, Cool Pills sends it to Coolhost for processing and queues the finished MP4; a toast reports the handoff or any failure. Items rejected from Q+ are still removed rather than retried indefinitely.
 4. **Choose what CP does.** Click **CP** to focus Coolhole and run Work by default. In settings, change CP to add to Q+ or schedule instead. Hold the pill for quick settings.
 5. **Use history and themes.** The Coolhole panel includes searchable **Hist** with pins and one-click re-queue, plus the Q+ list. Choose Default, Old Steam or King Cobra, or match supported Coolhole themes. **Gold Collector** assists with lottery chat lines.
 
 ## Coolhost recovery
 
-When Coolhole rejects a link as unplayable, Cool Pills automatically opens or uses an inactive Coolhost tab and submits the selected link for processing, so you can continue using the current page. Cool Pills waits for Coolhost to finish and queues the resulting MP4; it does not queue the unfinished source or retry when Coolhole is only at its queue limit. When a Coolhole tab is open, it shows background start, processing, completion, or failure notices. If Coolhost rejects the link, requires a login, or loses the processing connection, Cool Pills reports the problem by toast.
+When Coolhole rejects a link as unplayable, Cool Pills uses an open Coolhost tab or opens one inactive tab if none is open, then submits the selected link for processing so you can continue using the current page. If an existing Coolhost tab does not respond, it will not open another one; it shows an error so you can reload that tab and retry. Cool Pills waits for Coolhost to finish and queues the resulting MP4; it does not queue the unfinished source or retry when Coolhole is only at its queue limit. When a Coolhole tab is open, it shows background start, processing, completion, or failure notices. If Coolhost rejects the link, requires a login, or loses the processing connection, Cool Pills reports the problem by toast.
 
 On Coolhost, each active upload with a playable MP4 link gets a **CH** button beside **Copy link**. Click it to send that upload to Coolhole. Expired history entries are not given a button.
 

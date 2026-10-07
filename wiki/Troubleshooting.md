@@ -14,6 +14,10 @@ Check the on-page toast for the reason. Cool Pills may try Coolhost recovery whe
 
 If the room queue is full, Q+ can hold the item. A queue-limit error does not trigger media recovery.
 
+## Coolhole did not receive a queued video
+
+If Coolhole is already open but its extension script is still loading or has stopped responding, Cool Pills will try other open Coolhole tabs and then show an error instead of opening another tab. Reload the existing Coolhole tab and retry. This avoids accidentally switching to a separate Coolhole session with different sign-in or chat state.
+
 Before Q+ sends a direct media-file URL, it makes a lightweight availability check. Confirmed unavailable links are removed from Q+ and sent to Coolhost to try recovery. If the check times out or the server does not provide a conclusive response, the item continues through the regular Coolhole queue flow.
 
 ## Reddit recovery fails
@@ -26,6 +30,8 @@ Make sure the Reddit tab is signed in and that the post can be played there. The
 - Read the completion or error toast.
 - Confirm that Coolhost returned a valid MP4 link and that it is still available.
 - If Coolhost's own active upload card has a **CH** button, try sending that MP4 manually.
+
+If Coolhost is already open but does not respond to a recovery request, Cool Pills will not open another Coolhost tab. Reload the existing tab and retry.
 
 ## Q+ does not auto-queue
 

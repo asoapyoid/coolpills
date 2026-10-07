@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cool Pills",
-  "version": "3.1.4",
+  "version": "3.1.6",
   "description": "Queue videos from any site to Coolhole. CH/CP pills, Coolhost recovery, Q+ auto-queue, history and themes.",
   "permissions": [
     "storage",
@@ -12,6 +12,7 @@
   "host_permissions": [
     "*://*/*",
     "https://coolhole.org/*",
+    "https://www.coolhole.org/*",
     "https://new.coolhole.org/*"
   ],
   "background": {
@@ -33,6 +34,7 @@
       ],
       "exclude_matches": [
         "*://coolhole.org/*",
+        "*://www.coolhole.org/*",
         "*://new.coolhole.org/*",
         "*://coolhost.ca/*",
         "*://www.coolhost.ca/*"
@@ -48,6 +50,7 @@
     {
       "matches": [
         "https://coolhole.org/*",
+        "https://www.coolhole.org/*",
         "https://new.coolhole.org/*"
       ],
       "js": [
@@ -60,6 +63,7 @@
     {
       "matches": [
         "https://coolhole.org/*",
+        "https://www.coolhole.org/*",
         "https://new.coolhole.org/*"
       ],
       "js": [

@@ -263,7 +263,10 @@
         }
       }
       const result = await CQ.send({ type: 'cq:queue', payload: this.payload(c, extra) });
-      if (!result || result.ok === false) ui.toast('Could not send the video to Coolhole. Check that the extension is enabled and try again.', 'error');
+      if (!result || result.ok === false) {
+        ui.toast('Could not send the video to Coolhole. ' +
+          String(result && result.error || 'Check that the extension is enabled and try again.'), 'error');
+      }
       return result;
     }
     unqueue(ctx) {

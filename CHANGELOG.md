@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.6
+- Avoid opening another Coolhost tab when an existing tab is unresponsive; retry the most recently used tab and report an actionable error if it still does not respond.
+
+## 3.1.5
+- Avoid opening a second Coolhole tab when an existing tab is slow or unresponsive; try other open Coolhole tabs and show an actionable error if none respond.
+- Recognize `www.coolhole.org` as an existing Coolhole tab.
+- Improve YouTube Shorts detection when YouTube's active Shorts player exposes the video ID in its renderer instead of the URL.
+
 ## 3.1.4
 - Check direct media links from Q+ just before queueing; try Coolhost recovery and remove links that are confirmed expired.
 
