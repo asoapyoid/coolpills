@@ -152,6 +152,7 @@
 
     try {
       localToast('Sending media link to Coolhost for processing…');
+      await notifyHole('Coolhost started processing the video in the background.');
       const response = await fetch(new URL('/api/upload-from-url', location.origin), {
         method: 'POST',
         credentials: 'include',
@@ -171,6 +172,7 @@
         throw new Error('Coolhost did not return an upload progress link.');
       }
       localToast('Coolhost accepted the video. Processing…');
+      await notifyHole('Coolhost accepted the video and is processing it in the background.');
 
       const progressUrl = new URL(data.progress_url, location.origin);
       if (progressUrl.protocol !== 'https:' ||
@@ -228,6 +230,7 @@
         throw new Error(queued && queued.error || 'The processed video could not be sent to Coolhole.');
       }
       localToast('Coolhost finished processing. The MP4 was sent to Coolhole.');
+      await notifyHole('Coolhost finished processing; the MP4 was sent to Coolhole.');
     } catch (error) {
       console.error('[CoolPills] Coolhost fallback failed', error);
       const message = 'Could not send the rejected video to Coolhost: ' +

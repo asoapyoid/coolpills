@@ -228,7 +228,7 @@
               ui.toast('Could not start Reddit recovery on Coolhost: ' +
                 String(fallback && fallback.error || 'the extension did not respond.'), 'error');
             } else {
-              ui.toast('Coolhost opened to process the Reddit video. Watch the Coolhost tab for upload status.', 'queue');
+              ui.toast('Coolhost is processing the Reddit video in the background.', 'queue');
             }
             return fallback;
           }

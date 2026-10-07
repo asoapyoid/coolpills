@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.28
+- Run Reddit Coolhost recovery in an inactive background tab so it does not interrupt the current page.
+- Send Coolhost start, progress, and completion notices to the open Coolhole tab.
+
 ## 3.0.27
 - Allow Reddit DASH recovery when the video is selected from a subreddit feed, while still validating the Reddit post and media host.
 

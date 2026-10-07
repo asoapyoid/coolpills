@@ -9,14 +9,14 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.0.27](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.27) |
+| **Current release** | [v3.0.28](https://github.com/asoapyoid/coolpills/releases/tag/v3.0.28) |
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.27.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.27.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.0.28.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.0.28.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -47,7 +47,7 @@ Firefox's temporary add-on is removed when Firefox closes; load it again after r
 
 ## Coolhost recovery
 
-When Coolhole rejects a link as unplayable, Cool Pills automatically opens or uses a Coolhost tab and submits the selected link for processing. For Reddit fallback, the Coolhost tab is brought to the foreground so its upload status is visible. Cool Pills waits for Coolhost to finish and queues the resulting MP4; it does not queue the unfinished source or retry when Coolhole is only at its queue limit. If Coolhost rejects the link, requires a login, or loses the processing connection, Cool Pills reports the problem in the Coolhost tab and by toast.
+When Coolhole rejects a link as unplayable, Cool Pills automatically opens or uses an inactive Coolhost tab and submits the selected link for processing, so you can continue using the current page. Cool Pills waits for Coolhost to finish and queues the resulting MP4; it does not queue the unfinished source or retry when Coolhole is only at its queue limit. When a Coolhole tab is open, it shows background start, processing, completion, or failure notices. If Coolhost rejects the link, requires a login, or loses the processing connection, Cool Pills reports the problem by toast.
 
 On Coolhost, each active upload with a playable MP4 link gets a **CH** button beside **Copy link**. Click it to send that upload to Coolhole. Expired history entries are not given a button.
 
