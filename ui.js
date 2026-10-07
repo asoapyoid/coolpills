@@ -272,14 +272,20 @@
       .join('\n');
 
   // ── theme state (site theme + v2 day/night phase come from Coolhole via storage) ──
-  ui.themeState = { siteTheme: null, phase: 'night' };
+  const clockPhase = () => {
+    const minutes = new Date().getMinutes();
+    return minutes >= 50 ? 'moon' : minutes >= 30 ? 'night' : 'day';
+  };
+  ui.themeState = { siteTheme: null, phase: clockPhase() };
   const themeListeners = new Set();
   const emitTheme = () => themeListeners.forEach((fn) => { try { fn(); } catch (_) { /* ignore */ } });
   ui.onTheme = (fn) => { themeListeners.add(fn); return () => themeListeners.delete(fn); };
-  const normPhase = (p) => (p === 'day' ? 'day' : p === 'moon' || p === 'moonrise' ? 'moon' : 'night');
+  const normPhase = (p) => (
+    p === 'day' ? 'day' : p === 'night' ? 'night' : p === 'moon' || p === 'moonrise' ? 'moon' : clockPhase()
+  );
   ui.themeReady = (async () => {
     ui.themeState.siteTheme = await store.get(KEYS.siteTheme, null);
-    ui.themeState.phase = normPhase(await store.get(KEYS.v2Phase, 'night'));
+    ui.themeState.phase = normPhase(await store.get(KEYS.v2Phase, null));
   })();
   store.watch(KEYS.siteTheme, (v) => { ui.themeState.siteTheme = v; emitTheme(); });
   store.watch(KEYS.v2Phase, (v) => { ui.themeState.phase = normPhase(v); emitTheme(); });

@@ -813,19 +813,49 @@
   }
   function detectPhase() {
     const root = document.documentElement;
-    const attr = (root.getAttribute('data-phase') || '').toLowerCase();
-    if (attr === 'moon' || attr === 'moonrise') return 'moon';
-    if (attr === 'night' || attr === 'day') return attr;
+    const body = document.body;
+    const phaseAttrs = [
+      root.getAttribute('data-phase'),
+      root.dataset && root.dataset.phase,
+      body && body.getAttribute('data-phase'),
+      body && body.dataset && body.dataset.phase,
+    ].map((value) => String(value || '').toLowerCase());
+    if (phaseAttrs.some((value) => value === 'moon' || value === 'moonrise')) return 'moon';
+    if (phaseAttrs.includes('night')) return 'night';
+    if (phaseAttrs.includes('day')) return 'day';
     const dn = document.getElementById('day-night');
     if (dn) {
       const blob = (dn.className || '') + ' ' + (dn.textContent || '').toLowerCase();
-      if (/is-moon|moonrise|\bmoon\b/.test(blob)) return 'moon';
-      if (/is-night|\bnight\b/.test(blob)) return 'night';
-      if (/is-day|\bday\b/.test(blob)) return 'day';
+      if (/\bis-moon\b|moonrise|\bmoon\b|full.?moon/i.test(blob)) return 'moon';
+      if (/\bis-night\b|\bnight\b/i.test(blob)) return 'night';
+      if (/\bis-day\b|\bday\b/i.test(blob)) return 'day';
     }
+    const blob = [
+      root.className,
+      body && body.className,
+      root.getAttribute('data-theme'),
+      ...phaseAttrs,
+      body && body.getAttribute('data-theme'),
+    ].join(' ');
+    if (/\bmoonrise\b|\bis-moon\b|\bmoon\b|full.?moon/i.test(blob)) return 'moon';
+    if (/\bnight\b|nocturnal|after.?dark|\bis-night\b/i.test(blob)) return 'night';
+    if (/\bday\b|daytime|sunrise|morning|\bis-day\b/i.test(blob)) return 'day';
     const m = new Date().getMinutes();
     return m >= 50 ? 'moon' : m >= 30 ? 'night' : 'day';
   }
+  let phaseElement = null;
+  let phaseObserver = null;
+  const observePhaseElement = () => {
+    const next = $('#day-night');
+    if (next === phaseElement) return;
+    if (phaseObserver) phaseObserver.disconnect();
+    phaseElement = next;
+    if (phaseElement) {
+      phaseObserver = new MutationObserver(syncSiteThemeSoon);
+      phaseObserver.observe(phaseElement, { attributes: true, childList: true, characterData: true, subtree: true });
+      syncSiteThemeSoon();
+    }
+  };
   async function syncSiteTheme() {
     const site = detectSiteTheme();
     const phase = detectPhase();
@@ -1469,13 +1499,15 @@
     const attrs = { attributes: true, attributeFilter: ['class', 'data-theme', 'data-phase', 'style'] };
     obs.observe(document.documentElement, attrs);
     obs.observe(document.body, attrs);
+    const phaseFinder = new MutationObserver(observePhaseElement);
+    phaseFinder.observe(document.body, { childList: true, subtree: true });
+    observePhaseElement();
     const link = $('#usertheme');
     if (link) obs.observe(link, { attributes: true, attributeFilter: ['href'] });
     if (document.head) obs.observe(document.head, { childList: true });
-    const dn = $('#day-night');
-    if (dn) obs.observe(dn, { attributes: true, childList: true, characterData: true, subtree: true });
   } catch (_) { /* ignore */ }
 
+  setInterval(syncSiteTheme, 30000);
   setTimeout(processHash, 600);
   setTimeout(tryAutoQueue, 2000);
 })();

@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.6
+- Improve Black Spring day/night/bloodmoon detection and keep the cycle synchronized when Coolhole updates or inserts its phase indicator.
+
 ## 3.0.5
 - Match the Coolhole floating pill and panel to the supplied userscript’s theme-specific shells, borders, active states, and shadows.
 
