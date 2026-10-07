@@ -729,7 +729,7 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const origin = sender.url || sender.tab && sender.tab.url || '';
         const fromCoolhole = /^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin);
         const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
-          isRedditUrl(origin, true) && isRedditUrl(msg.payload.postUrl, true) &&
+          isRedditUrl(origin) && isRedditUrl(msg.payload.postUrl, true) &&
           isRedditDashUrl(msg.payload.url);
         if (!fromCoolhole && !fromReddit) {
           return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a verified Reddit media manifest.' };

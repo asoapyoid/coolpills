@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.27
+- Allow Reddit DASH recovery when the video is selected from a subreddit feed, while still validating the Reddit post and media host.
+
 ## 3.0.26
 - For Reddit posts that require login, read the DASH playlist in the signed-in Reddit page and give the direct media manifest to Coolhost instead of asking it to fetch the gated post page.
 - Never send Reddit login cookies to Coolhost; stop with a clear error if Reddit does not expose a media playlist.
