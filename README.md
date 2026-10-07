@@ -13,6 +13,8 @@
 | **Queue controls** | CH to queue or remove; CP to Work, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
+See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the full installation guide, feature explanations, site coverage, privacy notes, and troubleshooting.
+
 ## Download
 
 - [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.1.zip)
