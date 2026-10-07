@@ -53,10 +53,10 @@ On Coolhost, each active upload with a playable MP4 link gets a **CH** button be
 
 ## Check for updates
 
-Open the extension's settings and choose **Check for updates**. Cool Pills checks the latest published GitHub release and offers the ZIP for your browser if a newer version is available. Downloading a browser extension from GitHub cannot silently replace an installed extension, so finish the update manually:
+Open the extension's settings and choose **Check for updates**. Cool Pills checks the latest published GitHub release and offers the ZIP for your browser if a newer version is available. The extension cannot silently replace its own files, so download the ZIP, extract it, overwrite the existing extension files, then reload the extension in your browser:
 
-- **Chrome, Edge or Brave:** extract the new ZIP over the existing unpacked extension folder, then open `chrome://extensions` and click **Reload** on Cool Pills.
-- **Firefox:** load the new ZIP again from `about:debugging#/runtime/this-firefox`. Temporary add-ons must be loaded again after Firefox restarts.
+- **Chrome, Edge or Brave:** open the existing Cool Pills folder you selected with **Load unpacked**. Extract the new ZIP and copy its contents into that same folder, choosing **Replace the files in the destination** if Windows asks. Make sure `manifest.json` is still directly inside the selected folder, not inside a newly nested subfolder. Then open `chrome://extensions` (or `edge://extensions` / `brave://extensions`) and click **Reload** on the Cool Pills card. Refresh tabs where you want the updated content scripts to take effect.
+- **Firefox:** open `about:debugging#/runtime/this-firefox` and use **Reload** for Cool Pills if that control is available. If it is not, click **Remove**, then **Load Temporary Add-on** and select the new ZIP. Refresh tabs to activate the updated content scripts. Temporary add-ons must be loaded again after Firefox restarts.
 
 ## Settings and saved data
 
