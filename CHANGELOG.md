@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.3
+- Show only the queue button on YouTube video cards; keep the full CH | CP pill on watch pages and other sites.
+
 ## 3.0.2
 - Improve dropdown text and background contrast in light and dark settings themes.
 
