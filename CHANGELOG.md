@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.16
+- Detect smaller social-feed videos and video-post thumbnails when sites use custom post cards instead of standard video elements.
+- Add Facebook and Threads adapters and recognize Instagram mirror domains.
+
 ## 3.0.15
 - Remove the unsupported-media asterisk from the CH button; queue failures are reported by toast.
 - Label videos without a discoverable title as "Raw Video".

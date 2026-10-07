@@ -91,6 +91,37 @@
     }
     return null;
   };
+  const SOCIAL_POST = 'article, [role="article"], shreddit-post, [data-testid="post-container"]';
+  const VIDEO_MARKER = 'video, [data-testid*="video" i], [data-e2e*="video" i], [aria-label*="video" i]';
+  const hasVideoSignal = (post) => {
+    if (!post) return false;
+    if (post.matches('shreddit-post[post-type="video"], [data-post-type="video"], [data-media-type="video"]')) return true;
+    if (post.querySelector(VIDEO_MARKER)) return true;
+    return !!post.querySelector('a[href*="/reel/"], a[href*="/reels/"], a[href*="/watch/"], a[href*="/videos/"]');
+  };
+  const resolveSocialMedia = (adapter, stack) => {
+    for (const el of stack) {
+      if (!el || !el.tagName) continue;
+      const isVideo = el.tagName === 'VIDEO';
+      const isImage = el.tagName === 'IMG';
+      const isVideoSurface = !isVideo && !isImage &&
+        el.matches('[data-testid*="video" i], [data-e2e*="video" i], [aria-label*="video" i]');
+      if (!isVideo && !isImage && !isVideoSurface) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 120 || r.height < 70) continue;
+      if (isImage) {
+        const post = closestDeep(el, SOCIAL_POST);
+        if (!hasVideoSignal(post)) continue;
+      }
+      return {
+        key: el,
+        rect: () => el.getBoundingClientRect(),
+        place: 'video-top-right',
+        ctx: () => adapter.context(el),
+      };
+    }
+    return null;
+  };
 
   const base = (video, url, title, supported) => ({
     url,
@@ -358,7 +389,7 @@
   };
 
   const instagram = {
-    id: 'instagram', label: 'Instagram', hosts: /(^|\.)instagram\.com$/i, supported: 'no',
+    id: 'instagram', label: 'Instagram', hosts: /(^|\.)(instagram|kkinstagram|ddinstagram)\.com$/i, supported: 'no',
     context(v) {
       const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"]');
       const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;
@@ -426,6 +457,28 @@
     },
   };
 
+  const facebook = {
+    id: 'facebook', label: 'Facebook', hosts: /(^|\.)facebook\.com$/i, supported: 'no',
+    context(v) {
+      const post = closestDeep(v, '[role="article"], article');
+      const link = post && post.querySelector('a[href*="/reel/"], a[href*="/watch/"], a[href*="/videos/"]');
+      const direct = directVideoUrl(v);
+      const title = post && textOf('[data-ad-preview="message"]', post);
+      return base(v, direct || (link && abs(link.getAttribute('href'))) || location.href, title, direct ? 'yes' : 'no');
+    },
+  };
+
+  const threads = {
+    id: 'threads', label: 'Threads', hosts: /(^|\.)threads\.net$/i, supported: 'no',
+    context(v) {
+      const post = closestDeep(v, 'article');
+      const link = post && post.querySelector('a[href*="/post/"]');
+      const direct = directVideoUrl(v);
+      const title = post && textOf('[data-testid="post-text"], [dir="auto"]');
+      return base(v, direct || (link && abs(link.getAttribute('href'))) || location.href, title, direct ? 'yes' : 'no');
+    },
+  };
+
   const generic = {
     id: 'generic', label: 'Any HTML5 video', hosts: /./, supported: 'maybe',
     context(v) {
@@ -434,9 +487,13 @@
     },
   };
 
-  const list = [youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, kick];
+  const list = [youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, kick, facebook, threads];
+  const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
-    if (!a.resolve) a.resolve = (stack) => resolveVideo(a, stack);
+    if (!a.resolve) {
+      a.resolve = (stack) => resolveVideo(a, stack) ||
+        (socialAdapters.has(a) ? resolveSocialMedia(a, stack) : null);
+    }
   });
   generic.resolve = (stack) => resolveVideo(generic, stack);
 
