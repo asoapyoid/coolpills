@@ -199,6 +199,8 @@
             if (!fallback || fallback.ok === false) {
               ui.toast('Could not start Reddit recovery on Coolhost: ' +
                 String(fallback && fallback.error || 'the extension did not respond.'), 'error');
+            } else {
+              ui.toast('Coolhost opened to process the Reddit video. Watch the Coolhost tab for upload status.', 'queue');
             }
             return fallback;
           }

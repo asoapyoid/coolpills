@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.25
+- Open Coolhost visibly for Reddit fallback uploads and show whether processing was accepted, completed, or failed.
+
 ## 3.0.24
 - Stop queueing Reddit post pages when direct MP4 lookup fails; send the post to Coolhost and queue only the processed MP4.
 - Resolve Reddit posts even when the page exposes a video-only MP4, so RapidSave can provide an audio-merged file.

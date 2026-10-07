@@ -73,6 +73,7 @@ async function relayToHole(type, payload, { focus = false } = {}) {
 }
 
 async function startCoolhostUpload(payload) {
+  const showTab = payload.platform === 'reddit';
   const source = new URL(String(payload && payload.url || ''));
   if (!['http:', 'https:'].includes(source.protocol)) {
     return { ok: false, error: 'Coolhost only accepts HTTP or HTTPS video links.' };
@@ -91,6 +92,7 @@ async function startCoolhostUpload(payload) {
   const tabs = await api.tabs.query({ url: ['https://coolhost.ca/*', 'https://www.coolhost.ca/*'] });
   tabs.sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0) || (b.lastAccessed || 0) - (a.lastAccessed || 0));
   for (const tab of tabs) {
+    if (showTab) await focusTab(tab);
     for (let i = 0; i < 3; i++) {
       try {
         await api.tabs.sendMessage(tab.id, { type: 'cq:coolhost-upload', payload: request });
@@ -105,7 +107,7 @@ async function startCoolhostUpload(payload) {
     cq_upload: request.url,
     cq_title: request.title,
   });
-  await api.tabs.create({ url: 'https://coolhost.ca/#' + hash.toString(), active: false });
+  await api.tabs.create({ url: 'https://coolhost.ca/#' + hash.toString(), active: showTab });
   return { ok: true, via: 'new-tab' };
 }
 
