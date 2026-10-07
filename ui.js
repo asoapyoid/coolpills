@@ -490,7 +490,9 @@
     menu.append(el('div', 'cq-pop-head', 'CP Actions'));
     const mbody = el('div', 'cq-pop-body');
     const radios = {};
-    [['work', 'Click CP to go Fishing'], ['qplus', 'Click CP to queue to Q+'], ['schedule', 'Click CP to Schedule']].forEach(
+    [['work', 'Click CP to go Fishing'], ['qplus', 'Click CP to queue to Q+'], ['schedule', 'Click CP to Schedule'],
+      ['copy', 'Click CP to copy the video link'], ['open', 'Click CP to open Coolhole'],
+      ['none', 'Click CP to do nothing'], ['custom', 'Click CP to run Custom (experimental)']].forEach(
       ([val, text]) => {
         const lab = el('label');
         const r = el('input', null, null, { type: 'radio', name: 'cq-cpmode', value: val });

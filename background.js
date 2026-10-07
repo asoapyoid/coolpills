@@ -42,6 +42,7 @@ function hashUrl(type, p = {}) {
   return 'https://coolhole.org/#' + h + '&n=' + Date.now();
 }
 
+
 async function focusTab(tab) {
   try {
     await api.tabs.update(tab.id, { active: true });
@@ -79,6 +80,7 @@ async function relayToHole(type, payload, { focus = false } = {}) {
     };
   }
   if (type === 'cq:unqueue') return { ok: false, via: 'none' };
+  if (type === 'cq:custom') return { ok: false, via: 'none', error: 'No Coolhole tab is open. Open a Coolhole tab and try again.' };
   const s = await getSettings();
   if (s.openNewCoolholeTab === false) {
     return { ok: false, via: 'none', error: 'No Coolhole tab is open. Open a Coolhole tab and try again.' };
@@ -817,6 +819,21 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       case 'cq:work': {
         const s = await getSettings();
         return relayToHole('cq:work', {}, { focus: s.autoFocus !== false });
+      }
+      case 'cq:open-hole': {
+        const tab = await pickHoleTab();
+        if (tab) { await focusTab(tab); return { ok: true, via: 'tab' }; }
+        const s = await getSettings();
+        if (s.openNewCoolholeTab === false) {
+          return { ok: false, via: 'none', error: 'No Coolhole tab is open. Open a Coolhole tab and try again.' };
+        }
+        await api.tabs.create({ url: 'https://coolhole.org/', active: true });
+        return { ok: true, via: 'hash' };
+      }
+      case 'cq:custom': {
+        const s = await getSettings();
+        const steps = Array.isArray(msg.payload && msg.payload.steps) ? msg.payload.steps.slice(0, 10).map((x) => String(x).slice(0, 200)) : [];
+        return relayToHole('cq:custom', { steps }, { focus: s.autoFocus !== false });
       }
       case 'cq:fetch-meta':
         return fetchMeta(msg.url);

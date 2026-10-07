@@ -39,8 +39,16 @@
           <option value="work">Fishing</option>
           <option value="qplus">Queue to Q+</option>
           <option value="schedule">Schedule to Q+</option>
+          <option value="copy">Copy video link</option>
+          <option value="open">Open / focus Coolhole</option>
+          <option value="none">None (do nothing)</option>
+          <option value="custom">Custom (experimental)</option>
         </select>
       </label>
+      <div id="customBox" hidden>
+        <p class="hint">Custom (experimental): one CSS selector per line (max 10). When you click CP, each matching element on your Coolhole tab is clicked in order, for example <code>#btn-store</code> or <code>#rail-town</code>. No code is run.</p>
+        <textarea id="cpCustomSteps" rows="4" maxlength="1000" spellcheck="false" placeholder="#btn-store"></textarea>
+      </div>
       <label class="check"><input type="checkbox" id="unAfk"> Un-AFK before Fishing</label>
       <label class="check"><input type="checkbox" id="autoFocus"> Auto-focus Coolhole tab</label>
     </section>

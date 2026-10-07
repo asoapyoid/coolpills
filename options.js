@@ -83,6 +83,8 @@
     $('uiMode').value = s.uiMode;
     document.documentElement.setAttribute('data-mode', s.uiMode);
     $('maxQueued').value = s.maxQueued;
+    $('cpCustomSteps').value = s.cpCustomSteps;
+    $('customBox').hidden = s.cpMode !== 'custom';
     BOOLS.forEach((k) => ($(k).checked = s[k]));
     [['ytOpacity', 10], ['holeOpacity', 0]].forEach(([k]) => {
       $(k).value = Math.round(s[k] * 100);
@@ -125,7 +127,11 @@
     CQ.settings.save(v === 'match' ? { matchCoolholeTheme: true } : { matchCoolholeTheme: false, theme: v });
   });
   $('uiMode').addEventListener('change', () => CQ.settings.save({ uiMode: $('uiMode').value }));
-  $('cpMode').addEventListener('change', () => CQ.settings.save({ cpMode: $('cpMode').value }));
+  $('cpMode').addEventListener('change', () => {
+    $('customBox').hidden = $('cpMode').value !== 'custom';
+    CQ.settings.save({ cpMode: $('cpMode').value });
+  });
+  $('cpCustomSteps').addEventListener('change', () => CQ.settings.save({ cpCustomSteps: $('cpCustomSteps').value }));
   $('maxQueued').addEventListener('change', () => CQ.settings.save({ maxQueued: $('maxQueued').value }));
   BOOLS.forEach((k) => $(k).addEventListener('change', () => CQ.settings.save({ [k]: $(k).checked })));
   ['ytOpacity', 'holeOpacity'].forEach((k) =>

@@ -109,7 +109,8 @@
     holeOpacity: 0.35,
     ytOpacity: 0.38, // pill opacity on video sites
     grayButtons: true,
-    cpMode: 'work', // work | qplus | schedule
+    cpMode: 'work', // work (Fishing) | qplus | schedule | none | copy | open | custom
+    cpCustomSteps: '', // Custom (experimental): one CSS selector per line, clicked in order on Coolhole
     unAfk: false,
     autoFocus: true,
     autoQueue: true,
@@ -143,7 +144,8 @@
     }
     if (r.qPlusEnabled === undefined && r.qPlus === false) s.qPlusEnabled = false;
     if (!MANUAL_THEMES.includes(s.theme)) s.theme = 'default';
-    if (!['work', 'qplus', 'schedule'].includes(s.cpMode)) s.cpMode = 'work';
+    if (!['work', 'qplus', 'schedule', 'none', 'copy', 'open', 'custom'].includes(s.cpMode)) s.cpMode = 'work';
+    s.cpCustomSteps = typeof s.cpCustomSteps === 'string' ? s.cpCustomSteps.slice(0, 1000) : '';
     if (!['auto', 'light', 'dark'].includes(s.uiMode)) s.uiMode = 'auto';
     s.holeOpacity = clamp(s.holeOpacity, 0, 1, 0.35);
     s.ytOpacity = clamp(s.ytOpacity, 0.1, 1, 0.38);

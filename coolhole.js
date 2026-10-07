@@ -774,6 +774,22 @@
     check();
   }
 
+  // ══ Custom CP (experimental) ═════════════════════════════════════
+  // No code execution (extension CSP forbids it): each step is a CSS selector, clicked in order.
+  async function doCustom(p) {
+    const steps = Array.isArray(p.steps) ? p.steps : [];
+    let done = 0;
+    for (const sel of steps) {
+      let node = null;
+      try { node = document.querySelector(String(sel)); } catch (_) { return toast(`Custom: invalid selector "${String(sel).slice(0, 40)}"`, 'error'); }
+      if (!node) return toast(`Custom: nothing matches "${String(sel).slice(0, 40)}" (${done}/${steps.length} done)`, 'error');
+      node.click();
+      done++;
+      if (done < steps.length) await sleep(250);
+    }
+    toast(`Custom: ${done} step${done === 1 ? '' : 's'} done`, 'queue');
+  }
+
   // ══ Gold Collector (.text-lottery chat lines) ════════════════════
   const G = { entries: [], seen: new Set(), mediaKey: null, started: false, armed: false, quietUntil: 0 };
   const goldOn = () => cfg().goldChatHist === true;
@@ -1556,6 +1572,7 @@
         break;
       }
       case 'cq:unqueue': handleUnqueue(msg.payload || {}); respond({ ok: true }); break;
+      case 'cq:custom': doCustom(msg.payload || {}); respond({ ok: true }); break;
       case 'cq:work': doWork(); respond({ ok: true }); break;
       case 'cq:try-auto': scheduleAutoCheck(); respond({ ok: true }); break;
       case 'cq:toggle-panel': setCollapsed(!cfg().collapsed); respond({ ok: true }); break;
