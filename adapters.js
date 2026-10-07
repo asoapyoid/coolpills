@@ -353,10 +353,7 @@
     if (Date.now() - shareCache.at < 600) return shareCache;
     const shorts = /^\/shorts\//i.test(location.pathname);
     const el = shorts
-      ? findShare([
-          document.querySelector('ytd-reel-video-renderer[is-active]'),
-          document.querySelector('ytd-reel-player-overlay-renderer'),
-        ])
+      ? findShare([document])
       : findShare([
           document.querySelector('#actions'),
           document.querySelector('ytd-watch-metadata'),
