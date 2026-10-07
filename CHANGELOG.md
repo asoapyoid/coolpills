@@ -1,6 +1,7 @@
 # Changelog
 
 ## 3.1.6
+- Make the Queue option 'If no Coolhole tab is open, create one' work; when off, show a toast asking you to open a Coolhole tab instead of opening one.
 - Avoid opening another Coolhost tab when an existing tab is unresponsive; retry the most recently used tab and report an actionable error if it still does not respond.
 - On YouTube Shorts watch pages, show the pill when hovering the Share control, including when YouTube renders it inside a shadow root.
 

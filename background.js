@@ -79,6 +79,10 @@ async function relayToHole(type, payload, { focus = false } = {}) {
     };
   }
   if (type === 'cq:unqueue') return { ok: false, via: 'none' };
+  const s = await getSettings();
+  if (s.openNewCoolholeTab === false) {
+    return { ok: false, via: 'none', error: 'No Coolhole tab is open. Open a Coolhole tab and try again.' };
+  }
   await api.tabs.create({ url: hashUrl(type, payload), active: true });
   return { ok: true, via: 'hash' };
 }

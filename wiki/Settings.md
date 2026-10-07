@@ -19,6 +19,7 @@ Choose whether CP runs Work, adds the video to Q+, or schedules it. **Un-AFK bef
 
 - **Q+ enabled:** turn the waiting list on or off.
 - **Auto-queue when a slot opens:** automatically send the next Q+ entry when the room queue has room.
+- **If no Coolhole tab is open, create one:** on by default. When off, CH shows a toast asking you to open a Coolhole tab instead of opening one.
 - **Max Queued:** set your personal queue limit.
 - **Force ignores limit:** let force actions bypass your personal limit where supported.
 - **Gold Collector:** enable the lottery chat-line helper.

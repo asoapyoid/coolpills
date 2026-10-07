@@ -74,7 +74,7 @@
     }
   });
 
-  const BOOLS = ['grayButtons', 'disableCinemaIdleHide', 'unAfk', 'autoFocus', 'qPlusEnabled', 'autoQueue', 'forceIgnoreLimit', 'goldChatHist', 'genericEnabled'];
+  const BOOLS = ['grayButtons', 'disableCinemaIdleHide', 'unAfk', 'autoFocus', 'qPlusEnabled', 'autoQueue', 'openNewCoolholeTab', 'forceIgnoreLimit', 'goldChatHist', 'genericEnabled'];
 
   function fill() {
     const s = CQ.settings.cur;
