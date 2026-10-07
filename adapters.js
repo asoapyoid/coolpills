@@ -126,14 +126,34 @@
     /\/shorts\//i.test(location.pathname) ||
     !!document.querySelector('ytd-reel-video-renderer[is-active], #shorts-player');
 
+  const ytCardLinks = (card) =>
+    card.querySelectorAll(
+      'a#thumbnail[href], a#video-title-link[href], a[href*="/watch"], a[href*="/shorts/"]'
+    );
   const ytCardId = (card) => {
-    const a =
-      card.querySelector('a#thumbnail[href]') ||
-      card.querySelector('a#video-title-link[href]') ||
-      card.querySelector('a[href*="/watch"]') ||
-      card.querySelector('a[href*="/shorts/"]') ||
-      card.querySelector('a[href]');
-    return a ? ytIdFromHref(a.href) : null;
+    for (const link of ytCardLinks(card)) {
+      const id = ytIdFromHref(link.href);
+      if (id) return id;
+    }
+    return null;
+  };
+  const ytCardForTarget = (node) => {
+    let card = closestDeep(node, CARD_SEL);
+    if (!card) return null;
+    const id = ytCardId(card);
+    if (!id) return null;
+    let parent = card.parentElement;
+    while (parent) {
+      if (parent.matches && parent.matches(CARD_SEL) && ytCardId(parent) === id) card = parent;
+      parent = parent.parentElement || (parent.getRootNode && parent.getRootNode().host) || null;
+    }
+    return { card, id };
+  };
+  const ytCardAnchor = (card, id) => {
+    for (const link of ytCardLinks(card)) {
+      if (ytIdFromHref(link.href) === id) return link;
+    }
+    return card;
   };
   const ytCardTitle = (card) => {
     const t =
@@ -257,12 +277,6 @@
     shareCache = { at: Date.now(), el, shorts };
     return shareCache;
   };
-  const ytAnchor = (card) =>
-    card.querySelector('ytd-menu-renderer') ||
-    card.querySelector('#menu') ||
-    card.querySelector('a#thumbnail') ||
-    card;
-
   const youtube = {
     id: 'youtube',
     label: 'YouTube',
@@ -270,14 +284,13 @@
     supported: 'yes',
     resolve(stack) {
       for (const el of stack) {
-        const card = el.closest && el.closest(CARD_SEL);
-        if (!card) continue;
-        const id = ytCardId(card);
-        if (!id) continue;
+        const target = ytCardForTarget(el);
+        if (!target) continue;
+        const { card, id } = target;
         return {
           key: card,
-          rect: () => ytAnchor(card).getBoundingClientRect(),
-          place: 'below-right',
+          rect: () => ytCardAnchor(card, id).getBoundingClientRect(),
+          place: 'video-top-right',
           ctx: () => ytCtx(id, ytCardTitle(card), ytCardDuration(card)),
         };
       }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.11
+- Keep the pill anchored to one stable thumbnail corner per YouTube video card to prevent it jumping between card controls.
+
 ## 3.0.10
 - Prevent duplicate extension copies from rendering overlapping pills; the newest Cool Pills pill takes priority.
 
