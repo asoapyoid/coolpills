@@ -151,7 +151,7 @@
     processing.add(parsed.href);
 
     try {
-      localToast('Sending video link to Coolhost for processing…');
+      localToast('Sending media link to Coolhost for processing…');
       const response = await fetch(new URL('/api/upload-from-url', location.origin), {
         method: 'POST',
         credentials: 'include',

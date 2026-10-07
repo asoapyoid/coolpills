@@ -18,6 +18,7 @@ FILES = (
     "options.css",
     "options.html",
     "options.js",
+    "reddit-main.js",
     "storage.js",
     "ui.js",
     "icon16.png",

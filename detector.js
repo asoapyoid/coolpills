@@ -14,6 +14,25 @@
   await ui.themeReady;
 
   const extensionVersion = CQ.api.runtime.getManifest().version;
+  const redditMediaChannel = 'coolpills:reddit-media';
+  const requestRedditDashUrl = (postUrl) => new Promise((resolve) => {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => finish(null), 7000);
+    const finish = (result) => {
+      clearTimeout(timeout);
+      window.removeEventListener('message', onMessage);
+      resolve(result);
+    };
+    const onMessage = (event) => {
+      const message = event.data;
+      if (event.source !== window || event.origin !== location.origin ||
+          !message || message.channel !== redditMediaChannel ||
+          message.type !== 'dash-result' || message.id !== id) return;
+      finish(message);
+    };
+    window.addEventListener('message', onMessage);
+    window.postMessage({ channel: redditMediaChannel, type: 'get-dash', id, postUrl }, location.origin);
+  });
   const compareVersions = (left, right) => {
     const a = String(left || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
     const b = String(right || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
@@ -186,12 +205,21 @@
         if (!resolution || !resolution.ok || !/^https:\/\//i.test(String(resolution.url || ''))) {
           const error = resolution && resolution.error || 'The resolver did not respond.';
           if (c.platform === 'reddit') {
-            ui.toast('Reddit MP4 lookup failed. Sending the post to Coolhost to process before queueing. ' + error, 'queue');
+            ui.toast('Reddit MP4 lookup failed. Checking the signed-in page for its audio/video manifest…', 'queue');
+            const media = await requestRedditDashUrl(c.postUrl);
+            const dashUrl = media && /^https:\/\/v\.redd\.it\/[^?#]*\/DASHPlaylist\.mpd(?:[?#]|$)/i.test(media.dashUrl || '')
+              ? media.dashUrl : null;
+            if (!dashUrl) {
+              const reason = media && media.error || 'The signed-in page did not expose a Reddit DASH playlist.';
+              ui.toast('Could not recover this Reddit video with audio: ' + reason + ' ' + error, 'error');
+              return { ok: false, error: reason };
+            }
+            ui.toast('Found Reddit’s audio/video manifest. Sending it to Coolhost to combine and process…', 'queue');
             let fallback;
             try {
               fallback = await CQ.send({
                 type: 'cq:coolhost-upload',
-                payload: { url: c.postUrl, title: c.title, platform: 'reddit' },
+                payload: { url: dashUrl, postUrl: c.postUrl, title: c.title, platform: 'reddit' },
               });
             } catch (uploadError) {
               fallback = { ok: false, error: String(uploadError && uploadError.message || uploadError) };

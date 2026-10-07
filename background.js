@@ -127,6 +127,16 @@ function isRedditUrl(value, requirePost = false) {
   }
 }
 
+function isRedditDashUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' && url.hostname === 'v.redd.it' &&
+      /\/DASHPlaylist\.mpd$/i.test(url.pathname);
+  } catch (_) {
+    return false;
+  }
+}
+
 // ── metadata fetch (CORS-free thanks to host_permissions) ───────────
 const ytId = (u) => {
   const m = String(u || '').match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
@@ -719,9 +729,10 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const origin = sender.url || sender.tab && sender.tab.url || '';
         const fromCoolhole = /^https:\/\/(?:new\.)?coolhole\.org\//i.test(origin);
         const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
-          isRedditUrl(origin) && isRedditUrl(msg.payload.url, true);
+          isRedditUrl(origin, true) && isRedditUrl(msg.payload.postUrl, true) &&
+          isRedditDashUrl(msg.payload.url);
         if (!fromCoolhole && !fromReddit) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a Reddit video post.' };
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a verified Reddit media manifest.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }

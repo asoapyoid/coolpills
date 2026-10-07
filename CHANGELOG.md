@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.26
+- For Reddit posts that require login, read the DASH playlist in the signed-in Reddit page and give the direct media manifest to Coolhost instead of asking it to fetch the gated post page.
+- Never send Reddit login cookies to Coolhost; stop with a clear error if Reddit does not expose a media playlist.
+
 ## 3.0.25
 - Open Coolhost visibly for Reddit fallback uploads and show whether processing was accepted, completed, or failed.
 
