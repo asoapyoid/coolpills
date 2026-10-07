@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.15
+- Remove the unsupported-media asterisk from the CH button; queue failures are reported by toast.
+- Label videos without a discoverable title as "Raw Video".
+
 ## 3.0.14
 - Fall back to FxTwitter when VxTwitter cannot resolve an X/Twitter video.
 

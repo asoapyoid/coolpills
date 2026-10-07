@@ -16,7 +16,7 @@
   const cfg = () => CQ.settings.cur;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const fmt = (t, title) => t.replaceAll('{title}', title || 'Unknown video');
+  const fmt = (t, title) => t.replaceAll('{title}', title || 'Raw Video');
   const MAX_PENDING = 40;
   const MAX_HISTORY = 30;
   const MAX_PINS = 40;
@@ -406,7 +406,7 @@
     return {
       videoId: String(parsed.videoId),
       mediaUrl: parsed.mediaUrl,
-      title: CQ.cleanTitle(raw.title) || null,
+      title: CQ.cleanTitle(raw.title) || 'Raw Video',
       duration: dur,
       durationLabel: label,
       thumbnail: raw.thumbnail || null,
@@ -456,9 +456,10 @@
   };
   const displayTitle = (item) => {
     let t = CQ.cleanTitle(item.title);
+    if (!t || /^raw video$/i.test(t)) return 'Raw Video';
     const isYt = CQ.isYoutubeId(String(item.videoId));
     if (!isYt && (!t || t === item.videoId || /^https?:\/\//i.test(t) || t.length > 100)) t = CQ.smartTitleFromUrl(item.mediaUrl || item.videoId);
-    return t || (isYt ? item.videoId : 'Untitled');
+    return t || 'Raw Video';
   };
 
   /** Fill in a missing title / duration through the background worker */

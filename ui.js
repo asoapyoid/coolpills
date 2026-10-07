@@ -429,7 +429,6 @@
 .cq-pill.cq-colored .cq-seg-cp:hover{background:var(--cq-cph);color:var(--cq-cphfg);box-shadow:var(--cq-cphsh);filter:brightness(1.1)}
 .cq-seg.cq-sent{filter:brightness(1.25)}
 .cq-seg-ch.cq-locked{pointer-events:none}
-.cq-pill[data-support="no"] .cq-seg-ch>span::after{content:'*';opacity:.8}
 .cq-fill{position:absolute;top:0;bottom:0;width:0;background:var(--cq-chfill,rgba(255,255,255,.3));pointer-events:none}
 .cq-ch-fill{right:0}
 .cq-cp-fill{left:0;background:var(--cq-cpfill,rgba(255,255,255,.18));transition:width .3s linear}

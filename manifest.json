@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cool Pills",
-  "version": "3.0.14",
+  "version": "3.0.15",
   "description": "Queue videos from any site to Coolhole. CH/CP pills, Q+ auto-queue, history, themes, Gold Collector.",
   "permissions": [
     "storage",
