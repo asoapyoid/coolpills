@@ -13,7 +13,7 @@ Open Cool Pills from the browser's extensions page to reach its settings. Most s
 
 ## CP button and Fishing
 
-Choose whether CP goes Fishing, adds the video to Q+, schedules it, copies the video link, opens or focuses Coolhole, does nothing, or runs **Custom (experimental)**. Custom clicks a list of CSS selectors (one per line, up to 10) on your Coolhole tab in order; no code is executed. **Un-AFK** and **Auto-focus Coolhole tab** affect what CP does on Coolhole (Auto-focus brings an already-open Coolhole tab to the front on any CP click) (Un-AFK takes you out of AFK on an open Coolhole tab whenever you click CP, whichever CP action is selected).
+Choose whether CP goes Fishing, adds the video to Q+, schedules it, copies the video link, opens or focuses Coolhole, does nothing, or runs **Custom (experimental)**. Custom clicks a list of CSS selectors (one per line, up to 10) on your Coolhole tab in order; no code is executed. **Un-AFK** and **Auto-focus Coolhole tab** apply to every CP action: Un-AFK takes you out of AFK on an open Coolhole tab, and Auto-focus brings an already-open Coolhole tab to the front. Neither opens a new tab.
 
 ## Queue options
 
