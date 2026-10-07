@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cool Pills — Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>Cool Pills</h1>
+    <p class="sub">Queue videos from any site to Coolhole. Changes save automatically.</p>
+    <label class="row"><span>Settings page appearance</span>
+      <select id="uiMode"><option value="auto">Auto (system)</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+
+    <section>
+      <h2>Appearance</h2>
+      <label class="row"><span>Theme</span>
+        <select id="theme">
+          <option value="default">Default (CQ)</option>
+          <option value="steam">Old Steam</option>
+          <option value="cobra">King Cobra</option>
+          <option value="match">Match Coolhole (incl. Battle.net, Cinema, Black Spring)</option>
+        </select>
+      </label>
+      <label class="row"><span>Pill opacity (video sites)</span>
+        <input type="range" id="ytOpacity" min="10" max="100" step="1"><output id="ytOpacityV"></output></label>
+      <label class="row"><span>Coolhole panel opacity</span>
+        <input type="range" id="holeOpacity" min="0" max="100" step="1"><output id="holeOpacityV"></output></label>
+      <label class="check"><input type="checkbox" id="grayButtons"> Gray buttons on video sites (color on hover)</label>
+      <label class="check"><input type="checkbox" id="disableCinemaIdleHide"> Disable Cinema idle-fade (Match + Cinema only)</label>
+    </section>
+
+    <section>
+      <h2>CP button</h2>
+      <label class="row"><span>Click CP to…</span>
+        <select id="cpMode">
+          <option value="work">Work (earn CP)</option>
+          <option value="qplus">Queue to Q+</option>
+          <option value="schedule">Schedule to Q+</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="unAfk"> Un-AFK before Work</label>
+      <label class="check"><input type="checkbox" id="autoFocus"> Auto-focus Coolhole tab</label>
+    </section>
+
+    <section>
+      <h2>Queue</h2>
+      <label class="check"><input type="checkbox" id="qPlusEnabled"> Q+ enabled (overflow list)</label>
+      <label class="check"><input type="checkbox" id="autoQueue"> Auto-queue when a slot opens</label>
+      <label class="row"><span>Max Queued</span><input type="number" id="maxQueued" min="1" max="99" step="1"></label>
+      <label class="check"><input type="checkbox" id="forceIgnoreLimit"> Force ignores limit</label>
+      <label class="check"><input type="checkbox" id="goldChatHist"> Gold Collector</label>
+    </section>
+
+    <section>
+      <h2>Sites</h2>
+      <p class="hint">Turn the pill off per site. Unknown sites use generic HTML5 &lt;video&gt; detection.</p>
+      <div id="sites"></div>
+      <label class="check"><input type="checkbox" id="genericEnabled"> Detect &lt;video&gt; on all other sites</label>
+      <div class="row">
+        <input type="text" id="siteInput" placeholder="Disable a hostname, e.g. example.com">
+        <button id="siteAdd" type="button">Add</button>
+      </div>
+      <ul id="siteList"></ul>
+    </section>
+
+    <section>
+      <h2>Keyboard shortcuts</h2>
+      <ul id="shortcuts"></ul>
+      <p class="hint">Change them at <code>chrome://extensions/shortcuts</code> (Firefox: Add-ons → ⚙ → Manage Extension Shortcuts).
+        Some browsers reserve Ctrl+Shift+Q.</p>
+    </section>
+
+    <section>
+      <h2>Backup</h2>
+      <div class="row">
+        <button id="export" type="button">Export JSON</button>
+        <button id="importBtn" type="button">Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+      <p id="status" class="hint"></p>
+    </section>
+  </main>
+  <script src="storage.js"></script>
+  <script src="adapters.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

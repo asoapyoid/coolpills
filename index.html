@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cool Pills — queue any video to Coolhole</title>
+<meta name="description" content="Browser extension that queues videos from any site to Coolhole.">
+<link rel="icon" href="icon.png">
+<style>
+:root{--bg:#141418;--fg:#ececf1;--card:#1d1d24;--edge:#34343f;--red:#c62828;--blue:#1e88e5;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f5f5f8;--fg:#18181d;--card:#fff;--edge:#dcdce4;color-scheme:light}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:48px 20px 80px}
+header{text-align:center}header img{width:112px;height:112px}
+h1{font-size:2.4rem;margin:.2em 0 .1em}.lead{opacity:.75;font-size:1.1rem;margin:0 auto 24px;max-width:520px}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+a.btn{display:inline-block;padding:12px 22px;border-radius:999px;color:#fff;font-weight:700;text-decoration:none}
+a.btn.c{background:linear-gradient(180deg,#e53935,#b71c1c)}a.btn.f{background:linear-gradient(180deg,#1e88e5,#0d47a1)}
+a.btn.g{background:var(--card);color:var(--fg);border:1px solid var(--edge)}
+section{background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:18px 22px;margin:22px 0}
+h2{margin:0 0 8px;font-size:1.1rem}ul{padding-left:20px;margin:6px 0}code,kbd{background:rgba(128,128,128,.2);padding:1px 6px;border-radius:5px;font-size:.9em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:620px){.grid{grid-template-columns:1fr}}
+footer{text-align:center;opacity:.6;font-size:.85rem;margin-top:30px}
+</style>
+</head>
+<body><main>
+<header>
+  <img src="icon.png" alt="">
+  <h1>Cool Pills</h1>
+  <p class="lead">A tiny <b>CH | CP</b> pill on any video. One click queues it to Coolhole.</p>
+  <div class="btns">
+    <a class="btn c" href="https://github.com/OWNER/REPO/releases/latest">⬇ Chrome / Edge / Brave</a>
+    <a class="btn f" href="https://github.com/OWNER/REPO/releases/latest">⬇ Firefox</a>
+    <a class="btn g" href="https://github.com/OWNER/REPO">View on GitHub</a>
+  </div>
+</header>
+
+<section><h2>What it does</h2><ul>
+  <li><b>CH</b> queues to Coolhole (becomes <b>UN</b> if already queued). Over your limit? It waits in <b>Q+</b> and auto-queues when a slot opens.</li>
+  <li><b>CP</b> focuses Coolhole and hits Work. Hold for settings.</li>
+  <li>Searchable <b>history</b> with pins, drag-reorder <b>Q+</b>, <b>Schedule</b>, multi-link paste, <b>Gold Collector</b>.</li>
+  <li>Works on YouTube, Vimeo, Twitch, TikTok, Instagram, X, Reddit, Dailymotion, Kick and any HTML5 video.</li>
+  <li>Themes: Default, Old Steam, King Cobra, or Match Coolhole (incl. Cinema, Black Spring and Battle.net).</li>
+</ul></section>
+
+<div class="grid">
+<section><h2>Install on Chrome / Edge / Brave</h2><ol>
+  <li>Download the Chrome zip and <b>unzip</b> it.</li>
+  <li>Go to <code>chrome://extensions</code> and enable <b>Developer mode</b>.</li>
+  <li><b>Load unpacked</b> and choose the folder.</li></ol></section>
+<section><h2>Install on Firefox</h2><ol>
+  <li>Download the Firefox zip.</li>
+  <li>Open <code>about:debugging#/runtime/this-firefox</code>.</li>
+  <li><b>Load Temporary Add-on</b> and pick the zip.</li></ol>
+  <p style="opacity:.7;font-size:.9rem;margin:0">Temporary add-ons reset when Firefox restarts.</p></section>
+</div>
+
+<section><h2>Shortcuts</h2>
+<ul><li><kbd>Ctrl+Shift+Q</kbd> queue current video</li><li><kbd>Ctrl+Shift+W</kbd> focus Coolhole + Work</li><li><kbd>Ctrl+Shift+H</kbd> toggle Hist / Q+ panel</li></ul></section>
+
+<footer>MIT licensed · by aSoapyoid · not affiliated with Coolhole</footer>
+</main></body></html>
