@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.1.3
+- Detect X's visible `GIF` badge within the media area and suppress the pill for those posts.
+
 ## 3.1.2
 - Do not show video pills on X/Twitter GIF media.
 

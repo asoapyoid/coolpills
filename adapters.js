@@ -476,6 +476,17 @@
         if (player && Array.from(player.querySelectorAll('[aria-label], [title], [alt], [data-testid]')).some(gifLabel)) {
           return null;
         }
+        const mediaRect = el.getBoundingClientRect();
+        const hasGifBadge = Array.from(tweet.querySelectorAll('span')).some((badge) => {
+          if ((badge.textContent || '').trim().toUpperCase() !== 'GIF') return false;
+          const rect = badge.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          return rect.width > 0 && rect.height > 0 &&
+            centerX >= mediaRect.left && centerX <= mediaRect.right &&
+            centerY >= mediaRect.top && centerY <= mediaRect.bottom;
+        });
+        if (hasGifBadge) return null;
       }
       return resolveVideo(this, stack) || resolveSocialMedia(this, stack);
     },
