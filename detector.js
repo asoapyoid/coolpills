@@ -272,17 +272,37 @@
     unqueue(ctx) {
       CQ.send({ type: 'cq:unqueue', payload: { url: ctx.url, videoId: ctx.videoId || null } });
     }
-    async work() {
-      const cd = await store.get(KEYS.workCd, null);
-      if (cd && cd.ready === false && cd.remainingMs > 0 && cd.startedAt) {
-        if (cd.startedAt + Math.max(cd.totalMs || 0, cd.remainingMs) > Date.now() + 500) return; // cooling
+    async copyLink(ctx) {
+      const url = ctx && ctx.url;
+      if (!url) return ui.toast('No video link found to copy.', 'error');
+      try {
+        await navigator.clipboard.writeText(url);
+        ui.toast('Video link copied', 'queue');
+      } catch (_) {
+        ui.toast('Could not copy the link — the browser blocked clipboard access.', 'error');
       }
+    }
+    async custom() {
+      const steps = String(CQ.settings.cur.cpCustomSteps || '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 10);
+      if (!steps.length) return ui.toast('Custom CP has no steps yet. Add CSS selectors in Options → CP button.', 'error');
+      const result = await CQ.send({ type: 'cq:custom', payload: { steps } });
+      if (!result || result.ok === false) ui.toast(String((result && result.error) || 'Custom CP action failed.'), 'error');
+    }
+    async work() {
       CQ.send({ type: 'cq:work' });
     }
     cpClick(ctx) {
       const mode = CQ.settings.cur.cpMode;
+      // Un-AFK applies to every CP action; Fishing/Custom do it themselves on the Coolhole tab.
+      if (CQ.settings.cur.unAfk && mode !== 'work' && mode !== 'custom') CQ.send({ type: 'cq:unafk' });
+      // Auto-focus applies to every CP action; Fishing/Custom/Open focus via their own relay.
+      if (CQ.settings.cur.autoFocus && !['work', 'custom', 'open'].includes(mode)) CQ.send({ type: 'cq:focus-hole' });
       if (ctx && mode === 'schedule') return this.pill.openSchedule(ctx);
       if (ctx && mode === 'qplus') return this.queue(ctx, { forceQPlus: true });
+      if (mode === 'none') return;
+      if (mode === 'copy') return this.copyLink(ctx || this.currentContext());
+      if (mode === 'open') return void CQ.send({ type: 'cq:open-hole' });
+      if (mode === 'custom') return this.custom();
       this.work();
     }
 

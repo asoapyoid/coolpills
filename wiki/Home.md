@@ -21,7 +21,7 @@ Get the latest browser ZIPs from the [GitHub releases page](https://github.com/a
 
 - **CH** sends a detected video to Coolhole. When possible, its title, duration, and thumbnail are included.
 - **UN** removes a video that is already in the room queue.
-- **CP** runs Work by default. Its action can be changed to add or schedule the video in Q+.
+- **CP** goes Fishing by default. Its action can be changed to add or schedule the video in Q+.
 - **Q+** holds items locally until Coolhole has room, or adds them when auto-queue is enabled.
 
 For the exact settings available in the current release, see [Settings](Settings).

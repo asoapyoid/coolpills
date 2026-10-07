@@ -11,15 +11,16 @@ Open Cool Pills from the browser's extensions page to reach its settings. Most s
 - **Gray buttons:** show gray buttons until hover.
 - **Disable Cinema idle-fade:** keep the panel from fading while matching the Cinema theme.
 
-## CP button and Work
+## CP button and Fishing
 
-Choose whether CP runs Work, adds the video to Q+, or schedules it. **Un-AFK before Work** and **Auto-focus Coolhole tab** affect Work behavior.
+Choose whether CP goes Fishing, adds the video to Q+, schedules it, copies the video link, opens or focuses Coolhole, does nothing, or runs **Custom (experimental)**. Custom clicks a list of CSS selectors (one per line, up to 10) on your Coolhole tab in order; no code is executed. **Un-AFK** and **Auto-focus Coolhole tab** apply to every CP action: Un-AFK takes you out of AFK on an open Coolhole tab, and Auto-focus brings an already-open Coolhole tab to the front. Neither opens a new tab.
 
 ## Queue options
 
 - **Q+ enabled:** turn the waiting list on or off.
 - **Auto-queue when a slot opens:** automatically send the next Q+ entry when the room queue has room.
-- **Max Queued:** set your personal queue limit.
+- **If no Coolhole tab is open, create one:** on by default. When off, CH shows a toast asking you to open a Coolhole tab instead of opening one.
+- **Max Queued:** set your personal queue limit. Set it to 0 for unlimited; Coolhole's own room limit still applies.
 - **Force ignores limit:** let force actions bypass your personal limit where supported.
 - **Gold Collector:** enable the lottery chat-line helper.
 
@@ -40,7 +41,7 @@ The default shortcuts are:
 | Shortcut | Action |
 | --- | --- |
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
-| `Ctrl+Shift+W` | Focus Coolhole and run Work |
+| `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
 
 Use **Enable keyboard shortcut actions** to turn shortcut actions on or off. Firefox allows remapping from the settings page. Chrome-based browsers require remapping through the browser's extension shortcut manager. Browsers may reserve a combination; choose another if it cannot be assigned.

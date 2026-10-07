@@ -477,7 +477,7 @@
     ch.append(chFill, chLabel);
     const cp = el('button', 'cq-seg cq-seg-cp cq-ready', null, {
       type: 'button',
-      title: 'Focus Coolhole and Work · hold for settings',
+      title: 'Focus Coolhole and go Fishing · hold for settings',
     });
     const cpFill = el('span', 'cq-fill cq-cp-fill');
     cpFill.style.width = '100%';
@@ -490,7 +490,9 @@
     menu.append(el('div', 'cq-pop-head', 'CP Actions'));
     const mbody = el('div', 'cq-pop-body');
     const radios = {};
-    [['work', 'Click CP to Work'], ['qplus', 'Click CP to queue to Q+'], ['schedule', 'Click CP to Schedule']].forEach(
+    [['work', 'Click CP to go Fishing'], ['qplus', 'Click CP to queue to Q+'], ['schedule', 'Click CP to Schedule'],
+      ['copy', 'Click CP to copy the video link'], ['open', 'Click CP to open Coolhole'],
+      ['none', 'Click CP to do nothing'], ['custom', 'Click CP to run Custom (experimental)']].forEach(
       ([val, text]) => {
         const lab = el('label');
         const r = el('input', null, null, { type: 'radio', name: 'cq-cpmode', value: val });
@@ -502,7 +504,7 @@
     );
     mbody.append(el('div', 'cq-pop-sep'));
     const checks = {};
-    [['unAfk', 'Un-AFK before Work'], ['autoFocus', 'Auto-focus Coolhole tab']].forEach(([k, text]) => {
+    [['unAfk', 'Un-AFK'], ['autoFocus', 'Auto-focus Coolhole tab']].forEach(([k, text]) => {
       const lab = el('label');
       const c = el('input', null, null, { type: 'checkbox' });
       checks[k] = c;
@@ -733,14 +735,14 @@
     cp.addEventListener('pointercancel', () => { pressAt = 0; clearTimeout(holdTimer); });
     cp.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
 
-    // ── Work cooldown charge bar (written by the Coolhole tab) ──
+    // ── Fishing cooldown charge bar (written by the Coolhole tab) ──
     let cdTimer = 0;
     let cdEnds = 0;
     let cdTotal = 1000;
     const setReady = () => {
       cp.classList.add('cq-ready');
       cpFill.style.width = '100%';
-      cp.title = 'Focus Coolhole and Work · hold for settings';
+      cp.title = 'Focus Coolhole and go Fishing · hold for settings';
       clearInterval(cdTimer);
       cdTimer = 0;
     };
@@ -749,7 +751,7 @@
       if (rem <= 0) return setReady();
       cp.classList.remove('cq-ready');
       cpFill.style.width = (((cdTotal - rem) / cdTotal) * 100).toFixed(1) + '%';
-      cp.title = `Work cooldown — ${Math.ceil(rem / 1000)}s · hold for settings`;
+      cp.title = `Fishing cooldown — ${Math.ceil(rem / 1000)}s · hold for settings`;
     };
     const startCd = (state) => {
       if (!state || state.ready || !(state.remainingMs > 0)) { if (state && state.ready) setReady(); return; }

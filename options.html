@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <h1>Cool Pills</h1>
+    <h1><img class="logo" src="icon48.png" alt="" width="32" height="32">Cool Pills</h1>
     <p class="sub">Queue videos from any site to Coolhole. Changes save automatically.</p>
     <label class="row"><span>Settings page appearance</span>
       <select id="uiMode"><option value="auto">Auto (system)</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
@@ -36,12 +36,20 @@
       <h2>CP button</h2>
       <label class="row"><span>Click CP to…</span>
         <select id="cpMode">
-          <option value="work">Work (earn CP)</option>
+          <option value="work">Fishing</option>
           <option value="qplus">Queue to Q+</option>
           <option value="schedule">Schedule to Q+</option>
+          <option value="copy">Copy video link</option>
+          <option value="open">Open / focus Coolhole</option>
+          <option value="none">None (do nothing)</option>
+          <option value="custom">Custom (experimental)</option>
         </select>
       </label>
-      <label class="check"><input type="checkbox" id="unAfk"> Un-AFK before Work</label>
+      <div id="customBox" hidden>
+        <p class="hint">Custom (experimental): one CSS selector per line (max 10). When you click CP, each matching element on your Coolhole tab is clicked in order, for example <code>#btn-store</code> or <code>#rail-town</code>. No code is run.</p>
+        <textarea id="cpCustomSteps" rows="4" maxlength="1000" spellcheck="false" placeholder="#btn-store"></textarea>
+      </div>
+      <label class="check"><input type="checkbox" id="unAfk"> Un-AFK</label>
       <label class="check"><input type="checkbox" id="autoFocus"> Auto-focus Coolhole tab</label>
     </section>
 
@@ -50,7 +58,7 @@
       <label class="check"><input type="checkbox" id="qPlusEnabled"> Q+ enabled (overflow list)</label>
       <label class="check"><input type="checkbox" id="autoQueue"> Auto-queue when a slot opens</label>
       <label class="check"><input type="checkbox" id="openNewCoolholeTab"> If no Coolhole tab is open, create one instead of just showing a toast</label>
-      <label class="row"><span>Max Queued</span><input type="number" id="maxQueued" min="1" max="99" step="1"></label>
+      <label class="row"><span>Max Queued <small class="hint">(0 = unlimited)</small></span><input type="number" id="maxQueued" min="0" max="99" step="1"></label>
       <label class="check"><input type="checkbox" id="forceIgnoreLimit"> Force ignores limit</label>
       <label class="check"><input type="checkbox" id="goldChatHist"> Gold Collector</label>
     </section>
