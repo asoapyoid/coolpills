@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1
+- Show `CH.CA` in Q+ when a Coolhost MP4 has no available duration.
+- Clean up Coolhost URL detection placement in the Q+ list helpers.
+
 ## 3.0.29
 - Preserve Reddit post titles and duration from its media metadata through Coolhost processing into Coolhole Q+.
 - Probe the finished Coolhost MP4 for duration when Reddit does not provide one.

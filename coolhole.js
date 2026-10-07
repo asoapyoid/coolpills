@@ -389,10 +389,22 @@
   }
 
   // ══ list operations ══════════════════════════════════════════════
+  function isCoolhostUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return (parsed.hostname === 'coolhost.ca' || parsed.hostname === 'www.coolhost.ca') &&
+        parsed.pathname.toLowerCase().startsWith('/f/') &&
+        parsed.pathname.toLowerCase().endsWith('.mp4');
+    } catch (_) {
+      return false;
+    }
+  }
+
   const durLabel = (item) => {
     const raw = item.durationLabel != null ? String(item.durationLabel).trim() : '';
     if (raw && raw !== 'undefined' && raw !== 'null') return raw;
-    return item.duration != null ? CQ.formatDuration(item.duration) : '';
+    if (item.duration != null) return CQ.formatDuration(item.duration);
+    return isCoolhostUrl(item.mediaUrl) ? 'CH.CA' : '';
   };
   function normItem(raw) {
     const parsed = raw.videoId && raw.mediaUrl
@@ -461,17 +473,6 @@
     if (!isYt && (!t || t === item.videoId || /^https?:\/\//i.test(t) || t.length > 100)) t = CQ.smartTitleFromUrl(item.mediaUrl || item.videoId);
     return t || 'Raw Video';
   };
-
-  function isCoolhostUrl(url) {
-    try {
-      const parsed = new URL(url);
-      return (parsed.hostname === 'coolhost.ca' || parsed.hostname === 'www.coolhost.ca') &&
-        parsed.pathname.toLowerCase().startsWith('/f/') &&
-        parsed.pathname.toLowerCase().endsWith('.mp4');
-    } catch (_) {
-      return false;
-    }
-  }
 
   async function sendToCoolhost(item, reason) {
     toast('Coolhole could not add ' + displayTitle(item) + ' (' + reason + '). Sending the link to Coolhost to process…', 'queue');
