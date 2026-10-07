@@ -3,7 +3,6 @@
 ## 3.1.7
 - Replace Work (Earn CP) with Fishing: CP, the Fishing shortcut and the CP mode option now cast your line on Coolhole (the Fish button) and automatically hook the moment a fish bites. Existing CP settings and shortcuts carry over.
 - Click CP can now do nothing, copy the video link, open/focus Coolhole, or run Custom (experimental): click your own list of CSS selectors on Coolhole in order.
-
 - Max Queued of 0 now means unlimited (only Coolhole's room limit applies).
 
 ## 3.1.6
