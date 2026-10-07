@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.0.4
+- Align pill and Coolhole theme styling with the supplied YouTube userscript, including phase colors, gray mode, progress fills, and theme-specific typography.
+
 ## 3.0.3
 - Show only the queue button on YouTube video cards; keep the full CH | CP pill on watch pages and other sites.
 

@@ -27,10 +27,14 @@
   const BASE = {
     shell: '#2a2a2a', radius: '999px', rad: '8px',
     shadow: '0 2px 10px rgba(0,0,0,.5)',
-    font: 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif', tt: 'none', ts: 'none', gloss: '.55',
+    font: 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif', fontsize: '10px', letterspacing: '.06em',
+    holefontsize: '12px', holeletterspacing: '.04em',
+    tt: 'none', ts: 'none', gloss: '.55',
+    chfill: 'rgba(255,255,255,.3)', cpfill: 'rgba(255,255,255,.18)',
+    graych: '#3a3a3a', graychfg: '#c8c8c8', graycp: '#3a3a3a', graycpfg: '#c8c8c8',
     ch: GRAD_R, chfg: '#fff', chh: GRAD_R, chhfg: '#fff', chsh: NOSH, chhsh: NOSH,
     cp: GRAD_B, cpfg: '#fff', cph: GRAD_B, cphfg: '#fff', cpsh: NOSH, cphsh: NOSH,
-    idlech: '#4a4a4a', idlechfg: '#c8c8c8', idlecp: '#525252', idlecpfg: '#c8c8c8',
+    idlech: '#3a3a3a', idlechfg: '#c8c8c8', idlecp: '#3a3a3a', idlecpfg: '#c8c8c8',
     panel: '#1e1e1e', panelfg: '#eee', edge: '#444', head: '#252525', pilledge: '#444',
     dragbg: '#333', dragfg: '#ccc', dragedge: '#555',
     badge: '#e53935', badgefg: '#fff', badgeb: 'transparent', pattern: 'none',
@@ -43,7 +47,9 @@
   const THEMES = {
     default: {},
     steam: {
-      shell: '#4c5844', radius: '0', rad: '0', font: 'Tahoma,"MS Sans Serif",sans-serif', ts: '0 1px 0 rgba(0,0,0,.35)', gloss: '0',
+      shell: '#4c5844', radius: '0', rad: '0', font: 'Tahoma,"MS Sans Serif",sans-serif',
+      fontsize: '11px', holefontsize: '11px', letterspacing: '.04em', ts: '0 1px 0 rgba(0,0,0,.35)', gloss: '0',
+      chfill: 'rgba(245,242,224,.28)', cpfill: 'rgba(198,195,181,.3)',
       shadow: 'inset 1px 1px 0 #7a8a62, inset -1px -1px 0 #1b1f14, 0 2px 6px rgba(0,0,0,.4)',
       ch: '#d35400', chh: '#d35400', cp: '#6b7a4e', cpfg: '#f5f2e0', cph: '#6b7a4e', cphfg: '#f5f2e0',
       idlech: '#5c4030', idlechfg: '#e8d8c0', idlecp: '#3e4a2c', idlecpfg: '#c6c3b5',
@@ -54,10 +60,13 @@
       tg: '#c45500', tgfg: '#fff', tgsh: 'inset 1px 1px 0 #e8a060, inset -1px -1px 0 #5c2800',
     },
     cobra: {
-      shell: '#000', radius: '8px 4px 10px 4px', rad: '8px 4px 10px 4px', font: 'Cinzel,"Times New Roman",serif', gloss: '0',
-      shadow: '0 0 10px rgba(57,255,20,.14), 0 2px 12px rgba(0,0,0,.8)',
-      ch: '#080a08', chfg: '#39ff14', chh: '#0f2410', chhfg: '#7dff5a', cp: '#050705', cpfg: '#39ff14', cph: '#22c20e', cphfg: '#000',
-      idlech: '#080a08', idlechfg: '#39ff14', idlecp: '#050705', idlecpfg: '#39ff14',
+      shell: '#000', radius: '8px 4px 10px 4px', rad: '8px 4px 10px 4px', font: 'Cinzel,"Times New Roman",serif',
+      fontsize: '10px', holefontsize: '11px', holeletterspacing: '.06em', letterspacing: '.04em', gloss: '0',
+      chfill: 'rgba(57,255,20,.22)', cpfill: 'rgba(0,0,0,.4)',
+      shadow: '0 0 0 1px #0f2a0f, 0 0 10px rgba(57,255,20,.14), 0 2px 10px rgba(0,0,0,.85)',
+      ch: '#0f2410', chfg: '#39ff14', chh: '#0f2410', chhfg: '#39ff14',
+      cp: '#22c20e', cpfg: '#000', cph: '#22c20e', cphfg: '#000',
+      idlech: '#2a2a2a', idlechfg: '#c8c8c8', idlecp: '#2a2a2a', idlecpfg: '#c8c8c8',
       panel: '#000', panelfg: '#39ff14', edge: '#143314', head: '#050705', pilledge: '#0f2a0f',
       dragbg: '#050705', dragfg: '#6fd85a', dragedge: '#143314', badge: '#0a1f0a', badgefg: '#39ff14', badgeb: '#39ff14',
       pattern: 'linear-gradient(135deg,rgba(57,255,20,.1) 25%,transparent 25%),linear-gradient(225deg,rgba(57,255,20,.07) 25%,transparent 25%)',
@@ -65,7 +74,9 @@
       tf: '#0a0404', tffg: '#ff6b6b', tfb: '#4a1010', tfsh: 'inset 3px 0 0 #39ff14', tg: '#22c20e', tgfg: '#000',
     },
     wc2: {
-      shell: 'linear-gradient(180deg,#152056,#0c1438)', radius: '0', rad: '0', font: 'Georgia,"Times New Roman",serif', ts: 'none', gloss: '0',
+      shell: 'linear-gradient(180deg,#152056,#0c1438)', radius: '4px', rad: '4px',
+      font: 'Georgia,"Times New Roman",serif', holefontsize: '12px', letterspacing: '.03em', ts: 'none', gloss: '0',
+      chfill: 'rgba(255,236,160,.28)', cpfill: 'rgba(26,18,0,.3)',
       shadow: '0 0 0 1px #c9a227, 0 2px 12px rgba(0,0,40,.55)',
       ch: '#a01818', chh: '#a01818', cp: '#c9a227', cpfg: '#1a1200', cph: '#c9a227', cphfg: '#1a1200',
       idlech: '#5c1010', idlechfg: '#f5d0d0', idlecp: '#121a4a', idlecpfg: '#e8d5a3',
@@ -75,14 +86,17 @@
       tf: '#1a0c08', tffg: '#f0d77b', tfb: '#8b1a1a', tfsh: 'inset 3px 0 0 #c9a227', tg: '#c9a227', tgfg: '#1a1200',
     },
     coolhole: {
-      shell: '#1a2226', shadow: '0 2px 12px rgba(0,0,0,.55)', ch: '#c23b3b', chh: '#d44545', cp: '#3c788c', cph: '#4aa3bc',
-      idlech: '#4a3030', idlechfg: '#f0d8d8', idlecp: '#1e3a44', idlecpfg: '#b2dce8',
+      shell: '#1a2226', shadow: '0 2px 10px rgba(0,0,0,.4)', ch: '#c23b3b', chh: '#c23b3b', cp: '#3c788c', cph: '#3c788c',
+      chfill: 'rgba(255,255,255,.3)', cpfill: 'rgba(158,201,214,.35)',
+      idlech: '#3a2a2a', idlechfg: '#f0d0d0', idlecp: '#1e3a44', idlecpfg: '#b2dce8',
       panel: '#13191c', panelfg: '#d5eef4', edge: '#2a3a40', head: '#0c1214', pilledge: '#2f4248',
       dragbg: '#13191c', dragfg: '#9ec9d6', dragedge: '#2f4248', badge: '#c23b3b',
       tf: '#12181a', tffg: '#f0b0b0', tfb: '#3a2a2a', tfsh: 'inset 3px 0 0 #c23b3b',
     },
     cinema: {
       shell: '#0a0a0a', radius: '4px', rad: '4px', tt: 'uppercase', gloss: '0', shadow: '0 6px 20px rgba(0,0,0,.75)',
+      fontsize: '10px', holefontsize: '10px', letterspacing: '.05em', holeletterspacing: '.05em',
+      chfill: 'rgba(255,255,255,.22)', cpfill: 'rgba(255,255,255,.2)',
       ch: '#c42828', chh: '#c42828', chsh: 'inset 0 -3px 0 #7a1010', chhsh: 'inset 0 -3px 0 #7a1010',
       cp: '#3a3a3a', cph: '#3a3a3a', cpsh: 'inset 0 -3px 0 #c62828', cphsh: 'inset 0 -3px 0 #c62828',
       idlech: '#1f1414', idlechfg: '#c8a0a0', idlecp: '#161616', idlecpfg: '#aaa',
@@ -94,35 +108,64 @@
     },
     v2day: {
       shell: 'linear-gradient(180deg,#3A4A5E 0%,#131015 75%)', radius: '4px', rad: '4px', gloss: '.3', shadow: '0 2px 12px rgba(0,0,0,.55)',
-      ch: 'linear-gradient(180deg,#c0392b 0%,#a8454a 100%)', chs: '#C0392B', chh: 'linear-gradient(180deg,#c0392b 0%,#a8454a 100%)', chhs: '#C0392B',
-      cp: 'linear-gradient(180deg,#5a7a9a 0%,#4a6a8a 100%)', cps: '#5A7A9A', cph: 'linear-gradient(180deg,#5a7a9a 0%,#4a6a8a 100%)', cphs: '#5A7A9A',
-      idlech: '#5a3838', idlechfg: '#e8d0d0', idlecp: '#3a5068', idlecpfg: '#c8d8e8',
+      chfill: 'rgba(168,69,74,.3)', cpfill: 'rgba(58,74,94,.35)',
+      graych: '#5a3838', graychfg: '#e8d0d0', graycp: '#3a5068', graycpfg: '#c8d8e8',
+      ch: 'linear-gradient(180deg,#c0392b 0%,#a8454a 100%)', chs: '#C0392B',
+      chh: 'linear-gradient(180deg,#c0392b 0%,#a8454a 100%)', chhs: '#C0392B',
+      cp: 'linear-gradient(180deg,#5a7a9a 0%,#4a6a8a 100%)', cps: '#5A7A9A',
+      cph: 'linear-gradient(180deg,#5a7a9a 0%,#4a6a8a 100%)', cphs: '#5A7A9A',
+      idlech: 'linear-gradient(180deg,#A8454A 0%,#7C1F23 100%)', idlechfg: '#EDE6DA',
+      idlecp: 'linear-gradient(180deg,#4A6A8A 0%,#3A5470 100%)', idlecpfg: '#E8F0F8',
       panel: '#131015', panelfg: '#EDE6DA', edge: '#3A2E36', head: '#0E0C10', pilledge: '#3A2E36',
       dragbg: '#0E0C10', dragfg: '#EDE6DA', dragedge: '#3A4A5E', badge: '#3A5470', badgefg: '#E8F0F8',
       tq: V2_RED, tqfg: '#ede6da', tp: 'linear-gradient(180deg,#4a6a8a,#3a5470)', tpfg: '#e8f0f8',
       tf: '#0c0a0c', tffg: '#e8c8c4', tfb: '#3a0c10', tfsh: 'inset 3px 0 0 #7c1f23', tg: 'linear-gradient(180deg,#c9a227,#7c1f23)', tgfg: '#ede6da',
     },
     v2night: {
-      shell: 'linear-gradient(180deg,#1A0709 0%,#0A0809 78%)', radius: '4px', rad: '4px', gloss: '.2',
-      shadow: '0 2px 16px rgba(0,0,0,.7), inset 0 -2px 0 rgba(124,31,35,.7)',
-      ch: 'linear-gradient(180deg,#7c1f23 0%,#3a0c10 100%)', chs: '#5a1418', chfg: '#ede6da', chh: '#a82828', chhfg: '#fff',
-      cp: 'linear-gradient(180deg,#2a4560 0%,#162838 100%)', cps: '#223a50', cpfg: '#c8d8e8', cph: '#3a5a78', cphfg: '#fff',
-      idlech: '#4a3038', idlechfg: '#e0c8d0', idlecp: '#2a4058', idlecpfg: '#b8d0e4',
+      shell: 'linear-gradient(180deg,#2A0C10 0%,#131015 68%)', radius: '4px', rad: '4px', gloss: '.2',
+      shadow: '0 2px 14px rgba(0,0,0,.6), inset 0 -2px 0 rgba(124,31,35,.45)',
+      chfill: 'rgba(192,57,43,.3)', cpfill: 'rgba(58,74,94,.32)',
+      graych: '#4a3038', graychfg: '#e0c8d0', graycp: '#2a4058', graycpfg: '#b8d0e4',
+      ch: 'linear-gradient(180deg,#A8454A 0%,#7C1F23 100%)', chs: '#7C1F23', chfg: '#EDE6DA',
+      chh: '#C0392B', chhs: '#C0392B', chhfg: '#fff',
+      cp: 'linear-gradient(180deg,#3A5A78 0%,#2A4560 100%)', cps: '#2A4560', cpfg: '#E0ECF6',
+      cph: '#4A6A8A', cphs: '#4A6A8A', cphfg: '#041018',
+      idlech: 'linear-gradient(180deg,#7C1F23 0%,#3A0C10 100%)', idlechfg: '#EDE6DA',
+      idlecp: 'linear-gradient(180deg,#2A4560 0%,#162838 100%)', idlecpfg: '#C8D8E8',
       panel: '#0C0A0C', panelfg: '#EDE6DA', edge: '#2A0C10', head: '#070506', pilledge: '#2A0C10',
       dragbg: '#070506', dragfg: '#C8B8B0', dragedge: '#2A0C10', badge: '#3A0C10', badgefg: '#E8D0D0',
       tq: V2_RED, tqfg: '#ede6da', tp: 'linear-gradient(180deg,#2a4560,#162838)', tpfg: '#c8d8e8',
       tf: '#070506', tffg: '#e8c8c4', tfb: '#2a0c10', tfsh: 'inset 3px 0 0 #7c1f23', tg: 'linear-gradient(180deg,#c9a227,#7c1f23)', tgfg: '#ede6da',
     },
     v2moon: {
-      shell: 'linear-gradient(180deg,#4A1018 0%,#1C1226 72%)', radius: '4px', rad: '4px', gloss: '.25',
-      shadow: '0 2px 14px rgba(0,0,0,.6), inset 0 -2px 0 rgba(124,31,35,.55)',
-      ch: 'linear-gradient(180deg,#8b1518 0%,#4a080c 100%)', chs: '#6a0e12', chfg: '#f2d4d0', chh: '#c0392b', chhfg: '#fff',
-      cp: 'linear-gradient(180deg,#3a4a78 0%,#2a3458 100%)', cps: '#323f68', cpfg: '#e0d8f0', cph: '#5a5a90', cphfg: '#fff',
-      idlech: 'linear-gradient(180deg,#8b1518 0%,#4a080c 100%)', idlechs: '#6a0e12', idlechfg: '#f2d4d0', idlecp: '#3a3858', idlecpfg: '#c8c0e0',
+      shell: 'linear-gradient(180deg,#1C1226 0%,#221E31 65%)', radius: '4px', rad: '4px', gloss: '.25',
+      shadow: '0 2px 14px rgba(0,0,0,.55), 0 0 12px rgba(143,122,196,.15)',
+      chfill: 'rgba(168,69,74,.28)', cpfill: 'rgba(143,122,196,.3)',
+      graycp: '#3a3858', graycpfg: '#c8c0e0',
+      ch: 'linear-gradient(180deg,#A8454A 0%,#7C1F23 100%)', chs: '#7C1F23', chfg: '#EDE6DA',
+      chh: '#C0392B', chhs: '#C0392B', chhfg: '#fff',
+      cp: 'linear-gradient(180deg,#6A5A9A 0%,#4A3A78 100%)', cps: '#4A3A78', cpfg: '#EDE6DA',
+      cph: '#8f7ac4', cphs: '#8f7ac4', cphfg: '#1a1220',
+      idlech: 'linear-gradient(180deg,#8B1518 0%,#4A080C 100%)', idlechfg: '#F2D4D0',
+      idlecp: 'linear-gradient(180deg,#3A4A78 0%,#2A3458 100%)', idlecpfg: '#E0D8F0',
       panel: '#160C14', panelfg: '#EDE6DA', edge: '#4A1820', head: '#140810', pilledge: '#5C1820',
       dragbg: '#140810', dragfg: '#EDE6DA', dragedge: '#5C1820', badge: '#4A080C', badgefg: '#F2D4D0',
       tq: 'linear-gradient(180deg,#8b1518,#4a080c)', tqfg: '#f2d4d0', tp: 'linear-gradient(180deg,#3a4a78,#2a3458)', tpfg: '#e0d8f0',
       tf: '#12080e', tffg: '#e8c8c4', tfb: '#4a1018', tfsh: 'inset 3px 0 0 #8b1518', tg: 'linear-gradient(180deg,#c9a227,#7c1f23)', tgfg: '#ede6da',
+    },
+  };
+  const PHASE_COLORS = {
+    default: {
+      day: { shadow: '0 2px 10px rgba(80,60,20,.25)', ch: '#d05040', chh: '#d05040', cp: '#3a8ec0', cph: '#3a8ec0' },
+      night: { ch: '#c03848', chh: '#c03848', cp: '#3a78b0', cph: '#3a78b0' },
+    },
+    coolhole: {
+      day: { shell: '#1e2a30', shadow: '0 2px 12px rgba(40,80,90,.4)', ch: '#d04848', chh: '#d04848', cp: '#4aa0b8', cph: '#4aa0b8' },
+      night: { shell: '#12181c', shadow: '0 2px 12px rgba(0,20,30,.55)', ch: '#b03040', chh: '#b03040', cp: '#3488a0', cph: '#3488a0' },
+    },
+    wc2: {
+      day: { shell: 'linear-gradient(180deg,#1a2868,#101c48)', shadow: '0 0 0 1px #e0c040, 0 2px 14px rgba(40,40,80,.5)', ch: '#c02020', chh: '#c02020', cp: '#e0c040', cph: '#e0c040', cpfg: '#1a1200', cphfg: '#1a1200' },
+      night: { shell: 'linear-gradient(180deg,#0c1438,#080e28)', shadow: '0 0 0 1px #a08020, 0 2px 14px rgba(0,0,30,.7)', ch: '#901818', chh: '#901818', cp: '#c0a030', cph: '#c0a030', cpfg: '#1a1200', cphfg: '#1a1200' },
     },
   };
   ui.THEME_IDS = Object.keys(THEMES);
@@ -148,7 +191,11 @@
         f.tqfg = p.tqfg || f.chfg;
         f.tp = p.tp || f.cp;
         f.tpfg = p.tpfg || f.cpfg;
-        return `[data-cq-theme="${id}"]{${Object.entries(f).map(([k, v]) => `--cq-${k}:${v};`).join('')}}`;
+        const rules = [`[data-cq-theme="${id}"]{${Object.entries(f).map(([k, v]) => `--cq-${k}:${v};`).join('')}}`];
+        Object.entries(PHASE_COLORS[id] || {}).forEach(([phase, colors]) => {
+          rules.push(`[data-cq-theme="${id}"][data-cq-phase="${phase}"]{${Object.entries(colors).map(([k, v]) => `--cq-${k}:${v};`).join('')}}`);
+        });
+        return rules.join('\n');
       })
       .join('\n');
 
@@ -232,6 +279,7 @@
     t.style.cursor = '';
     if (t._cqClick) { t.removeEventListener('click', t._cqClick); t._cqClick = null; }
     t.setAttribute('data-cq-theme', ui.themeId());
+    t.setAttribute('data-cq-phase', ui.themeState.phase);
 
     const map = {
       account: ['cq-account'], qplus: ['cq-qplus'], 'qplus-posted': ['cq-qplus'],
@@ -271,11 +319,23 @@
 .cq-pill.cq-visible{opacity:var(--cq-op);transform:scale(1)}
 .cq-pill.cq-visible.cq-hot{opacity:1}
 .cq-seg{position:relative;overflow:hidden;border:0;margin:0;padding:0 9px;min-width:2.4em;height:24px;
-  font:700 10px/1 var(--cq-font);letter-spacing:.05em;text-transform:var(--cq-tt);cursor:pointer;
+  font:700 var(--cq-fontsize,10px)/1 var(--cq-font);letter-spacing:var(--cq-letterspacing,.05em);text-transform:var(--cq-tt);cursor:pointer;
   color:var(--cq-idlechfg);background:var(--cq-idlech);text-shadow:var(--cq-ts);text-align:center;
   appearance:none;-webkit-appearance:none;
   transition:color .15s ease,box-shadow .15s ease,filter .12s ease,transform .08s ease}
 .cq-seg-cp{color:var(--cq-idlecpfg);background:var(--cq-idlecp)}
+.cq-pill:not(.cq-colored) .cq-seg-ch{background:var(--cq-graych,#3a3a3a);color:var(--cq-graychfg,#c8c8c8);box-shadow:none;text-shadow:none}
+.cq-pill:not(.cq-colored) .cq-seg-cp{background:var(--cq-graycp,#3a3a3a);color:var(--cq-graycpfg,#c8c8c8);box-shadow:none;text-shadow:none}
+.cq-pill:not(.cq-colored) .cq-seg-ch:hover{background:var(--cq-chh);color:var(--cq-chhfg);box-shadow:var(--cq-chhsh);text-shadow:none}
+.cq-pill:not(.cq-colored) .cq-seg-cp:hover{background:var(--cq-cph);color:var(--cq-cphfg);box-shadow:var(--cq-cphsh);text-shadow:none}
+.cq-root[data-cq-theme="cobra"] .cq-pill:not(.cq-colored) .cq-seg-ch,
+.cq-root[data-cq-theme="cobra"] .cq-pill:not(.cq-colored) .cq-seg-cp{
+  background-color:#3a3a3a;background-image:none;color:#c8c8c8}
+.cq-root[data-cq-theme="cobra"] .cq-pill:not(.cq-colored) .cq-seg-cp{box-shadow:inset 2px 0 0 rgba(57,255,20,.15)}
+.cq-root[data-cq-theme="cobra"] .cq-pill:not(.cq-colored) .cq-seg-ch:hover{
+  background-color:var(--cq-chh);background-image:none;color:var(--cq-chhfg)}
+.cq-root[data-cq-theme="cobra"] .cq-pill:not(.cq-colored) .cq-seg-cp:hover{
+  background-color:var(--cq-cph);background-image:none;color:var(--cq-cphfg)}
 .cq-seg:active{transform:scale(.97)}
 .cq-seg:focus-visible{outline:2px solid rgba(255,255,255,.75);outline-offset:-2px}
 .cq-seg::before{content:'';position:absolute;inset:0;background-image:var(--cq-pattern);background-size:7px 7px;pointer-events:none}
@@ -294,9 +354,9 @@
 .cq-seg.cq-sent{filter:brightness(1.25)}
 .cq-seg-ch.cq-locked{pointer-events:none}
 .cq-pill[data-support="no"] .cq-seg-ch>span::after{content:'*';opacity:.8}
-.cq-fill{position:absolute;top:0;bottom:0;width:0;background:rgba(255,255,255,.3);pointer-events:none}
+.cq-fill{position:absolute;top:0;bottom:0;width:0;background:var(--cq-chfill,rgba(255,255,255,.3));pointer-events:none}
 .cq-ch-fill{right:0}
-.cq-cp-fill{left:0;background:rgba(255,255,255,.18);transition:width .3s linear}
+.cq-cp-fill{left:0;background:var(--cq-cpfill,rgba(255,255,255,.18));transition:width .3s linear}
 .cq-cp-hold{right:0;background:rgba(255,255,255,.22)}
 .cq-seg-cp.cq-holding .cq-cp-hold{transition:width .45s linear;width:100%}
 .cq-seg-cp.cq-ready .cq-cp-fill{width:100%;background:rgba(255,255,255,.08)}
@@ -403,6 +463,7 @@
     const applySettings = () => {
       const s = CQ.settings.cur;
       root.setAttribute('data-cq-theme', ui.themeId(s));
+      root.setAttribute('data-cq-phase', ui.themeState.phase);
       pill.style.setProperty('--cq-op', String(s.ytOpacity));
       pill.classList.toggle('cq-colored', s.grayButtons === false);
     };

@@ -853,7 +853,7 @@
 #cq-float-pill-wrap{position:relative;display:inline-flex}
 #cq-float-pill{display:inline-flex;align-items:stretch;overflow:hidden;line-height:1}
 #cq-float #cq-float-pill .cq-seg,#cq-float #cq-float-restore{position:relative;overflow:hidden;cursor:pointer;margin:0;
-  padding:5px 9px;font:700 10px/1 var(--cq-font);letter-spacing:.04em;text-transform:var(--cq-tt);min-width:2.4em;text-align:center}
+  padding:5px 9px;font:700 var(--cq-holefontsize,12px)/1 var(--cq-font);letter-spacing:var(--cq-holeletterspacing,.04em);text-transform:var(--cq-tt);min-width:2.4em;text-align:center}
 #cq-float #cq-float-pill .cq-seg::before{content:'';position:absolute;inset:0;background-image:var(--cq-pattern);background-size:7px 7px;pointer-events:none}
 #cq-float #cq-float-pill .cq-seg+.cq-seg{border-left:1px solid rgba(0,0,0,.25)}
 /* ── CQ colors: Default / Steam / Cobra / Battle.net (isolated from site CSS) ── */
@@ -954,7 +954,10 @@
   function applyTheme() {
     const s = cfg();
     const id = ui.themeId(s);
-    document.querySelectorAll('#cq-float, .cq-pop, #cq-toast').forEach((n) => n.setAttribute('data-cq-theme', id));
+    document.querySelectorAll('#cq-float, .cq-pop, #cq-toast').forEach((n) => {
+      n.setAttribute('data-cq-theme', id);
+      n.setAttribute('data-cq-phase', ui.themeState.phase);
+    });
     if (floatRoot) floatRoot.classList.toggle('cq-match-site', s.matchCoolholeTheme);
     applySiteClasses();
     applyOpacity();
