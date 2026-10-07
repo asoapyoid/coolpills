@@ -49,6 +49,7 @@
       <h2>Queue</h2>
       <label class="check"><input type="checkbox" id="qPlusEnabled"> Q+ enabled (overflow list)</label>
       <label class="check"><input type="checkbox" id="autoQueue"> Auto-queue when a slot opens</label>
+      <label class="check"><input type="checkbox" id="openNewCoolholeTab"> If no Coolhole tab is open, create one instead of just showing a toast</label>
       <label class="row"><span>Max Queued</span><input type="number" id="maxQueued" min="1" max="99" step="1"></label>
       <label class="check"><input type="checkbox" id="forceIgnoreLimit"> Force ignores limit</label>
       <label class="check"><input type="checkbox" id="goldChatHist"> Gold Collector</label>
@@ -72,7 +73,7 @@
         <button id="checkUpdates" type="button">Check for updates</button>
         <span id="updateStatus" class="hint" role="status" aria-live="polite">Click to check the latest GitHub release.</span>
       </div>
-      <p class="hint">If an update is available, download the ZIP and install it manually. Chrome, Edge and Brave require replacing the unpacked files and clicking Reload on the extensions page. Firefox temporary add-ons must be loaded again from the new ZIP.</p>
+      <p class="hint">If an update is available, download the ZIP and install it manually. Chrome, Edge and Brave require replacing the unpacked files and clicking Reload on the extensions page. Firefox can reload the temporary add-on.</p>
       <div id="updateLink"></div>
     </section>
 
