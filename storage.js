@@ -113,6 +113,7 @@
     unAfk: false,
     autoFocus: true,
     autoQueue: true,
+    openNewCoolholeTab: true,
     qPlusEnabled: true,
     collapsed: false,
     maxQueued: CQ.DEFAULT_ROOM_LIMIT,
@@ -154,7 +155,7 @@
         .filter(([name, shortcut]) => ['queue-current', 'work', 'toggle-panel'].includes(name) && typeof shortcut === 'string')
         .map(([name, shortcut]) => [name, shortcut.slice(0, 40)]))
       : {};
-    ['matchCoolholeTheme', 'grayButtons', 'unAfk', 'autoFocus', 'autoQueue', 'qPlusEnabled',
+    ['matchCoolholeTheme', 'grayButtons', 'unAfk', 'autoFocus', 'autoQueue', 'openNewCoolholeTab', 'qPlusEnabled',
       'collapsed', 'forceIgnoreLimit', 'goldChatHist', 'disableCinemaIdleHide', 'genericEnabled',
     ].forEach((k) => (s[k] = s[k] === true));
     return s;
