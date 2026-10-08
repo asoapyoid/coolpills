@@ -298,17 +298,26 @@
   }
 
   // ── error text / limit learning ──
+  // Other users' chat lines must never be read as Coolhole queue errors.
+  const isChatLine = (n) => !!n.closest('[class*="chat-msg"]') && !n.closest('.server-whisper, .server-msg');
   function recentErrorText() {
     const chunks = [];
     ['#messagebuffer .server-whisper', '#messagebuffer .server-msg', '#messagebuffer .action', '.alert-danger', '.alert-warning', '#qfail', '#queuefail', '.queue-error']
-      .forEach((sel) => document.querySelectorAll(sel).forEach((n) => { const t = n.textContent.trim(); if (t) chunks.push(t); }));
+      .forEach((sel) => document.querySelectorAll(sel).forEach((n) => { const t = n.textContent.trim(); if (t && !isChatLine(n)) chunks.push(t); }));
     const buf = $('#messagebuffer');
-    if (buf) Array.from(buf.querySelectorAll('div, span, p, li')).slice(-15).forEach((n) => { const t = n.textContent.trim(); if (t) chunks.push(t); });
+    if (buf) Array.from(buf.querySelectorAll('div, span, p, li')).filter((n) => !isChatLine(n)).slice(-15).forEach((n) => { const t = n.textContent.trim(); if (t) chunks.push(t); });
     return chunks.join('\n');
   }
+  // Count-aware diff so a repeated identical error (e.g. the queue-limit message) still counts as new.
   const newErrorText = (before, after) => {
-    const previous = new Set(String(before || '').split('\n').filter(Boolean));
-    return String(after || '').split('\n').filter((line) => line && !previous.has(line)).join('\n');
+    const seen = new Map();
+    String(before || '').split('\n').filter(Boolean).forEach((line) => seen.set(line, (seen.get(line) || 0) + 1));
+    return String(after || '').split('\n').filter((line) => {
+      if (!line) return false;
+      const left = seen.get(line) || 0;
+      if (left > 0) { seen.set(line, left - 1); return false; }
+      return true;
+    }).join('\n');
   };
   const usefulQueueError = (text) => {
     const line = String(text || '').split('\n').find((part) =>
@@ -367,8 +376,7 @@
     if (btn.disabled) {
       await sleep(250);
       const t = recentErrorText();
-      if (isMaxErr(t)) { learnLimit(t); return 'max'; }
-      throw new Error('Queue button is disabled');
+      if (isMaxErr(t) || getMyQueuedCount() >= getRoomLimit()) { learnLimit(t); return 'max'; }
     }
     const before = recentErrorText();
     const rowsBefore = queueRows().length;
@@ -387,6 +395,8 @@
     const delayedReason = usefulQueueError(errors);
     if (delayedReason) throw new Error(delayedReason);
     if (inRoom(mediaUrl) || queueRows().length > rowsBefore) return 'ok';
+    // Nothing was added and we are at the room limit: this is a full queue, not a broken link.
+    if (getMyQueuedCount() >= getRoomLimit()) return 'max';
     throw new Error('Coolhole did not add this media link. It may be unsupported or temporarily unavailable.');
   }
 
@@ -616,7 +626,7 @@
       }
       else {
         const reason = usefulQueueError(message) || message || 'Coolhole rejected the media link or did not add it to the room queue.';
-        if (!isDefBrokenMedia(message)) {
+        if (!isDefBrokenMedia(message) || getMyQueuedCount() >= getRoomLimit()) {
           if (fromPending) toast('Still in Q+: ' + name() + ' — queue failed; will retry.', 'qplus');
           else toast(reason, 'error');
           return;
