@@ -80,6 +80,11 @@
     const s = CQ.settings.cur;
     $('theme').value = s.matchCoolholeTheme ? 'match' : s.theme;
     $('cpMode').value = s.cpMode;
+    $('pillCorner').querySelectorAll('button').forEach((b) => {
+      const on = b.dataset.corner === s.pillCorner;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', String(on));
+    });
     $('uiMode').value = s.uiMode;
     document.documentElement.setAttribute('data-mode', s.uiMode);
     $('maxQueued').value = s.maxQueued;
@@ -125,6 +130,10 @@
   $('theme').addEventListener('change', () => {
     const v = $('theme').value;
     CQ.settings.save(v === 'match' ? { matchCoolholeTheme: true } : { matchCoolholeTheme: false, theme: v });
+  });
+  $('pillCorner').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-corner]');
+    if (b) CQ.settings.save({ pillCorner: b.dataset.corner }).then(fill);
   });
   $('uiMode').addEventListener('change', () => CQ.settings.save({ uiMode: $('uiMode').value }));
   $('cpMode').addEventListener('change', () => {

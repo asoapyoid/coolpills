@@ -109,6 +109,7 @@
     holeOpacity: 0.35,
     ytOpacity: 0.38, // pill opacity on video sites
     grayButtons: true,
+    pillCorner: 'top-right', // overlay pills only: top-left | top-right | bottom-left | bottom-right
     cpMode: 'work', // work (Fishing) | qplus | schedule | none | copy | open | custom
     cpCustomSteps: '', // Custom (experimental): one CSS selector per line, clicked in order on Coolhole
     unAfk: false,
@@ -147,6 +148,7 @@
     if (!['work', 'qplus', 'schedule', 'none', 'copy', 'open', 'custom'].includes(s.cpMode)) s.cpMode = 'work';
     s.cpCustomSteps = typeof s.cpCustomSteps === 'string' ? s.cpCustomSteps.slice(0, 1000) : '';
     if (!['auto', 'light', 'dark'].includes(s.uiMode)) s.uiMode = 'auto';
+    if (!['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(s.pillCorner)) s.pillCorner = 'top-right';
     s.holeOpacity = clamp(s.holeOpacity, 0, 1, 0.35);
     s.ytOpacity = clamp(s.ytOpacity, 0.1, 1, 0.38);
     s.maxQueued = Math.floor(clamp(s.maxQueued, 0, 99, CQ.DEFAULT_ROOM_LIMIT)); // 0 = unlimited (only the room's own limit applies)

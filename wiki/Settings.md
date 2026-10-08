@@ -6,6 +6,7 @@ Open Cool Pills from the browser's extensions page to reach its settings. Most s
 
 - **Settings page appearance:** use light, dark, or system appearance for the settings page.
 - **Theme:** select Default, Old Steam, King Cobra, or Match Coolhole.
+- **Pill position:** choose the top-left, top-right, bottom-left, or bottom-right corner of video overlays. The default is top-right. Inline pills keep their existing placement.
 - **Pill opacity:** adjust the video-site buttons.
 - **Coolhole panel opacity:** adjust the floating Hist / Q+ panel.
 - **Gray buttons:** show gray buttons until hover.

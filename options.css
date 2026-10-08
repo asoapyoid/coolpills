@@ -30,3 +30,10 @@ code{background:rgba(128,128,128,.2);padding:1px 5px;border-radius:4px}
 .shortcut-row button{min-width:150px}
 .shortcut-row button.recording{background:var(--red)}
 button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+.corner-pick{position:relative;width:96px;height:56px;border:2px solid var(--edge);border-radius:6px;background:rgba(128,128,128,.12)}
+.corner-pick button{position:absolute;width:20px;height:16px;padding:0;border:1px solid var(--edge);background:var(--card)}
+.corner-pick button.active{background:var(--accent);border-color:var(--accent)}
+.corner-pick [data-corner=top-left]{top:3px;left:3px}
+.corner-pick [data-corner=top-right]{top:3px;right:3px}
+.corner-pick [data-corner=bottom-left]{bottom:3px;left:3px}
+.corner-pick [data-corner=bottom-right]{bottom:3px;right:3px}
