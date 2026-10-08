@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.1.7](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.7) |
+| **Current release** | [v3.1.8](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.8) |
 | **Queue controls** | CH to queue or remove; CP to go Fishing, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
@@ -17,8 +17,8 @@ See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the f
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.7.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.7.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.8.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.8.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install

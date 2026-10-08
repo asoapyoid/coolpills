@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.1.8
 - Fix Q+ items being sent to Coolhost when you are already at your queue limit: repeated "already have N items queued" messages are now recognised, other users' chat lines are ignored when reading Coolhole errors, and a full queue keeps the item in Q+ instead of triggering recovery.
 
 ## 3.1.7
