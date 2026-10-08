@@ -4,7 +4,7 @@
 
 Coolpills is a browser-extension project for video workflows around YouTube and [Coolhole](https://coolhole.org). Its product goals include queuing YouTube videos to Coolhole, earning CP through Work, managing videos that cannot yet be queued, and providing queue history and a small floating Coolhole interface.
 
-This guide captures the supplied product and handoff notes in extension-oriented terms. **The repository snapshot checked for this document contains only `README.md`; it does not contain an extension manifest or implementation source.** Consequently, feature behavior and integration details below are product context or design guidance, not confirmation that a particular file, browser API, selector, or feature is implemented here. Check the extension source before relying on any implementation detail.
+This guide captures product and handoff notes for the Manifest V3 extension (Chrome, Edge, Brave and Firefox) in this repository. The notes originate from an earlier userscript, so the sections below describe **intended behavior**; confirm specifics against the source files listed in the repository map before changing code.
 
 ## Product behavior
 
@@ -37,13 +37,19 @@ Hist search should use a real, compact text input that expands on focus and filt
 
 ## Extension architecture and integration guidance
 
-The source notes describe a userscript predecessor. For this repository, treat the following as browser-extension design context—not as verified architecture:
+The source notes describe a userscript predecessor; this repository implements the same ideas as a Manifest V3 extension:
 
-- A YouTube integration observes video cards and watch-page metadata, extracts the video ID, title, and duration, and presents the queue/work controls.
-- A Coolhole integration augments the site with Hist/Q+ and interacts with its queue, Work controls, media URL input, and theme options.
-- Extension contexts need a supported way to coordinate YouTube actions with Coolhole actions and share preferences and queue state across tabs. Use the browser's extension messaging and storage model as appropriate to the actual manifest and browser targets; do not assume userscript `GM_*` APIs.
-- Keep site-specific DOM access in the relevant page integration. Selectors named in the predecessor notes (`#queue`, `.q-user`, the media URL input, queue-end button, Work controls, and Options theme select) are leads to verify, not a stable or confirmed extension contract.
+- `manifest.json` registers content scripts for non-Coolhole pages (`storage.js`, `adapters.js`, `ui.js`, `detector.js`), for Coolhole (`storage.js`, `ui.js`, `coolhole.js`, plus `bridge-main.js` in the MAIN world), for Coolhost (`coolhost.js`) and for Reddit (`reddit-main.js`), and a service worker (`background.js`).
+- The Coolhole content script owns Hist/Q+, queueing, auto-queue and queue-limit learning. The background worker relays messages between tabs, arbitrates the auto-queue lock, and performs fetches such as metadata, media-link checks and Coolhost recovery.
+- Use the extension's own storage layer (`storage.js`) and messaging rather than userscript `GM_*` APIs.
+- Selectors named in the predecessor notes (`#queue`, `.q-user`, the media URL input, queue-end button, and Options theme select) are leads; the Coolhole script selects `#queue-url` / `#btn-queue` on the new site and `#mediaurl` / `#queue_end` on the classic one. Re-verify them when Coolhole changes.
 - YouTube's duration badges may live in nested or shadow DOM. Any scraper should be resilient to markup changes and tested against current YouTube pages.
+
+### Queue-limit and Coolhost recovery rules
+
+- A full queue is not a broken link. A queue-limit message, or no row being added while the user is at the room limit, keeps the item in Q+; it must never trigger Coolhost recovery.
+- Coolhole error text is read from server messages only. Other users' chat lines are ignored, and repeated identical error lines still count as new.
+- Only clearly broken-media errors, or a confirmed expired direct link, send a link to Coolhost.
 
 ### State and account scoping
 
@@ -84,16 +90,21 @@ When matching, do not paint Coolpills colors over Coolhole's UI. Let the site th
 
 The predecessor used a `cq-match-site` class on `#cq-float` and Bootstrap-like classes as an integration technique. These are historical implementation examples only; confirm the extension's current DOM and styling approach before reusing them.
 
-## Repository and implementation map
+## Repository map
 
-At the time this guide was written, the checked-out repository contained:
-
-| Path | Verified contents |
+| Path | Purpose |
 | --- | --- |
-| `README.md` | A one-line project description: “Coolest Pills for all video needs for coolhole.org” |
+| `manifest.json` | MV3 manifest: permissions, content scripts, service worker |
+| `background.js` | Service worker: messaging, auto-queue lock, metadata and link checks |
+| `coolhole.js` | Coolhole-side Hist/Q+, queueing, auto-queue, limit learning |
+| `coolhost.js`, `reddit-main.js`, `bridge-main.js` | Coolhost recovery, Reddit media lookup, MAIN-world bridge |
+| `storage.js`, `adapters.js`, `detector.js`, `ui.js` | Shared storage and settings, site adapters, pill detection, shared UI |
+| `options.html`, `options.js`, `options.css` | Settings page |
+| `wiki/` | User-facing documentation |
+| `CHANGELOG.md`, `scripts/package.py`, `package.sh` | Release notes and packaging |
 | `artifacts/PROJECT.md` | This product and handoff guide |
 
-No extension source tree, manifest, test setup, or build configuration was present in the inspected snapshot. Do not assume the predecessor's `artifacts/YouTube-Coolhole-Queue-Buttons.user.js` exists here or is the extension's primary deliverable. Update this map when the extension implementation is available and verify every path before documenting it.
+The predecessor userscript file (`artifacts/YouTube-Coolhole-Queue-Buttons.user.js`) is not part of this repository.
 
 ## Editing and verification conventions
 

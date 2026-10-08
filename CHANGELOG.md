@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix Q+ items being sent to Coolhost when you are already at your queue limit: repeated "already have N items queued" messages are now recognised, other users' chat lines are ignored when reading Coolhole errors, and a full queue keeps the item in Q+ instead of triggering recovery.
+
 ## 3.1.7
 - Replace Work (Earn CP) with Fishing: CP, the Fishing shortcut and the CP mode option now cast your line on Coolhole (the Fish button) and automatically hook the moment a fish bites. Existing CP settings and shortcuts carry over.
 - Click CP can now do nothing, copy the video link, open/focus Coolhole, or run Custom (experimental): click your own list of CSS selectors on Coolhole in order.
