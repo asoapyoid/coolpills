@@ -320,6 +320,8 @@
     !!t && (/already have \d+\s+items?\s+queued/i.test(t) || /wait for one to play/i.test(t) ||
       (/limit\s*\d+/i.test(t) && /queued/i.test(t)) || /queue(?:d)?\s*(?:is\s*)?(?:full|limit)/i.test(t) ||
       /too many (videos?|items?)/i.test(t));
+  const isDefBrokenMedia = (t) =>
+    /\b(?:unsupported|not supported)\s+(?:media|video|link|url)\b|\b(?:media|video|link|url)\s+(?:(?:is|has(?:\s+been)?)\s+)?(?:unplayable|not playable|unsupported|not supported|invalid|expired|not found|does not exist)\b|\b(?:invalid|expired)\s+(?:media|video|link|url)\b/i.test(String(t || ''));
   const learnLimit = (t) => {
     const m = String(t || '').match(/already have (\d+)\s+items?\s+queued/i);
     if (m && +m[1] >= 2) setRoomLimit(+m[1]);
@@ -614,6 +616,11 @@
       }
       else {
         const reason = usefulQueueError(message) || message || 'Coolhole rejected the media link or did not add it to the room queue.';
+        if (!isDefBrokenMedia(message)) {
+          if (fromPending) toast('Still in Q+: ' + name() + ' — queue failed; will retry.', 'qplus');
+          else toast(reason, 'error');
+          return;
+        }
         if (fromPending) {
           removePending(item.videoId);
           renderIfOpen();
