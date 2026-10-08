@@ -6,6 +6,8 @@
 
 **Queue videos to [Coolhole](https://coolhole.org) from almost any site.** Cool Pills adds a small CH | CP pill to videos, a waiting list for full queues, and a history/settings panel.
 
+Cool Pills was inspired by the original [Cool Pills YouTube Coolhole Queue Buttons userscript on GreasyFork](https://greasyfork.org/en/scripts/591925-cool-pills-youtube-coolhole-queue-buttons).
+
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
