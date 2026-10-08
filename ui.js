@@ -546,12 +546,15 @@
       root.setAttribute('data-cq-phase', ui.themeState.phase);
       pill.style.setProperty('--cq-op', String(s.ytOpacity));
       pill.classList.toggle('cq-colored', s.grayButtons === false);
+      if (lastPlace && pill.style.display !== 'none') place(...lastPlace);
     };
     applySettings();
     CQ.settings.onChange(applySettings);
     ui.onTheme(applySettings);
 
+    let lastPlace = null;
     const place = (rect, where) => {
+      lastPlace = [rect, where];
       pill.style.display = 'inline-flex';
       const pw = pill.offsetWidth || 72;
       const ph = pill.offsetHeight || 24;
@@ -560,8 +563,13 @@
       let left;
       let top;
       if (where === 'video-top-right') {
-        left = Math.min(rect.right, vw) - pw - 8;
-        top = Math.max(rect.top, 0) + 8;
+        const corner = CQ.settings.cur.pillCorner || 'top-right';
+        const l = Math.max(rect.left, 0);
+        const r = Math.min(rect.right, vw);
+        const t = Math.max(rect.top, 0);
+        const b = Math.min(rect.bottom, vh);
+        left = corner.endsWith('left') ? l + 8 : r - pw - 8;
+        top = corner.startsWith('top') ? t + 8 : b - ph - 8;
       } else if (where === 'above') {
         left = rect.left + (rect.width - pw) / 2;
         top = rect.top - ph - 6;
