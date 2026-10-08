@@ -539,6 +539,7 @@
     let hideT = 0;
     let goldKey = null;
     let goldOn = false;
+    let lastPlace = null;
 
     const applySettings = () => {
       const s = CQ.settings.cur;
@@ -552,7 +553,6 @@
     CQ.settings.onChange(applySettings);
     ui.onTheme(applySettings);
 
-    let lastPlace = null;
     const place = (rect, where) => {
       lastPlace = [rect, where];
       pill.style.display = 'inline-flex';

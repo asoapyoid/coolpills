@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.9
+- Add an Appearance setting to place video-overlay pills in any corner of a video. Keep the default top-right placement and leave inline pill placements unchanged.
+- Fix pill initialization so saved appearance settings do not trigger a temporal-dead-zone error before the first video is shown.
+
 ## 3.1.8
 - Fix Q+ items being sent to Coolhost when you are already at your queue limit: repeated "already have N items queued" messages are now recognised, other users' chat lines are ignored when reading Coolhole errors, and a full queue keeps the item in Q+ instead of triggering recovery.
 
