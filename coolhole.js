@@ -93,6 +93,31 @@
     });
   }
 
+  // Click the live gold chat line so Coolhole copies the exact text into the chat box, then send it.
+  // Falls back to the stored text if the line has scrolled out of the chat buffer.
+  async function sendGoldText(text) {
+    const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+    const want = norm(text).toLowerCase();
+    const input = document.querySelector('#chatline');
+    let msg = '';
+    const line = [...document.querySelectorAll('#messagebuffer .text-lottery')]
+      .reverse().find((n) => norm(n.textContent).toLowerCase() === want);
+    if (line && input) {
+      input.value = '';
+      line.click();
+      await new Promise((r) => setTimeout(r, 120));
+      msg = norm(input.value);
+    }
+    const ok = await sendChatText(msg || text);
+    if (ok && input && msg) {
+      const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (desc && desc.set) desc.set.call(input, ''); else input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    return ok;
+  }
+
   // ══ account scope ════════════════════════════════════════════════
   const isGuest = (n) => !n || /^guest/i.test(n) || /^anon/i.test(n);
   const sfx = () => CQ.accountSuffix(S.account);
@@ -812,13 +837,12 @@
   }
 
   // ══ Gold Collector (.text-lottery chat lines) ════════════════════
-  const G = { entries: [], seen: new Set(), mediaKey: null, started: false, armed: false, quietUntil: 0 };
+  const G = { entries: [], seen: new Set(), mediaKey: null, started: false, restored: false, armed: false, quietUntil: 0 };
   const goldOn = () => cfg().goldChatHist === true;
   const curTitle = () => (S.bridge.current && S.bridge.current.title) || ($('#currenttitle') || {}).textContent || ($('.queue_active .qe_title') || {}).textContent || '';
   const curKey = () => {
-    const c = S.bridge.current;
-    if (c && (c.id || c.title)) return (c.id != null ? c.id : '') + '|' + (c.title || '');
-    const t = String(curTitle()).trim();
+    // Title only: the bridge id appears later than the DOM title, and a changing key would drop the saved counts on refresh.
+    const t = String(curTitle()).replace(/\s+/g, ' ').trim().toLowerCase();
     return t || 'none';
   };
   function persistGold() {
@@ -832,6 +856,7 @@
   async function restoreGold() {
     const key = curKey();
     const raw = await store.get(KEYS.gold, null);
+    if (key && key !== 'none') G.mediaKey = key;
     if (!raw || !key || key === 'none' || raw.mediaKey !== key) return false;
     let changed = false;
     for (const e of raw.entries || []) {
@@ -845,6 +870,7 @@
     return changed;
   }
   function noteGoldMedia() {
+    if (!G.restored) return false;
     const key = curKey();
     if (key === G.mediaKey) return false;
     G.quietUntil = Math.max(G.quietUntil, Date.now() + 3000);
@@ -859,7 +885,7 @@
     return true;
   }
   function ingestGold(node, fromRescan) {
-    if (!goldOn() || !node || node.nodeType !== 1) return;
+    if (!goldOn() || !G.restored || !node || node.nodeType !== 1) return;
     noteGoldMedia();
     const list = [];
     if (node.classList && node.classList.contains('text-lottery')) list.push(node);
@@ -892,7 +918,7 @@
       ms: 7000,
       onClick: async (t) => {
         t.style.pointerEvents = 'none';
-        const ok = await sendChatText(text);
+        const ok = await sendGoldText(text);
         t.textContent = ok ? '★ Gold sent' : '★ Could not send gold';
         setTimeout(() => t.classList.remove('show'), 2200);
       },
@@ -902,7 +928,13 @@
   function startGold() {
     if (G.started) return;
     G.started = true;
-    restoreGold().then((c) => c && renderGold());
+    (async () => {
+      for (let i = 0; i < 20 && curKey() === 'none'; i++) await sleep(500);
+      await restoreGold();
+      G.restored = true;
+      renderGold();
+      rescanGold();
+    })();
     const attach = () => {
       const buf = $('#messagebuffer');
       if (!buf) return false;
@@ -1053,8 +1085,9 @@
 #cq-float.cq-match-site #cq-float-pill{background:var(--cq-holeshell,var(--cq-shell));box-shadow:var(--cq-holeshadow,var(--cq-shadow));
   border:1px solid var(--cq-holeedge,var(--cq-edge));border-radius:var(--cq-holeradius,var(--cq-radius))}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist,#cq-float.cq-match-site #cq-float-restore{background-color:var(--cq-holechs,var(--cq-chs));color:var(--cq-holechfg,var(--cq-chfg))}
+#cq-float.cq-match-site #cq-float-pill .cq-seg{box-sizing:border-box;border-width:0;border-radius:0;line-height:1;height:auto;min-height:0}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-q{background-color:var(--cq-holecps,var(--cq-cps));color:var(--cq-holecpfg,var(--cq-cpfg));
-  border:var(--cq-holecphborder,0)}
+  box-shadow:inset 0 0 0 var(--cq-holecphborderw,0) var(--cq-holecphbordercolor,transparent)}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist:hover{background-color:var(--cq-holechh,var(--cq-chh));color:var(--cq-holechhfg,var(--cq-chhfg));
   box-shadow:var(--cq-holechhsh,none)}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist.cq-active{background-color:var(--cq-holecha,var(--cq-chh));color:var(--cq-holechafg,var(--cq-chhfg));
@@ -1361,12 +1394,15 @@
       const c = el('span', 'cq-gold-count', n > 1 ? '×' + n : '');
       if (n <= 1) c.style.visibility = 'hidden';
       const send = el('button', 'cq-gold-send', 'Send', { type: 'button', title: 'Send in chat' });
-      send.addEventListener('click', async (ev) => {
+      const doSend = async (ev) => {
         ev.stopPropagation();
-        const ok = await sendChatText(e.text);
+        const ok = await sendGoldText(e.text);
         send.textContent = ok ? '✓' : '?!';
         setTimeout(() => (send.textContent = 'Send'), 900);
-      });
+      };
+      send.addEventListener('click', doSend);
+      t.addEventListener('click', doSend);
+      t.style.cursor = 'pointer';
       row.append(t, c, send);
       list.append(row);
     });

@@ -118,11 +118,23 @@
         console.warn('[CoolPills] context failed', e);
       }
       if (!ctx || !ctx.url) return this.scheduleHide();
+      if (!this.inView(t)) return this.scheduleHide();
       this.cur = { ...t, ctxValue: ctx };
       this.pill.setContext(ctx);
       this.refreshMode();
       this.pill.show(t.rect(), t.place);
     };
+
+    /** True while the target still overlaps the viewport (the pill is clamped on-screen, so it would otherwise linger). */
+    inView(t) {
+      try {
+        const r = t.rect();
+        return !!r && r.width > 0 && r.height > 0 &&
+          r.bottom > (CQ.topInset ? CQ.topInset() : 0) + 24 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+      } catch (_) {
+        return false;
+      }
+    }
 
     scheduleHide() {
       if (this.hideT) return;
@@ -350,6 +362,11 @@
         { passive: true, capture: true }
       );
       window.addEventListener('resize', () => { this.cur = null; this.pill.hide(true); });
+      // Safety net: drop the pill if its target scrolled away, was removed, or the pointer left it.
+      setInterval(() => {
+        if (!this.cur || this.pill.menuOpen() || this.pill.isHot()) return;
+        if (!this.inView(this.cur)) { this.cur = null; this.pill.hide(true); }
+      }, 300);
       document.documentElement.addEventListener('mouseleave', () => this.scheduleHide());
       // SPA navigation → drop stale target
       ['yt-navigate-finish', 'popstate'].forEach((ev) => window.addEventListener(ev, () => { this.cur = null; this.pill.hide(true); }));
