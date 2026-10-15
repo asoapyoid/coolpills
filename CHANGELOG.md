@@ -2,6 +2,7 @@
 
 ## 3.1.10
 - Gold Collector: sending gold now clicks the original gold line in chat, so Coolhole copies the exact text itself, and then sends it automatically (toast, list text and Send button). Falls back to the stored text if the line has scrolled away. Counts and history are unchanged.
+- Gold Collector: gold counts now survive a page refresh for the current video (the saved list is restored before chat history is rescanned, and the video key no longer changes while the page loads).
 - Fix the YouTube pill lingering (or appearing over the header) after its video or card scrolled out of view or under YouTube's top bar.
 - Match Coolhole: make the Hist and Q+ buttons exactly the same size (Black Spring and other themes).
 

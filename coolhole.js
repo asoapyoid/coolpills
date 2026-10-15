@@ -837,13 +837,12 @@
   }
 
   // ══ Gold Collector (.text-lottery chat lines) ════════════════════
-  const G = { entries: [], seen: new Set(), mediaKey: null, started: false, armed: false, quietUntil: 0 };
+  const G = { entries: [], seen: new Set(), mediaKey: null, started: false, restored: false, armed: false, quietUntil: 0 };
   const goldOn = () => cfg().goldChatHist === true;
   const curTitle = () => (S.bridge.current && S.bridge.current.title) || ($('#currenttitle') || {}).textContent || ($('.queue_active .qe_title') || {}).textContent || '';
   const curKey = () => {
-    const c = S.bridge.current;
-    if (c && (c.id || c.title)) return (c.id != null ? c.id : '') + '|' + (c.title || '');
-    const t = String(curTitle()).trim();
+    // Title only: the bridge id appears later than the DOM title, and a changing key would drop the saved counts on refresh.
+    const t = String(curTitle()).replace(/\s+/g, ' ').trim().toLowerCase();
     return t || 'none';
   };
   function persistGold() {
@@ -857,6 +856,7 @@
   async function restoreGold() {
     const key = curKey();
     const raw = await store.get(KEYS.gold, null);
+    if (key && key !== 'none') G.mediaKey = key;
     if (!raw || !key || key === 'none' || raw.mediaKey !== key) return false;
     let changed = false;
     for (const e of raw.entries || []) {
@@ -870,6 +870,7 @@
     return changed;
   }
   function noteGoldMedia() {
+    if (!G.restored) return false;
     const key = curKey();
     if (key === G.mediaKey) return false;
     G.quietUntil = Math.max(G.quietUntil, Date.now() + 3000);
@@ -884,7 +885,7 @@
     return true;
   }
   function ingestGold(node, fromRescan) {
-    if (!goldOn() || !node || node.nodeType !== 1) return;
+    if (!goldOn() || !G.restored || !node || node.nodeType !== 1) return;
     noteGoldMedia();
     const list = [];
     if (node.classList && node.classList.contains('text-lottery')) list.push(node);
@@ -927,7 +928,13 @@
   function startGold() {
     if (G.started) return;
     G.started = true;
-    restoreGold().then((c) => c && renderGold());
+    (async () => {
+      for (let i = 0; i < 20 && curKey() === 'none'; i++) await sleep(500);
+      await restoreGold();
+      G.restored = true;
+      renderGold();
+      rescanGold();
+    })();
     const attach = () => {
       const buf = $('#messagebuffer');
       if (!buf) return false;
