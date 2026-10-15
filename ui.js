@@ -108,7 +108,7 @@
       holecha: '#a01818', holechafg: '#fff', holechash: 'inset 0 0 0 1px #c9a227',
       holecp: '#121a4a', holecpfg: '#e8d5a3', holecph: '#c9a227', holecphfg: '#1a1200',
       holecpa: '#c9a227', holecpafg: '#1a1200', holeidlecp: '#121a4a', holeidlecpfg: '#e8d5a3',
-      holecphborder: '1px solid #c9a227',
+      holecphborder: '1px solid #c9a227', holecphborderw: '1px', holecphbordercolor: '#c9a227',
       chfill: 'rgba(255,236,160,.28)', cpfill: 'rgba(26,18,0,.3)',
       shadow: '0 0 0 1px #c9a227, 0 2px 12px rgba(0,0,40,.55)',
       ch: '#a01818', chh: '#a01818', cp: '#c9a227', cpfg: '#1a1200', cph: '#c9a227', cphfg: '#1a1200',

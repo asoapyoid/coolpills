@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.10
+- Gold Collector: clicking a gold toast or entry now pastes the text into the chat box (press Enter to send) instead of sending it. Counts and history are unchanged.
+- Fix the YouTube pill lingering after its video or card scrolled out of view.
+- Match Coolhole: make the Hist and Q+ buttons exactly the same size (Black Spring and other themes).
+
 ## 3.1.9
 - Add an Appearance setting to place video-overlay pills in any corner of a video. Keep the default top-right placement and leave inline pill placements unchanged.
 - Fix pill initialization so saved appearance settings do not trigger a temporal-dead-zone error before the first video is shown.

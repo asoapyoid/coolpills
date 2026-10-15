@@ -82,15 +82,18 @@
     }
   });
   const askBridge = () => window.postMessage({ source: 'cq-ext', type: 'request-state' }, '*');
-  function sendChatText(text) {
-    const msg = String(text || '').replace(/\s+/g, ' ').trim();
-    if (!msg) return Promise.resolve(false);
-    const id = 'c' + Date.now() + Math.random().toString(36).slice(2, 6);
-    return new Promise((resolve) => {
-      chatWaiters.set(id, resolve);
-      window.postMessage({ source: 'cq-ext', type: 'chat', id, msg }, '*');
-      setTimeout(() => { if (chatWaiters.delete(id)) resolve(false); }, 1500);
-    });
+  // Pastes into the chat box only; the user presses Enter to send.
+  function fillChatText(text) {
+    const msg = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 500);
+    const input = msg && document.querySelector('#chatline');
+    if (!input) return false;
+    const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    if (desc && desc.set) desc.set.call(input, msg); else input.value = msg;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    try { input.setSelectionRange(msg.length, msg.length); } catch (_) { /* ignore */ }
+    return true;
   }
 
   // ══ account scope ════════════════════════════════════════════════
@@ -888,12 +891,12 @@
   }
   function goldToast(text) {
     const preview = text.length > 90 ? text.slice(0, 87) + '…' : text;
-    toast('★ Gold · click to send — ' + preview, 'gold', {
+    toast('★ Gold · click to paste in chat — ' + preview, 'gold', {
       ms: 7000,
-      onClick: async (t) => {
+      onClick: (t) => {
         t.style.pointerEvents = 'none';
-        const ok = await sendChatText(text);
-        t.textContent = ok ? '★ Gold sent' : '★ Could not send gold';
+        const ok = fillChatText(text);
+        t.textContent = ok ? '★ Gold pasted — press Enter to send' : '★ Chat box not found';
         setTimeout(() => t.classList.remove('show'), 2200);
       },
     });
@@ -1053,8 +1056,9 @@
 #cq-float.cq-match-site #cq-float-pill{background:var(--cq-holeshell,var(--cq-shell));box-shadow:var(--cq-holeshadow,var(--cq-shadow));
   border:1px solid var(--cq-holeedge,var(--cq-edge));border-radius:var(--cq-holeradius,var(--cq-radius))}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist,#cq-float.cq-match-site #cq-float-restore{background-color:var(--cq-holechs,var(--cq-chs));color:var(--cq-holechfg,var(--cq-chfg))}
+#cq-float.cq-match-site #cq-float-pill .cq-seg{box-sizing:border-box;border-width:0;border-radius:0;line-height:1;height:auto;min-height:0}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-q{background-color:var(--cq-holecps,var(--cq-cps));color:var(--cq-holecpfg,var(--cq-cpfg));
-  border:var(--cq-holecphborder,0)}
+  box-shadow:inset 0 0 0 var(--cq-holecphborderw,0) var(--cq-holecphbordercolor,transparent)}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist:hover{background-color:var(--cq-holechh,var(--cq-chh));color:var(--cq-holechhfg,var(--cq-chhfg));
   box-shadow:var(--cq-holechhsh,none)}
 #cq-float.cq-match-site #cq-float-pill .cq-seg-hist.cq-active{background-color:var(--cq-holecha,var(--cq-chh));color:var(--cq-holechafg,var(--cq-chhfg));
@@ -1360,13 +1364,16 @@
       const t = el('span', 'cq-gold-text ' + (cur ? 'text-lottery' : 'cq-gold-past'), e.text || '(empty gold)', { title: (e.mediaTitle || 'Unknown video') + (cur ? ' (playing now)' : '') + (n > 1 ? ' · ×' + n : '') });
       const c = el('span', 'cq-gold-count', n > 1 ? '×' + n : '');
       if (n <= 1) c.style.visibility = 'hidden';
-      const send = el('button', 'cq-gold-send', 'Send', { type: 'button', title: 'Send in chat' });
-      send.addEventListener('click', async (ev) => {
+      const paste = (ev) => {
         ev.stopPropagation();
-        const ok = await sendChatText(e.text);
+        const ok = fillChatText(e.text);
         send.textContent = ok ? '✓' : '?!';
-        setTimeout(() => (send.textContent = 'Send'), 900);
-      });
+        setTimeout(() => (send.textContent = 'Paste'), 900);
+      };
+      const send = el('button', 'cq-gold-send', 'Paste', { type: 'button', title: 'Paste in chat box' });
+      send.addEventListener('click', paste);
+      t.addEventListener('click', paste);
+      t.style.cursor = 'pointer';
       row.append(t, c, send);
       list.append(row);
     });
