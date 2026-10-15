@@ -1,7 +1,7 @@
 # Changelog
 
 ## 3.1.10
-- Gold Collector: clicking a gold toast or entry now pastes the text into the chat box (press Enter to send) instead of sending it. Counts and history are unchanged.
+- Gold Collector: clicking a gold toast or an entry's text pastes it into the chat box (press Enter to send). Hist rows have both Paste and Send buttons. Counts and history are unchanged.
 - Fix the YouTube pill lingering (or appearing over the header) after its video or card scrolled out of view or under YouTube's top bar.
 - Match Coolhole: make the Hist and Q+ buttons exactly the same size (Black Spring and other themes).
 

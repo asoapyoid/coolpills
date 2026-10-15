@@ -82,6 +82,17 @@
     }
   });
   const askBridge = () => window.postMessage({ source: 'cq-ext', type: 'request-state' }, '*');
+  function sendChatText(text) {
+    const msg = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!msg) return Promise.resolve(false);
+    const id = 'c' + Date.now() + Math.random().toString(36).slice(2, 6);
+    return new Promise((resolve) => {
+      chatWaiters.set(id, resolve);
+      window.postMessage({ source: 'cq-ext', type: 'chat', id, msg }, '*');
+      setTimeout(() => { if (chatWaiters.delete(id)) resolve(false); }, 1500);
+    });
+  }
+
   // Pastes into the chat box only; the user presses Enter to send.
   function fillChatText(text) {
     const msg = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 500);
@@ -1364,17 +1375,24 @@
       const t = el('span', 'cq-gold-text ' + (cur ? 'text-lottery' : 'cq-gold-past'), e.text || '(empty gold)', { title: (e.mediaTitle || 'Unknown video') + (cur ? ' (playing now)' : '') + (n > 1 ? ' · ×' + n : '') });
       const c = el('span', 'cq-gold-count', n > 1 ? '×' + n : '');
       if (n <= 1) c.style.visibility = 'hidden';
-      const paste = (ev) => {
+      const send = el('button', 'cq-gold-send', 'Send', { type: 'button', title: 'Send in chat now' });
+      send.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        const ok = await sendChatText(e.text);
+        send.textContent = ok ? '✓' : '?!';
+        setTimeout(() => (send.textContent = 'Send'), 900);
+      });
+      const paste = el('button', 'cq-gold-send', 'Paste', { type: 'button', title: 'Paste into the chat box (press Enter to send)' });
+      const doPaste = (ev) => {
         ev.stopPropagation();
         const ok = fillChatText(e.text);
-        send.textContent = ok ? '✓' : '?!';
-        setTimeout(() => (send.textContent = 'Paste'), 900);
+        paste.textContent = ok ? '✓' : '?!';
+        setTimeout(() => (paste.textContent = 'Paste'), 900);
       };
-      const send = el('button', 'cq-gold-send', 'Paste', { type: 'button', title: 'Paste in chat box' });
-      send.addEventListener('click', paste);
-      t.addEventListener('click', paste);
+      paste.addEventListener('click', doPaste);
+      t.addEventListener('click', doPaste);
       t.style.cursor = 'pointer';
-      row.append(t, c, send);
+      row.append(t, c, paste, send);
       list.append(row);
     });
     box.append(list);
