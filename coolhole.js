@@ -93,18 +93,29 @@
     });
   }
 
-  // Pastes into the chat box only; the user presses Enter to send.
-  function fillChatText(text) {
-    const msg = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 500);
-    const input = msg && document.querySelector('#chatline');
-    if (!input) return false;
-    const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
-    if (desc && desc.set) desc.set.call(input, msg); else input.value = msg;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.focus();
-    try { input.setSelectionRange(msg.length, msg.length); } catch (_) { /* ignore */ }
-    return true;
+  // Click the live gold chat line so Coolhole copies the exact text into the chat box, then send it.
+  // Falls back to the stored text if the line has scrolled out of the chat buffer.
+  async function sendGoldText(text) {
+    const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+    const want = norm(text).toLowerCase();
+    const input = document.querySelector('#chatline');
+    let msg = '';
+    const line = [...document.querySelectorAll('#messagebuffer .text-lottery')]
+      .reverse().find((n) => norm(n.textContent).toLowerCase() === want);
+    if (line && input) {
+      input.value = '';
+      line.click();
+      await new Promise((r) => setTimeout(r, 120));
+      msg = norm(input.value);
+    }
+    const ok = await sendChatText(msg || text);
+    if (ok && input && msg) {
+      const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (desc && desc.set) desc.set.call(input, ''); else input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    return ok;
   }
 
   // ══ account scope ════════════════════════════════════════════════
@@ -902,12 +913,12 @@
   }
   function goldToast(text) {
     const preview = text.length > 90 ? text.slice(0, 87) + '…' : text;
-    toast('★ Gold · click to paste in chat — ' + preview, 'gold', {
+    toast('★ Gold · click to send — ' + preview, 'gold', {
       ms: 7000,
-      onClick: (t) => {
+      onClick: async (t) => {
         t.style.pointerEvents = 'none';
-        const ok = fillChatText(text);
-        t.textContent = ok ? '★ Gold pasted — press Enter to send' : '★ Chat box not found';
+        const ok = await sendGoldText(text);
+        t.textContent = ok ? '★ Gold sent' : '★ Could not send gold';
         setTimeout(() => t.classList.remove('show'), 2200);
       },
     });
@@ -1375,24 +1386,17 @@
       const t = el('span', 'cq-gold-text ' + (cur ? 'text-lottery' : 'cq-gold-past'), e.text || '(empty gold)', { title: (e.mediaTitle || 'Unknown video') + (cur ? ' (playing now)' : '') + (n > 1 ? ' · ×' + n : '') });
       const c = el('span', 'cq-gold-count', n > 1 ? '×' + n : '');
       if (n <= 1) c.style.visibility = 'hidden';
-      const send = el('button', 'cq-gold-send', 'Send', { type: 'button', title: 'Send in chat now' });
-      send.addEventListener('click', async (ev) => {
+      const send = el('button', 'cq-gold-send', 'Send', { type: 'button', title: 'Send in chat' });
+      const doSend = async (ev) => {
         ev.stopPropagation();
-        const ok = await sendChatText(e.text);
+        const ok = await sendGoldText(e.text);
         send.textContent = ok ? '✓' : '?!';
         setTimeout(() => (send.textContent = 'Send'), 900);
-      });
-      const paste = el('button', 'cq-gold-send', 'Paste', { type: 'button', title: 'Paste into the chat box (press Enter to send)' });
-      const doPaste = (ev) => {
-        ev.stopPropagation();
-        const ok = fillChatText(e.text);
-        paste.textContent = ok ? '✓' : '?!';
-        setTimeout(() => (paste.textContent = 'Paste'), 900);
       };
-      paste.addEventListener('click', doPaste);
-      t.addEventListener('click', doPaste);
+      send.addEventListener('click', doSend);
+      t.addEventListener('click', doSend);
       t.style.cursor = 'pointer';
-      row.append(t, c, paste, send);
+      row.append(t, c, send);
       list.append(row);
     });
     box.append(list);
