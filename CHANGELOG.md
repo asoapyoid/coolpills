@@ -2,7 +2,7 @@
 
 ## 3.1.10
 - Gold Collector: clicking a gold toast or entry now pastes the text into the chat box (press Enter to send) instead of sending it. Counts and history are unchanged.
-- Fix the YouTube pill lingering after its video or card scrolled out of view.
+- Fix the YouTube pill lingering (or appearing over the header) after its video or card scrolled out of view or under YouTube's top bar.
 - Match Coolhole: make the Hist and Q+ buttons exactly the same size (Black Spring and other themes).
 
 ## 3.1.9

@@ -566,7 +566,7 @@
         const corner = CQ.settings.cur.pillCorner || 'top-right';
         const l = Math.max(rect.left, 0);
         const r = Math.min(rect.right, vw);
-        const t = Math.max(rect.top, 0);
+        const t = Math.max(rect.top, CQ.topInset ? CQ.topInset() : 0, 0);
         const b = Math.min(rect.bottom, vh);
         left = corner.endsWith('left') ? l + 8 : r - pw - 8;
         top = corner.startsWith('top') ? t + 8 : b - ph - 8;

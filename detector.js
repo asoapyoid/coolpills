@@ -130,7 +130,7 @@
       try {
         const r = t.rect();
         return !!r && r.width > 0 && r.height > 0 &&
-          r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+          r.bottom > (CQ.topInset ? CQ.topInset() : 0) + 24 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
       } catch (_) {
         return false;
       }

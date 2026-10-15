@@ -98,6 +98,17 @@
   };
 
   /** elementsFromPoint that also descends into open shadow roots */
+  // Bottom edge of a sticky/fixed page header (e.g. YouTube's masthead): content under it is not really visible.
+  CQ.topInset = () => {
+    try {
+      const h = document.querySelector('#masthead-container, ytd-masthead');
+      if (!h) return 0;
+      const r = h.getBoundingClientRect();
+      return r.height > 0 && r.top <= 1 ? Math.max(0, Math.min(r.bottom, 160)) : 0;
+    } catch (_) {
+      return 0;
+    }
+  };
   CQ.deepStack = (x, y) => {
     const out = [];
     const seen = new Set();
