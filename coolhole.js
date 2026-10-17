@@ -544,6 +544,27 @@
     }
     return item;
   }
+  const isGenericTitle = (t) => !t || /^(raw video|coolhost)$/i.test(String(t).trim());
+  /** The title Coolhole itself shows for an entry in the room queue (e.g. a Coolhost file whose name we can't know). */
+  function roomTitle(mediaUrl) {
+    const key = CQ.mediaKey(mediaUrl);
+    for (const li of queueRows()) {
+      if (!rowKeys(li).includes(key)) continue;
+      const a = Array.from(li.querySelectorAll('a[href]')).find((x) => CQ.mediaKey(x.getAttribute('href') || x.href || '') === key);
+      const node = li.querySelector('.qe_title, .q-title') || a;
+      const t = CQ.cleanTitle(node && node.textContent);
+      if (t && !isGenericTitle(t) && !/^https?:\/\//i.test(t)) return t;
+    }
+    return null;
+  }
+  async function adoptRoomTitle(item) {
+    if (!isGenericTitle(item.title)) return;
+    for (let i = 0; i < 6; i++) {
+      const t = roomTitle(item.mediaUrl);
+      if (t) { item.title = t; return; }
+      await sleep(250);
+    }
+  }
   async function enrichPending(videoId) {
     const it = S.pending.find((x) => x.videoId === videoId);
     if (!it) return;
@@ -630,6 +651,7 @@
         else toast('Still in Q+: Coolhole is at its queue limit.', 'qplus');
         return;
       }
+      await adoptRoomTitle(item);
       if (fromPending) removePending(item.videoId);
       addToHistory(item);
       setTimeout(() => { const c = getMyQueuedCount(); if (c > getRoomLimit()) setRoomLimit(c); updateSlots(); publishSnapshot(); }, 450);

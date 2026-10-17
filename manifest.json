@@ -91,6 +91,10 @@
         "https://www.coolhost.ca/*"
       ],
       "js": [
+        "storage.js",
+        "adapters.js",
+        "ui.js",
+        "detector.js",
         "coolhost.js"
       ],
       "run_at": "document_idle"

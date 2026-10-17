@@ -1,4 +1,4 @@
-/* Cool Pills integration for completed Coolhost uploads and failed-link recovery. */
+/* Cool Pills integration for failed-link recovery on Coolhost (the CH/CP pill for finished uploads comes from the shared detector + coolhost adapter). */
 'use strict';
 
 (() => {
@@ -78,82 +78,6 @@
       video.addEventListener('error', () => finish(null), { once: true });
       video.src = url;
       video.load();
-    });
-  }
-
-  async function queueUpload(url, title, button) {
-    if (button.disabled) return;
-    button.disabled = true;
-    const oldText = button.textContent;
-    button.textContent = 'Sending…';
-    try {
-      const result = await api.runtime.sendMessage({
-        type: 'cq:queue',
-        payload: { url, title: title || null },
-      });
-      if (!result || result.ok === false) {
-        throw new Error(result && result.error || 'Could not contact Coolhole.');
-      }
-      button.textContent = 'Sent';
-      setTimeout(() => { button.textContent = oldText; button.disabled = false; }, 1800);
-    } catch (error) {
-      button.textContent = oldText;
-      button.disabled = false;
-      const message = 'Could not send the Coolhost video to Coolhole: ' +
-        String(error && error.message || error);
-      localToast(message, true);
-      await notifyHole(message);
-    }
-  }
-
-  function addQueueButton(container, url, title, after) {
-    const mediaUrl = completedMediaUrl(url);
-    if (!mediaUrl || container.querySelector('.coolpills-coolhost-queue')) return;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'btn btn-sm coolpills-coolhost-queue';
-    button.textContent = 'CH';
-    button.title = 'Send this Coolhost video to Coolhole';
-    button.setAttribute('aria-label', 'Send this Coolhost video to Coolhole');
-    button.style.marginLeft = '6px';
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      void queueUpload(mediaUrl, title, button);
-    });
-    after(button);
-  }
-
-  function scanHistory() {
-    document.querySelectorAll('.history-card').forEach((card) => {
-      const status = card.querySelector('.history-status.expired');
-      if (status) {
-        card.querySelectorAll('.coolpills-coolhost-queue').forEach((button) => button.remove());
-        return;
-      }
-      const copy = card.querySelector('.history-copy-btn');
-      const url = copy && copy.dataset.url || card.dataset.url;
-      const title = card.querySelector('.history-name')?.textContent?.trim() || '';
-      if (!url || !copy) return;
-      addQueueButton(card, url, title, (button) => copy.insertAdjacentElement('afterend', button));
-    });
-
-    document.querySelectorAll('.upload-row').forEach((row) => {
-      const link = row.querySelector('.upload-row-link');
-      const mediaUrl = link && completedMediaUrl(link.textContent.trim());
-      if (!mediaUrl) return;
-      let actions = row.querySelector('.upload-row-actions');
-      if (!actions) {
-        actions = document.createElement('div');
-        actions.className = 'upload-row-actions';
-        row.appendChild(actions);
-      }
-      const copy = actions.querySelector('button');
-      const title = row.querySelector('.upload-row-filename')?.textContent?.trim() || '';
-      addQueueButton(actions, mediaUrl, title, (button) => {
-        if (copy) copy.insertAdjacentElement('afterend', button);
-        else actions.appendChild(button);
-      });
     });
   }
 
@@ -295,13 +219,5 @@
     void processUpload({ url, title });
   }
 
-  const observer = new MutationObserver(scanHistory);
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'data-url'],
-  });
-  scanHistory();
   processHash();
 })();
