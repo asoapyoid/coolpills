@@ -94,12 +94,13 @@
   }
 
   // Click the live gold chat line so Coolhole copies the exact text into the chat box, then send it.
-  // Falls back to the stored text if the line has scrolled out of the chat buffer.
+  // If the line has scrolled out, uses the copy captured from Coolhole when the gold was first seen.
   async function sendGoldText(text) {
     const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
     const want = norm(text).toLowerCase();
     const input = document.querySelector('#chatline');
     let msg = '';
+    const stored = G.entries.find((e) => e.key === want);
     const line = [...document.querySelectorAll('#messagebuffer .text-lottery')]
       .reverse().find((n) => norm(n.textContent).toLowerCase() === want);
     if (line && input) {
@@ -108,7 +109,7 @@
       await new Promise((r) => setTimeout(r, 120));
       msg = norm(input.value);
     }
-    const ok = await sendChatText(msg || text);
+    const ok = await sendChatText(msg || (stored && stored.copy) || text);
     if (ok && input && msg) {
       const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
       const desc = Object.getOwnPropertyDescriptor(proto, 'value');
@@ -884,6 +885,22 @@
     if (!G.entries.some((e) => e.mediaKey === key)) store.set(KEYS.gold, { mediaKey: key, mediaTitle: String(curTitle()).trim(), entries: [], savedAt: Date.now() });
     return true;
   }
+  // Let Coolhole's own click handler produce the exact text it would put in the chat box, then restore the box.
+  function captureGoldCopy(line) {
+    const input = document.querySelector('#chatline');
+    if (!input || !line) return null;
+    const prev = input.value;
+    const active = document.activeElement;
+    let copy = null;
+    try {
+      input.value = '';
+      line.click();
+      copy = String(input.value || '').replace(/\s+/g, ' ').trim() || null;
+    } catch (_) { /* ignore */ }
+    input.value = prev;
+    try { if (active && active !== document.body && active.focus) active.focus(); else input.blur(); } catch (_) { /* ignore */ }
+    return copy;
+  }
   function ingestGold(node, fromRescan) {
     if (!goldOn() || !G.restored || !node || node.nodeType !== 1) return;
     noteGoldMedia();
@@ -905,7 +922,7 @@
         continue;
       }
       G.seen.add(key);
-      G.entries.unshift({ id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, key, at: Date.now(), mediaKey: G.mediaKey || curKey(), mediaTitle: String(curTitle()).trim() || 'Unknown video', count: 1 });
+      G.entries.unshift({ copy: captureGoldCopy(n), id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, key, at: Date.now(), mediaKey: G.mediaKey || curKey(), mediaTitle: String(curTitle()).trim() || 'Unknown video', count: 1 });
       if (G.entries.length > 80) { const d = G.entries.pop(); if (d) G.seen.delete(d.key); }
       changed = true;
       if (!fromRescan && G.armed && Date.now() >= G.quietUntil) goldToast(text);
