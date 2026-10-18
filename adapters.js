@@ -555,6 +555,15 @@
     },
   };
 
+  const bitchute = {
+    id: 'bitchute', label: 'BitChute', hosts: /(^|\.)bitchute\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .video-card, .channel-videos-container, [class*="video-card"]', 'a[href*="/video/"]');
+      const url = /^\/video\//.test(location.pathname) ? location.href : link || location.href;
+      return base(v, isNativeCoolholeUrl(url) ? url : nativeOrDirect(v, url), textOf('h1, #video-title, .video-title') || pageTitle(), 'yes');
+    },
+  };
+
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
@@ -661,7 +670,7 @@
     },
   };
 
-  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, kick, facebook, threads];
+  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, kick, facebook, threads];
   const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
     if (!a.resolve) {
