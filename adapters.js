@@ -78,7 +78,7 @@
       } catch (_) {
         continue;
       }
-      if (/\.mp4$/i.test(parsed.pathname) ||
+      if (/\.(?:mp4|webm)$/i.test(parsed.pathname) ||
         /^(?:video_mp4|video\/mp4)$/i.test(parsed.searchParams.get('mime_type') || '')) return url;
       if (/\.m3u8$/i.test(parsed.pathname)) hls.push(url);
     }
@@ -576,6 +576,9 @@
       }
       return null;
     },
+    watchContext() {
+      return /^\/video\//.test(location.pathname) ? this.context(null) : null;
+    },
     context(el) {
       const card = el && el.tagName === 'A' ? el : null;
       const linkEl = card || (el && el.closest ? el.closest('article, li, .video-card, [class*="video-card"]') : null);
@@ -615,7 +618,7 @@
     },
     context(v, card) {
       const link = card
-        ? card.querySelector('a[href^="/@"]:not([href$="/"])')
+        ? Array.from(card.querySelectorAll('a[href^="/@"]')).find((a) => /^\/@[^/]+\/[^/]+/.test(a.getAttribute('href'))) || null
         : null;
       const own = /^\/@[^/]+[/:][^/]+/.test(location.pathname);
       const url = card ? (link ? abs(link.getAttribute('href')) : location.href) : own ? location.href : linkIn(v, 'article, li, .claim-preview, [class*="claim-preview"]', 'a[href^="/@"], a[href*="odysee.com/@"]') || location.href;
@@ -631,13 +634,42 @@
   };
   const rumble = {
     id: 'rumble', label: 'Rumble', hosts: /(^|\.)rumble\.com$/i, supported: 'yes',
-    context(v) {
-      const link = linkIn(v, 'article, li, .videostream, [class*="video-item"]', 'a[href^="/v"], a[href*="rumble.com/v"]');
-      const url = /^\/v[^/]+/.test(location.pathname) ? location.href : link || location.href;
-      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    // Cards are plain thumbnails and the watch player is a blob: stream, so queueing resolves a link via Rumble's embed API.
+    resolve(stack) {
+      const viaVideo = resolveVideo(this, stack);
+      if (viaVideo) return viaVideo;
+      for (const el of stack) {
+        let card = el && el.closest ? el.closest('.videostream, [class*="video-item"]') : null;
+        while (card && card.parentElement && card.parentElement.closest('.videostream, [class*="video-item"]')) {
+          card = card.parentElement.closest('.videostream, [class*="video-item"]');
+        }
+        if (!card || !card.querySelector('a[href^="/v"]') || !card.querySelector('img')) continue;
+        const thumb = card.querySelector('img');
+        const r = thumb.getBoundingClientRect();
+        if (r.width < 120 || r.height < 60) continue;
+        return {
+          key: card,
+          rect: () => thumb.getBoundingClientRect(),
+          place: 'video-top-right',
+          ctx: () => this.context(null, card),
+        };
+      }
+      return null;
+    },
+    context(v, card) {
+      const own = /^\/v[^/]+/.test(location.pathname);
+      const link = card ? card.querySelector('a[href^="/v"]') : null;
+      const url = card ? (link ? abs(link.getAttribute('href')) : location.href)
+        : own ? location.href : linkIn(v, 'article, li, .videostream, [class*="video-item"]', 'a[href^="/v"], a[href*="rumble.com/v"]') || location.href;
+      const title = card
+        ? clean(textOf('[class*="title"], h3', card) || (card.querySelector('img') || {}).alt)
+        : textOf('h1') || pageTitle();
+      const ctx = base(v, url, title, 'yes');
+      const img = card && card.querySelector('img');
+      if (img && /^https?:/i.test(img.src)) ctx.thumbnail = img.src;
+      return ctx;
     },
   };
-
   const streamable = {
     id: 'streamable', label: 'Streamable', hosts: /(^|\.)streamable\.com$/i, supported: 'yes',
     context(v) {
@@ -656,6 +688,38 @@
     },
   };
 
+  const picarto = {
+    id: 'picarto', label: 'Picarto', hosts: /(^|\.)picarto\.tv$/i, supported: 'yes',
+    // Live streams only: the player is a blob: stream, so queueing resolves the channel's HLS link via Picarto's API.
+    resolve(stack) {
+      const viaVideo = resolveVideo(this, stack);
+      if (viaVideo) return viaVideo;
+      for (const el of stack) {
+        const link = el && el.closest ? el.closest('a[href]') : null;
+        const href = link && link.getAttribute('href');
+        if (!link || !/^(?:https:\/\/picarto\.tv)?\/[A-Za-z0-9_]+\/?$/.test(href || '') || !link.querySelector('img, video')) continue;
+        const media = link.querySelector('img, video');
+        const r = media.getBoundingClientRect();
+        if (r.width < 120 || r.height < 60) continue;
+        return {
+          key: link,
+          rect: () => media.getBoundingClientRect(),
+          place: 'video-top-right',
+          ctx: () => this.context(null, link),
+        };
+      }
+      return null;
+    },
+    context(v, link) {
+      const own = /^\/[A-Za-z0-9_]+\/?$/.test(location.pathname);
+      const url = link ? abs(link.getAttribute('href')) : own ? location.origin + location.pathname.replace(/\/$/, '') : location.href;
+      const name = (String(url).match(/picarto\.tv\/([A-Za-z0-9_]+)/) || [])[1];
+      const ctx = base(v, url, link ? clean(link.getAttribute('title') || name) : pageTitle() || name, 'yes');
+      ctx.duration = null;
+      ctx.durationLabel = null;
+      return ctx;
+    },
+  };
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
@@ -762,7 +826,7 @@
     },
   };
 
-  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, streamable, niconico, kick, facebook, threads];
+  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, streamable, niconico, picarto, kick, facebook, threads];
   const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
     if (!a.resolve) {

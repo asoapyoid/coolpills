@@ -1,9 +1,13 @@
 # Changelog
 
-## Unreleased
+## 3.2.2
 - BitChute: the pill now appears on the watch-page player (a cross-origin iframe) and on video thumbnails; queues the direct MP4 found via BitChute's media API.
 - Odysee: the pill now appears on listing cards; queues the direct MP4 (built from Odysee's public API) instead of the page link, with real title and duration.
 - Niconico: no raw MP4 exists (encrypted HLS), so the page is sent to Coolhost to download and queue; the player's ad clip is no longer picked up.
+- Rumble: pill on video cards; queues the direct MP4/WebM (or HLS if that's all Rumble offers) from Rumble's embed API.
+- Picarto: new adapter for live channels (stream page and channel cards); queues the channel's HLS link, with a clear message when the channel is offline.
+- Direct-link lookups now accept .webm as well as .mp4, validate the returned host, and only run from Coolhole or the matching site.
+- BitChute: the keyboard shortcut works on watch pages; Odysee cards now pick the video link rather than the channel link.
 - If a direct link can't be resolved, the page link is sent as before.
 
 ## 3.2.1

@@ -211,8 +211,9 @@
         }
         return upload;
       }
-      if ((siteId === 'bitchute' || siteId === 'odysee') && !/\.(?:mp4|webm)(?:[?#]|$)/i.test(pageUrl)) {
-        ui.toast('Looking up the direct ' + (siteId === 'bitchute' ? 'BitChute' : 'Odysee') + ' video link…', 'queue');
+      if (['bitchute', 'odysee', 'rumble', 'picarto'].includes(siteId) &&
+        /^https?:\/\/(?:www\.)?(?:(?:bitchute|odysee|rumble)\.com|picarto\.tv)\//i.test(pageUrl)) {
+        ui.toast('Looking up the direct ' + ({ bitchute: 'BitChute', odysee: 'Odysee', rumble: 'Rumble', picarto: 'Picarto' }[siteId]) + ' video link…', 'queue');
         let found;
         try {
           found = await CQ.send({ type: 'cq:resolve-direct-media', platform: siteId, postUrl: pageUrl });
@@ -223,7 +224,7 @@
           c = {
             ...c,
             url: found.url,
-            title: c.title && !/^(?:raw video|bitchute|odysee)$/i.test(c.title) ? c.title : found.title || c.title,
+            title: c.title && !/^(?:raw video|bitchute|odysee|rumble|picarto)$/i.test(c.title) ? c.title : found.title || c.title,
             duration: found.duration != null ? found.duration : c.duration,
             durationLabel: found.duration != null ? CQ.formatDuration(found.duration) : c.durationLabel,
             supported: 'yes',

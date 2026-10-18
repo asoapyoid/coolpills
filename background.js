@@ -785,7 +785,9 @@ async function resolveSocialVideo(platform, postUrl) {
 }
 
 async function resolveBitChuteMedia(pageUrl) {
-  const id = (String(pageUrl).match(/bitchute\.com\/video\/([\w-]+)/i) || [])[1];
+  let page;
+  try { page = new URL(String(pageUrl)); } catch (_) { return { ok: false, error: 'Not a BitChute video link.' }; }
+  const id = /^(?:www\.)?bitchute\.com$/i.test(page.hostname) ? (page.pathname.match(/^\/video\/([\w-]+)/) || [])[1] : null;
   if (!id) return { ok: false, error: 'Not a BitChute video link.' };
   const res = await fetch('https://api.bitchute.com/api/beta/video/media', {
     method: 'POST',
@@ -795,7 +797,10 @@ async function resolveBitChuteMedia(pageUrl) {
   if (!res.ok) return { ok: false, error: 'BitChute media API returned ' + res.status + '.' };
   const data = await res.json();
   const url = String(data && data.media_url || '');
-  if (!/^https:\/\/[^/]*bitchute\.com\/.+\.mp4(?:[?#]|$)/i.test(url)) {
+  let media = null;
+  try { media = new URL(url); } catch (_) { /* invalid */ }
+  if (!media || media.protocol !== 'https:' || media.username || media.password ||
+    !/(?:^|\.)bitchute\.com$/i.test(media.hostname) || !/\.mp4$/i.test(media.pathname)) {
     return { ok: false, error: 'BitChute did not return an MP4 link.' };
   }
   return { ok: true, url };
@@ -832,8 +837,57 @@ async function resolveOdyseeMedia(pageUrl) {
   };
 }
 
+async function resolveRumbleMedia(pageUrl) {
+  if (!/^https:\/\/(?:www\.)?rumble\.com\/v[^/]+/i.test(pageUrl)) return { ok: false, error: 'Not a Rumble video link.' };
+  const oembed = await fetch('https://rumble.com/api/Media/oembed.json?url=' + encodeURIComponent(pageUrl));
+  if (!oembed.ok) return { ok: false, error: 'Rumble oEmbed returned ' + oembed.status + '.' };
+  const id = (String((await oembed.json()).html || '').match(/\/embed\/(\w+)/) || [])[1];
+  if (!id) return { ok: false, error: 'Rumble did not expose an embed id.' };
+  const res = await fetch('https://rumble.com/embedJS/u3/?request=video&ver=2&v=' + id);
+  if (!res.ok) return { ok: false, error: 'Rumble media API returned ' + res.status + '.' };
+  const data = await res.json();
+  const ua = data && data.ua || {};
+  const best = (group) => Object.values(group || {})
+    .filter((q) => q && /^https:\/\//i.test(q.url || ''))
+    .sort((a, b) => ((b.meta && b.meta.h) || 0) - ((a.meta && a.meta.h) || 0))[0];
+  const pick = best(ua.mp4) || best(ua.webm) || best(ua.hls);
+  if (!pick) return { ok: false, error: 'Rumble did not return a playable link.' };
+  const duration = Number(data.duration);
+  const title = String(data.title || '').replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  return {
+    ok: true,
+    url: pick.url,
+    title: title || null,
+    duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+  };
+}
+
+async function resolvePicartoMedia(pageUrl) {
+  let page;
+  try { page = new URL(String(pageUrl)); } catch (_) { return { ok: false, error: 'Not a Picarto channel link.' }; }
+  const name = /^(?:www\.)?picarto\.tv$/i.test(page.hostname) ? (page.pathname.match(/^\/([A-Za-z0-9_]+)\/?$/) || [])[1] : null;
+  if (!name) return { ok: false, error: 'Not a Picarto channel link.' };
+  const res = await fetch('https://ptvintern.picarto.tv/api/channel/detail/' + name);
+  if (!res.ok) return { ok: false, error: 'Picarto API returned ' + res.status + '.' };
+  const data = await res.json();
+  const channel = data && data.channel || {};
+  if (!channel.online) return { ok: false, error: (channel.name || name) + ' is not live on Picarto right now.' };
+  let edge = null;
+  try { edge = new URL(String(data.getLoadBalancerUrl && data.getLoadBalancerUrl.url || '')); } catch (_) { /* invalid */ }
+  if (!edge || !/(?:^|\.)picarto\.tv$/i.test(edge.hostname)) return { ok: false, error: 'Picarto did not return a stream server.' };
+  const exact = channel.name || name;
+  return {
+    ok: true,
+    url: 'https://' + edge.hostname + '/stream/hls/golive+' + encodeURIComponent(exact) + '/index.m3u8',
+    title: exact + (channel.title ? ' — ' + String(channel.title).slice(0, 120) : ''),
+    duration: null,
+  };
+}
+
 async function resolveDirectMedia(platform, pageUrl) {
   try {
+    if (platform === 'picarto') return await resolvePicartoMedia(pageUrl);
+    if (platform === 'rumble') return await resolveRumbleMedia(pageUrl);
     if (platform === 'bitchute') return await resolveBitChuteMedia(pageUrl);
     if (platform === 'odysee') return await resolveOdyseeMedia(pageUrl);
   } catch (error) {
@@ -916,8 +970,13 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
         return checkDirectMediaLink(msg.url);
       }
-      case 'cq:resolve-direct-media':
+      case 'cq:resolve-direct-media': {
+        const origin = sender.url || sender.tab && sender.tab.url || '';
+        if (!/^https:\/\/(?:(?:www|new)\.)?(?:coolhole\.org|bitchute\.com|odysee\.com|rumble\.com|picarto\.tv)\//i.test(origin)) {
+          return { ok: false, error: 'Direct link lookups are only available from supported video sites.' };
+        }
         return resolveDirectMedia(msg.platform, msg.postUrl);
+      }
       case 'cq:resolve-social-video':
         return resolveSocialVideo(msg.platform, msg.postUrl);
       case 'cq:lock': {
