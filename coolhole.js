@@ -963,6 +963,14 @@
       },
     });
   }
+  async function sendLatestGold() {
+    if (!goldOn()) { toast('Gold Collector is off', 'error'); return; }
+    const key = curKey();
+    const e = G.entries.find((x) => x.mediaKey === key) || G.entries[0];
+    if (!e) { toast('No gold to send yet', 'error'); return; }
+    const ok = await sendGoldText(e.text);
+    toast(ok ? '★ Gold sent' : '★ Could not send gold', ok ? 'gold' : 'error');
+  }
   const rescanGold = () => { const b = $('#messagebuffer'); if (b && goldOn()) ingestGold(b, true); };
   function startGold() {
     if (G.started) return;
@@ -1672,6 +1680,7 @@
       case 'cq:custom': doCustom(msg.payload || {}); respond({ ok: true }); break;
       case 'cq:work': doWork(); respond({ ok: true }); break;
       case 'cq:try-auto': scheduleAutoCheck(); respond({ ok: true }); break;
+      case 'cq:send-gold': sendLatestGold(); respond({ ok: true }); break;
       case 'cq:toggle-panel': setCollapsed(!cfg().collapsed); respond({ ok: true }); break;
       default: break;
     }

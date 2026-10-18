@@ -79,6 +79,7 @@ Use **Settings → Keyboard shortcuts** to turn shortcut actions on or off. Fire
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
 | `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
+| `Ctrl+Shift+G` | Send the latest gold to Coolhole chat |
 
 Browsers may reserve a shortcut. Remap it in the browser's extension shortcut settings.
 

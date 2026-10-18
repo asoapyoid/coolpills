@@ -156,7 +156,7 @@
     s.keyboardShortcutsEnabled = s.keyboardShortcutsEnabled !== false;
     s.keyboardShortcuts = s.keyboardShortcuts && typeof s.keyboardShortcuts === 'object' && !Array.isArray(s.keyboardShortcuts)
       ? Object.fromEntries(Object.entries(s.keyboardShortcuts)
-        .filter(([name, shortcut]) => ['queue-current', 'work', 'toggle-panel'].includes(name) && typeof shortcut === 'string')
+        .filter(([name, shortcut]) => ['queue-current', 'work', 'toggle-panel', 'send-gold'].includes(name) && typeof shortcut === 'string')
         .map(([name, shortcut]) => [name, shortcut.slice(0, 40)]))
       : {};
     ['matchCoolholeTheme', 'grayButtons', 'unAfk', 'autoFocus', 'autoQueue', 'openNewCoolholeTab', 'qPlusEnabled',

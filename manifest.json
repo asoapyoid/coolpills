@@ -125,6 +125,13 @@
         "mac": "MacCtrl+Shift+H"
       },
       "description": "Show/hide the Coolhole Hist / Q+ panel"
+    },
+    "send-gold": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "MacCtrl+Shift+G"
+      },
+      "description": "Send the latest Coolhole gold to chat"
     }
   },
   "icons": {
