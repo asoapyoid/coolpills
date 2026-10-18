@@ -582,6 +582,24 @@
     },
   };
 
+  const streamable = {
+    id: 'streamable', label: 'Streamable', hosts: /(^|\.)streamable\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li', 'a[href^="/"]');
+      const url = /^\/[a-z0-9]+\/?$/i.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
+  const niconico = {
+    id: 'niconico', label: 'Niconico', hosts: /(^|\.)nicovideo\.jp$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, [class*="VideoItem"], [class*="video-item"]', 'a[href*="/watch/"]');
+      const url = /^\/watch\//.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
@@ -688,7 +706,7 @@
     },
   };
 
-  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, kick, facebook, threads];
+  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, streamable, niconico, kick, facebook, threads];
   const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
     if (!a.resolve) {

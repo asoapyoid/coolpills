@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Streamable and Niconico: dedicated video adapters.
 - Odysee and Rumble: dedicated adapters (video pages and cards, per-site toggles).
 - BitChute: dedicated adapter so the pill works on video pages and video cards (listed in per-site toggles).
 - Keyboard shortcut (default Ctrl+Shift+G, rebindable in Options) to send the latest gold to chat.
