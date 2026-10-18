@@ -44,5 +44,6 @@ The default shortcuts are:
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
 | `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
+| `Alt+Shift+G` | Send the latest Coolhole gold to chat |
 
 Use **Enable keyboard shortcut actions** to turn shortcut actions on or off. Firefox allows remapping from the settings page. Chrome-based browsers require remapping through the browser's extension shortcut manager. Browsers may reserve a combination; choose another if it cannot be assigned.

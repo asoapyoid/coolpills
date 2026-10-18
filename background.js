@@ -550,18 +550,6 @@ function trustedFacebookVideoUrl(value) {
   }
 }
 
-function trustedInstagramVideoUrl(value) {
-  try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    const trustedHost = host === 'fbcdn.net' || host.endsWith('.fbcdn.net') ||
-      host === 'cdninstagram.com' || host.endsWith('.cdninstagram.com');
-    return url.protocol === 'https:' && trustedHost && /\.mp4$/i.test(url.pathname) ? url.href : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 function trustedTikTokVideoUrl(value) {
   try {
     const url = new URL(value);
@@ -624,8 +612,6 @@ function validPublicPost(value, platform) {
   const host = url.hostname.toLowerCase();
   const matches = {
     facebook: ['facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'mbasic.facebook.com', 'fb.watch'].includes(host),
-    instagram: ['instagram.com', 'www.instagram.com', 'm.instagram.com', 'ddinstagram.com', 'www.ddinstagram.com',
-      'kkinstagram.com', 'www.kkinstagram.com'].includes(host),
     tiktok: ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'].includes(host),
   };
   return matches[platform] ? url : null;
@@ -658,35 +644,6 @@ async function resolveFacebookVideo(postUrl) {
     ) + ')');
   }
   return { ok: false, error: 'Facebook video lookup failed: ' + failures.join('; ') + '.' };
-}
-
-async function resolveInstagramVideo(postUrl) {
-  const post = validPublicPost(postUrl, 'instagram');
-  if (!post || !/\/(?:p|reel|reels|tv)\//i.test(post.pathname)) {
-    return { ok: false, error: 'Only public Instagram post and reel links can be resolved.' };
-  }
-  const mirror = new URL(post.href);
-  mirror.hostname = 'ddinstagram.com';
-  mirror.search = '';
-  try {
-    const { response, text } = await fetchSocialText(mirror.href, {
-      headers: { Accept: 'text/html,application/xhtml+xml' },
-    });
-    if (!response.ok) {
-      return { ok: false, error: 'Instagram mirror returned HTTP ' + response.status + '.' };
-    }
-    const links = linksFromHtml(text);
-    const url = links.map(trustedInstagramVideoUrl).find(Boolean);
-    if (!url) return { ok: false, error: 'Instagram mirror did not expose a direct MP4.' };
-    return { ok: true, url, title: titleFromHtml(text) };
-  } catch (error) {
-    return {
-      ok: false,
-      error: 'Instagram video lookup failed (' + (
-        error && error.name === 'AbortError' ? 'timed out' : 'mirror unavailable'
-      ) + ').',
-    };
-  }
 }
 
 async function resolveTikTokVideo(postUrl) {
@@ -779,7 +736,6 @@ async function resolveSocialVideo(platform, postUrl) {
   if (platform === 'x') return resolveXVideo(postUrl);
   if (platform === 'reddit') return resolveRedditVideo(postUrl);
   if (platform === 'facebook') return resolveFacebookVideo(postUrl);
-  if (platform === 'instagram') return resolveInstagramVideo(postUrl);
   if (platform === 'tiktok') return resolveTikTokVideo(postUrl);
   return { ok: false, error: 'No resolver is available for that site.' };
 }
@@ -803,7 +759,25 @@ async function resolveBitChuteMedia(pageUrl) {
     !/(?:^|\.)bitchute\.com$/i.test(media.hostname) || !/\.mp4$/i.test(media.pathname)) {
     return { ok: false, error: 'BitChute did not return an MP4 link.' };
   }
-  return { ok: true, url };
+  const info = { ok: true, url, title: null, duration: null, thumbnail: null };
+  try {
+    const meta = await fetch('https://api.bitchute.com/api/beta/video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_id: id }),
+    });
+    if (meta.ok) {
+      const data = await meta.json();
+      info.title = String(data.video_name || '').slice(0, 200) || null;
+      const parts = String(data.duration || '').split(':').map(Number);
+      if (parts.length && parts.length <= 3 && parts.every(Number.isFinite)) {
+        const secs = parts.reduce((total, p) => total * 60 + p, 0);
+        if (secs > 0 && secs < 172800) info.duration = secs;
+      }
+      if (/^https:\/\//i.test(data.thumbnail_url || '')) info.thumbnail = data.thumbnail_url;
+    }
+  } catch (_) { /* the title is optional */ }
+  return info;
 }
 
 async function resolveOdyseeMedia(pageUrl) {
@@ -831,7 +805,7 @@ async function resolveOdyseeMedia(pageUrl) {
   const duration = claim.value.video && Number(claim.value.video.duration);
   return {
     ok: true,
-    url: 'https://player.odycdn.com/v6/streams/' + claim.claim_id + '/' + sd.slice(0, 6) + '.mp4',
+    url: 'https://player.odycdn.com/speech/' + claim.claim_id + '.mp4',
     title: claim.value.title || null,
     duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
   };
@@ -841,7 +815,8 @@ async function resolveRumbleMedia(pageUrl) {
   if (!/^https:\/\/(?:www\.)?rumble\.com\/v[^/]+/i.test(pageUrl)) return { ok: false, error: 'Not a Rumble video link.' };
   const oembed = await fetch('https://rumble.com/api/Media/oembed.json?url=' + encodeURIComponent(pageUrl));
   if (!oembed.ok) return { ok: false, error: 'Rumble oEmbed returned ' + oembed.status + '.' };
-  const id = (String((await oembed.json()).html || '').match(/\/embed\/(\w+)/) || [])[1];
+  const oembedData = await oembed.json();
+  const id = (String(oembedData.html || '').match(/\/embed\/(\w+)/) || [])[1];
   if (!id) return { ok: false, error: 'Rumble did not expose an embed id.' };
   const res = await fetch('https://rumble.com/embedJS/u3/?request=video&ver=2&v=' + id);
   if (!res.ok) return { ok: false, error: 'Rumble media API returned ' + res.status + '.' };
@@ -853,12 +828,13 @@ async function resolveRumbleMedia(pageUrl) {
   const pick = best(ua.mp4) || best(ua.webm) || best(ua.hls);
   if (!pick) return { ok: false, error: 'Rumble did not return a playable link.' };
   const duration = Number(data.duration);
-  const title = String(data.title || '').replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const title = String(data.title || oembedData.title || '').replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
   return {
     ok: true,
     url: pick.url,
     title: title || null,
     duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+    thumbnail: /^https:\/\//i.test(oembedData.thumbnail_url || '') ? oembedData.thumbnail_url : null,
   };
 }
 
@@ -913,8 +889,11 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const fromNico = msg.payload && msg.payload.platform === 'niconico' &&
           /^https:\/\/(?:www\.)?nicovideo\.jp\//i.test(origin) &&
           /^https:\/\/(?:www\.)?nicovideo\.jp\/watch\//i.test(String(msg.payload.url || ''));
-        if (!fromCoolhole && !fromReddit && !fromNico) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico watch page.' };
+        const fromInstagram = msg.payload && msg.payload.platform === 'instagram' &&
+          /^https:\/\/(?:www\.)?instagram\.com\//i.test(origin) &&
+          /^https:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/[\w-]+/i.test(String(msg.payload.url || ''));
+        if (!fromCoolhole && !fromReddit && !fromNico && !fromInstagram) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico or Instagram video page.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.2.3
+- Send-gold shortcut default is now `Alt+Shift+G` (`Ctrl+Shift+G` is Find Previous in Chrome/Firefox). Only new installs get the new default; existing users keep their binding and can rebind in the browser's shortcut settings.
+- Instagram: the old ddinstagram mirror is dead, so it was removed. Queueing now reads the video from your own signed-in Instagram session when possible (untested while signed in), otherwise sends the post to Coolhost to download and queue.
+- Removed unused code (`closeAll`, `CQ.hooks`, Instagram mirror hosts); docs updated for newly supported sites.
+- Odysee: queue the CDN's `/speech/<claim>.mp4` link, which answers HEAD requests; the old `/v6/streams` link returned 401 to server-side checks, so Coolhole rejected it. If Coolhole still refuses a link, the existing Coolhost fallback takes over.
+- BitChute: real title, duration and thumbnail from BitChute's video API.
+- Rumble: title and thumbnail also fall back to Rumble's oEmbed; resolved titles now always win over the page's generic one.
+
 ## 3.2.2
 - BitChute: the pill now appears on the watch-page player (a cross-origin iframe) and on video thumbnails; queues the direct MP4 found via BitChute's media API.
 - Odysee: the pill now appears on listing cards; queues the direct MP4 (built from Odysee's public API) instead of the page link, with real title and duration.

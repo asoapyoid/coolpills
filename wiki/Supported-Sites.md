@@ -10,7 +10,8 @@ The extension has site-specific detection for:
 - Vimeo
 - Twitch, including clips
 - TikTok
-- Instagram and recognized mirror domains
+- Instagram
+- BitChute, Odysee, Rumble, Niconico and Picarto
 - X / Twitter
 - Reddit
 - Dailymotion
@@ -40,7 +41,9 @@ When a social post does not expose a usable MP4, Cool Pills may try a site-speci
 | Reddit | Reddit post metadata and RapidSave; gated-video recovery may use the signed-in Reddit page and Coolhost |
 | TikTok | TikWM, then MusicalDown |
 | Facebook | FBDown |
-| Instagram | ddinstagram mirror |
+| Instagram | Your own signed-in Instagram session (in-page lookup), otherwise Coolhost download |
+| BitChute / Odysee / Rumble / Picarto | Site APIs resolved by the extension (MP4/WebM, or HLS for Rumble and Picarto live) |
+| Niconico | Coolhost download |
 
 Resolvers receive the public post URL when you choose to queue the video. Cool Pills validates the returned media URL against expected hosts. Availability and behavior of third-party services can change; failures may leave the original link for Coolhost recovery or produce a clear error.
 

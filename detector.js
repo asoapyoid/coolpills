@@ -33,6 +33,50 @@
     window.addEventListener('message', onMessage);
     window.postMessage({ channel: redditMediaChannel, type: 'get-dash', id, postUrl }, location.origin);
   });
+  const IG_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  // Uses the visitor's own Instagram session (same-origin), so it only works while logged in; otherwise returns null.
+  const requestInstagramMedia = async (postUrl) => {
+    try {
+      if (!/(^|\.)instagram\.com$/i.test(location.hostname)) return null;
+      const shortcode = (new URL(postUrl).pathname.match(/\/(?:p|reel|reels|tv)\/([\w-]+)/) || [])[1];
+      if (!shortcode) return null;
+      let id = 0n;
+      for (const ch of shortcode.slice(0, 11)) {
+        const digit = IG_ALPHABET.indexOf(ch);
+        if (digit < 0) return null;
+        id = id * 64n + BigInt(digit);
+      }
+      const response = await fetch('/api/v1/media/' + id + '/info/', {
+        credentials: 'include',
+        headers: { 'X-IG-App-ID': '936619743392459', 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!response.ok || !/json/i.test(response.headers.get('content-type') || '')) return null;
+      const item = ((await response.json()).items || [])[0];
+      const versions = item && Array.isArray(item.video_versions) ? item.video_versions : [];
+      const best = versions
+        .filter((v) => {
+          try {
+            const u = new URL(v.url);
+            return u.protocol === 'https:' && /(?:^|\.)(?:cdninstagram\.com|fbcdn\.net)$/i.test(u.hostname) && /\.mp4$/i.test(u.pathname);
+          } catch (_) {
+            return false;
+          }
+        })
+        .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
+      if (!best) return null;
+      const duration = Number(item.video_duration);
+      const caption = item.caption && item.caption.text ? CQ.cleanTitle(String(item.caption.text).slice(0, 120)) : null;
+      const thumb = item.image_versions2 && item.image_versions2.candidates && item.image_versions2.candidates[0];
+      return {
+        url: best.url,
+        title: caption,
+        duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+        thumbnail: thumb && /^https:\/\//i.test(thumb.url || '') ? thumb.url : null,
+      };
+    } catch (_) {
+      return null;
+    }
+  };
   const compareVersions = (left, right) => {
     const a = String(left || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
     const b = String(right || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
@@ -224,7 +268,8 @@
           c = {
             ...c,
             url: found.url,
-            title: c.title && !/^(?:raw video|bitchute|odysee|rumble|picarto)$/i.test(c.title) ? c.title : found.title || c.title,
+            title: found.title || c.title,
+            thumbnail: found.thumbnail || c.thumbnail,
             duration: found.duration != null ? found.duration : c.duration,
             durationLabel: found.duration != null ? CQ.formatDuration(found.duration) : c.durationLabel,
             supported: 'yes',
@@ -233,13 +278,45 @@
           ui.toast('Direct link lookup failed; sending the page link instead. ' + String(found && found.error || ''), 'queue');
         }
       }
+      if (c.platform === 'instagram' && c.postUrl && /^https:\/\/(?:www\.)?instagram\.com\//i.test(c.postUrl)) {
+        const cached = this.resolvedMedia.get('instagram:' + c.postUrl);
+        const found = cached || await requestInstagramMedia(c.postUrl);
+        if (found) {
+          this.resolvedMedia.set('instagram:' + c.postUrl, found);
+          c = {
+            ...c,
+            url: found.url,
+            title: found.title || c.title,
+            duration: found.duration != null ? found.duration : c.duration,
+            durationLabel: found.duration != null ? CQ.formatDuration(found.duration) : c.durationLabel,
+            thumbnail: found.thumbnail || c.thumbnail,
+            supported: 'yes',
+          };
+        } else {
+          // Instagram exposes no public MP4, so Coolhost (yt-dlp) downloads it and the finished file gets queued.
+          ui.toast('Instagram has no public direct link. Sending it to Coolhost to download, then it will be queued…', 'queue');
+          let upload;
+          try {
+            upload = await CQ.send({
+              type: 'cq:coolhost-upload',
+              payload: { url: c.postUrl, title: c.title, platform: 'instagram' },
+            });
+          } catch (error) {
+            upload = { ok: false, error: String(error && error.message || error) };
+          }
+          if (!upload || upload.ok === false) {
+            ui.toast('Could not start the Coolhost upload: ' + String(upload && upload.error || 'the extension did not respond.'), 'error');
+          }
+          return upload;
+        }
+      }
       const cacheKey = c.platform + ':' + c.postUrl;
-      if (c.postUrl && ['x', 'reddit', 'facebook', 'instagram', 'tiktok'].includes(c.platform) &&
+      if (c.postUrl && ['x', 'reddit', 'facebook', 'tiktok'].includes(c.platform) &&
         !CQ.isNativeCoolholeUrl(c.postUrl) &&
         !this.resolvedMedia.has(cacheKey)) {
         const siteName = {
           x: 'X', reddit: 'Reddit', facebook: 'Facebook',
-          instagram: 'Instagram', tiktok: 'TikTok',
+          tiktok: 'TikTok',
         }[c.platform];
         let pending = this.resolvingMedia.get(cacheKey);
         if (!pending) {

@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.2.2](https://github.com/asoapyoid/coolpills/releases/tag/v3.2.2) |
+| **Current release** | [v3.2.3](https://github.com/asoapyoid/coolpills/releases/tag/v3.2.3) |
 | **Queue controls** | CH to queue or remove; CP to go Fishing, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
@@ -17,8 +17,8 @@ See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the f
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.2.2.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.2.2.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.2.3.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.2.3.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -41,7 +41,7 @@ Firefox's temporary add-on is removed when Firefox closes; load it again after r
 
 ## How it works
 
-1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube (including Shorts), Vimeo, Dailymotion, Twitch VOD pages, Bitchute, Rumble, Odysee, Streamable, Kick clips/VOD pages, Reddit posts with native media, and X posts with native video. You can also send links from pages that do not expose a player by using **CP** or the popup.
+1. **Find a video.** On supported video sites and pages with HTML5 video, the extension detects videos and shows a CH | CP pill when you hover or point at one. The detector supports YouTube (including Shorts), Vimeo, Dailymotion, Twitch VOD pages, BitChute, Rumble, Odysee, Niconico, Picarto, Instagram, Streamable, Kick clips/VOD pages, Reddit posts with native media, and X posts with native video. You can also send links from pages that do not expose a player by using **CP** or the popup.
 2. **Send it to Coolhole.** Click **CH** to queue the current video. Cool Pills passes the video link and available metadata (title, duration and thumbnail) to an open Coolhole tab. If there is no room in queue, the item can be sent to **Q+** if enabled.
 3. **Handle a full queue.** Items that cannot be added yet can wait in **Q+**, the local waiting list. Reorder items by dragging, force or schedule an item, or paste multiple links with **+Link**.
 4. **Choose what CP does.** Click **CP** to focus Coolhole and go Fishing by default. In settings, change CP to add to Q+, schedule, copy the video link, open Coolhole, do nothing, or run Custom (same-site open with copied link).
@@ -79,7 +79,7 @@ Use **Settings → Keyboard shortcuts** to turn shortcut actions on or off. Fire
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
 | `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
-| `Ctrl+Shift+G` | Send the latest gold to Coolhole chat |
+| `Alt+Shift+G` | Send the latest gold to Coolhole chat |
 
 Browsers may reserve a shortcut. Remap it in the browser's extension shortcut settings.
 

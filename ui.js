@@ -628,8 +628,7 @@
           if (!pill.classList.contains('cq-visible')) pill.style.display = 'none';
         }, immediate ? 0 : 160);
       },
-      closeAll() { closeMenu(); closeSched(); },
-      openSchedule(anchorCtx) {
+          openSchedule(anchorCtx) {
         if (anchorCtx) ctx = anchorCtx;
         const min = Date.now() + 30000;
         dt.min = toLocal(min);
