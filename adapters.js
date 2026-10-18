@@ -564,6 +564,24 @@
     },
   };
 
+  const odysee = {
+    id: 'odysee', label: 'Odysee', hosts: /(^|\.)odysee\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .claim-preview, [class*="claim-preview"]', 'a[href^="/@"], a[href*="odysee.com/@"]');
+      const url = /^\/@[^/]+[/:][^/]+/.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
+  const rumble = {
+    id: 'rumble', label: 'Rumble', hosts: /(^|\.)rumble\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .videostream, [class*="video-item"]', 'a[href^="/v"], a[href*="rumble.com/v"]');
+      const url = /^\/v[^/]+/.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
@@ -670,7 +688,7 @@
     },
   };
 
-  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, kick, facebook, threads];
+  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, kick, facebook, threads];
   const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
     if (!a.resolve) {

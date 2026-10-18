@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Odysee and Rumble: dedicated adapters (video pages and cards, per-site toggles).
 - BitChute: dedicated adapter so the pill works on video pages and video cards (listed in per-site toggles).
 - Keyboard shortcut (default Ctrl+Shift+G, rebindable in Options) to send the latest gold to chat.
 - Gold Collector: store the exact text Coolhole copies when a gold line first appears, so sending gold after it scrolls out of chat uses that real copy instead of re-read text.
