@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.2.1
 - Streamable and Niconico: dedicated video adapters.
 - Odysee and Rumble: dedicated adapters (video pages and cards, per-site toggles).
 - BitChute: dedicated adapter so the pill works on video pages and video cards (listed in per-site toggles).
@@ -8,6 +8,7 @@
 - Gold Collector: store the exact text Coolhole copies when a gold line first appears, so sending gold after it scrolls out of chat uses that real copy instead of re-read text.
 - Coolhost: finished uploads now get the full CH/CP pill (themes, corner, Q+, schedule) on hover instead of a plain CH button.
 - Queue toast and history use the title Coolhole shows when the video's own name is unknown (no more "Raw Video" for Coolhost files).
+
 ## 3.1.10
 - Gold Collector: sending gold now clicks the original gold line in chat, so Coolhole copies the exact text itself, and then sends it automatically (toast, list text and Send button). Falls back to the stored text if the line has scrolled away. Counts and history are unchanged.
 - Gold Collector: gold counts now survive a page refresh for the current video (the saved list is restored before chat history is rescanned, and the video key no longer changes while the page loads).
