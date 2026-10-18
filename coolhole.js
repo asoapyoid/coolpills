@@ -967,7 +967,7 @@
     if (!goldOn()) { toast('Gold Collector is off', 'error'); return; }
     const key = curKey();
     const e = G.entries.find((x) => x.mediaKey === key) || G.entries[0];
-    if (!e) { toast('No gold to send yet', 'error'); return; }
+    if (!e) { toast('★ There\'s no gold yet', 'gold'); return; }
     const ok = await sendGoldText(e.text);
     toast(ok ? '★ Gold sent' : '★ Could not send gold', ok ? 'gold' : 'error');
   }
