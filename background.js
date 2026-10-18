@@ -784,6 +784,117 @@ async function resolveSocialVideo(platform, postUrl) {
   return { ok: false, error: 'No resolver is available for that site.' };
 }
 
+async function resolveBitChuteMedia(pageUrl) {
+  let page;
+  try { page = new URL(String(pageUrl)); } catch (_) { return { ok: false, error: 'Not a BitChute video link.' }; }
+  const id = /^(?:www\.)?bitchute\.com$/i.test(page.hostname) ? (page.pathname.match(/^\/video\/([\w-]+)/) || [])[1] : null;
+  if (!id) return { ok: false, error: 'Not a BitChute video link.' };
+  const res = await fetch('https://api.bitchute.com/api/beta/video/media', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ video_id: id }),
+  });
+  if (!res.ok) return { ok: false, error: 'BitChute media API returned ' + res.status + '.' };
+  const data = await res.json();
+  const url = String(data && data.media_url || '');
+  let media = null;
+  try { media = new URL(url); } catch (_) { /* invalid */ }
+  if (!media || media.protocol !== 'https:' || media.username || media.password ||
+    !/(?:^|\.)bitchute\.com$/i.test(media.hostname) || !/\.mp4$/i.test(media.pathname)) {
+    return { ok: false, error: 'BitChute did not return an MP4 link.' };
+  }
+  return { ok: true, url };
+}
+
+async function resolveOdyseeMedia(pageUrl) {
+  let path;
+  try {
+    path = decodeURIComponent(new URL(pageUrl).pathname);
+  } catch (_) {
+    return { ok: false, error: 'Not an Odysee link.' };
+  }
+  const parts = path.split('/').filter(Boolean);
+  if (!parts.length || parts.length > 2) return { ok: false, error: 'Not an Odysee video link.' };
+  const lbry = 'lbry://' + parts.map((p) => p.replace(':', '#')).join('/');
+  const res = await fetch('https://api.na-backend.odysee.com/api/v1/proxy?m=resolve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-rpc' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'resolve', params: { urls: [lbry] } }),
+  });
+  if (!res.ok) return { ok: false, error: 'Odysee API returned ' + res.status + '.' };
+  const data = await res.json();
+  const claim = Object.values(data && data.result || {})[0] || {};
+  const sd = claim.value && claim.value.source && claim.value.source.sd_hash;
+  if (!claim.claim_id || !sd || !/^[0-9a-f]+$/i.test(claim.claim_id + sd) || claim.value.stream_type !== 'video') {
+    return { ok: false, error: 'Odysee did not return a playable video.' };
+  }
+  const duration = claim.value.video && Number(claim.value.video.duration);
+  return {
+    ok: true,
+    url: 'https://player.odycdn.com/v6/streams/' + claim.claim_id + '/' + sd.slice(0, 6) + '.mp4',
+    title: claim.value.title || null,
+    duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+  };
+}
+
+async function resolveRumbleMedia(pageUrl) {
+  if (!/^https:\/\/(?:www\.)?rumble\.com\/v[^/]+/i.test(pageUrl)) return { ok: false, error: 'Not a Rumble video link.' };
+  const oembed = await fetch('https://rumble.com/api/Media/oembed.json?url=' + encodeURIComponent(pageUrl));
+  if (!oembed.ok) return { ok: false, error: 'Rumble oEmbed returned ' + oembed.status + '.' };
+  const id = (String((await oembed.json()).html || '').match(/\/embed\/(\w+)/) || [])[1];
+  if (!id) return { ok: false, error: 'Rumble did not expose an embed id.' };
+  const res = await fetch('https://rumble.com/embedJS/u3/?request=video&ver=2&v=' + id);
+  if (!res.ok) return { ok: false, error: 'Rumble media API returned ' + res.status + '.' };
+  const data = await res.json();
+  const ua = data && data.ua || {};
+  const best = (group) => Object.values(group || {})
+    .filter((q) => q && /^https:\/\//i.test(q.url || ''))
+    .sort((a, b) => ((b.meta && b.meta.h) || 0) - ((a.meta && a.meta.h) || 0))[0];
+  const pick = best(ua.mp4) || best(ua.webm) || best(ua.hls);
+  if (!pick) return { ok: false, error: 'Rumble did not return a playable link.' };
+  const duration = Number(data.duration);
+  const title = String(data.title || '').replace(/&apos;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  return {
+    ok: true,
+    url: pick.url,
+    title: title || null,
+    duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+  };
+}
+
+async function resolvePicartoMedia(pageUrl) {
+  let page;
+  try { page = new URL(String(pageUrl)); } catch (_) { return { ok: false, error: 'Not a Picarto channel link.' }; }
+  const name = /^(?:www\.)?picarto\.tv$/i.test(page.hostname) ? (page.pathname.match(/^\/([A-Za-z0-9_]+)\/?$/) || [])[1] : null;
+  if (!name) return { ok: false, error: 'Not a Picarto channel link.' };
+  const res = await fetch('https://ptvintern.picarto.tv/api/channel/detail/' + name);
+  if (!res.ok) return { ok: false, error: 'Picarto API returned ' + res.status + '.' };
+  const data = await res.json();
+  const channel = data && data.channel || {};
+  if (!channel.online) return { ok: false, error: (channel.name || name) + ' is not live on Picarto right now.' };
+  let edge = null;
+  try { edge = new URL(String(data.getLoadBalancerUrl && data.getLoadBalancerUrl.url || '')); } catch (_) { /* invalid */ }
+  if (!edge || !/(?:^|\.)picarto\.tv$/i.test(edge.hostname)) return { ok: false, error: 'Picarto did not return a stream server.' };
+  const exact = channel.name || name;
+  return {
+    ok: true,
+    url: 'https://' + edge.hostname + '/stream/hls/golive+' + encodeURIComponent(exact) + '/index.m3u8',
+    title: exact + (channel.title ? ' — ' + String(channel.title).slice(0, 120) : ''),
+    duration: null,
+  };
+}
+
+async function resolveDirectMedia(platform, pageUrl) {
+  try {
+    if (platform === 'picarto') return await resolvePicartoMedia(pageUrl);
+    if (platform === 'rumble') return await resolveRumbleMedia(pageUrl);
+    if (platform === 'bitchute') return await resolveBitChuteMedia(pageUrl);
+    if (platform === 'odysee') return await resolveOdyseeMedia(pageUrl);
+  } catch (error) {
+    return { ok: false, error: String(error && error.message || error) };
+  }
+  return { ok: false, error: 'No resolver is available for that site.' };
+}
 // ── auto-queue lock (only one Coolhole tab drains Q+ at a time) ─────
 let lock = { tabId: null, until: 0 };
 
@@ -799,8 +910,11 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
           isRedditUrl(origin) && isRedditUrl(msg.payload.postUrl, true) &&
           isRedditDashUrl(msg.payload.url);
-        if (!fromCoolhole && !fromReddit) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a verified Reddit media manifest.' };
+        const fromNico = msg.payload && msg.payload.platform === 'niconico' &&
+          /^https:\/\/(?:www\.)?nicovideo\.jp\//i.test(origin) &&
+          /^https:\/\/(?:www\.)?nicovideo\.jp\/watch\//i.test(String(msg.payload.url || ''));
+        if (!fromCoolhole && !fromReddit && !fromNico) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico watch page.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }
@@ -855,6 +969,13 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           return { checked: false, error: 'Media link checks can only be requested by Coolhole.' };
         }
         return checkDirectMediaLink(msg.url);
+      }
+      case 'cq:resolve-direct-media': {
+        const origin = sender.url || sender.tab && sender.tab.url || '';
+        if (!/^https:\/\/(?:(?:www|new)\.)?(?:coolhole\.org|bitchute\.com|odysee\.com|rumble\.com|picarto\.tv)\//i.test(origin)) {
+          return { ok: false, error: 'Direct link lookups are only available from supported video sites.' };
+        }
+        return resolveDirectMedia(msg.platform, msg.postUrl);
       }
       case 'cq:resolve-social-video':
         return resolveSocialVideo(msg.platform, msg.postUrl);

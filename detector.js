@@ -192,6 +192,47 @@
     async queue(ctx, extra) {
       let c = this.withResolvedMedia(this.fresh(ctx));
       if (!c || !c.url) return;
+      const siteId = this.adapter && this.adapter.id;
+      const pageUrl = c.url;
+      if (siteId === 'niconico' && /^https:\/\/(?:www\.)?nicovideo\.jp\/watch\//i.test(pageUrl)) {
+        // Niconico streams encrypted HLS with no raw MP4, so Coolhost (yt-dlp) fetches it and queues the result.
+        ui.toast('Niconico has no direct video link. Sending it to Coolhost to download, then it will be queued…', 'queue');
+        let upload;
+        try {
+          upload = await CQ.send({
+            type: 'cq:coolhost-upload',
+            payload: { url: pageUrl, title: c.title, platform: 'niconico' },
+          });
+        } catch (error) {
+          upload = { ok: false, error: String(error && error.message || error) };
+        }
+        if (!upload || upload.ok === false) {
+          ui.toast('Could not start the Coolhost upload: ' + String(upload && upload.error || 'the extension did not respond.'), 'error');
+        }
+        return upload;
+      }
+      if (['bitchute', 'odysee', 'rumble', 'picarto'].includes(siteId) &&
+        /^https?:\/\/(?:www\.)?(?:(?:bitchute|odysee|rumble)\.com|picarto\.tv)\//i.test(pageUrl)) {
+        ui.toast('Looking up the direct ' + ({ bitchute: 'BitChute', odysee: 'Odysee', rumble: 'Rumble', picarto: 'Picarto' }[siteId]) + ' video link…', 'queue');
+        let found;
+        try {
+          found = await CQ.send({ type: 'cq:resolve-direct-media', platform: siteId, postUrl: pageUrl });
+        } catch (error) {
+          found = { ok: false, error: String(error && error.message || error) };
+        }
+        if (found && found.ok && /^https:\/\//i.test(String(found.url || ''))) {
+          c = {
+            ...c,
+            url: found.url,
+            title: c.title && !/^(?:raw video|bitchute|odysee|rumble|picarto)$/i.test(c.title) ? c.title : found.title || c.title,
+            duration: found.duration != null ? found.duration : c.duration,
+            durationLabel: found.duration != null ? CQ.formatDuration(found.duration) : c.durationLabel,
+            supported: 'yes',
+          };
+        } else {
+          ui.toast('Direct link lookup failed; sending the page link instead. ' + String(found && found.error || ''), 'queue');
+        }
+      }
       const cacheKey = c.platform + ':' + c.postUrl;
       if (c.postUrl && ['x', 'reddit', 'facebook', 'instagram', 'tiktok'].includes(c.platform) &&
         !CQ.isNativeCoolholeUrl(c.postUrl) &&
