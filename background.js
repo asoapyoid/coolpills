@@ -784,6 +784,63 @@ async function resolveSocialVideo(platform, postUrl) {
   return { ok: false, error: 'No resolver is available for that site.' };
 }
 
+async function resolveBitChuteMedia(pageUrl) {
+  const id = (String(pageUrl).match(/bitchute\.com\/video\/([\w-]+)/i) || [])[1];
+  if (!id) return { ok: false, error: 'Not a BitChute video link.' };
+  const res = await fetch('https://api.bitchute.com/api/beta/video/media', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ video_id: id }),
+  });
+  if (!res.ok) return { ok: false, error: 'BitChute media API returned ' + res.status + '.' };
+  const data = await res.json();
+  const url = String(data && data.media_url || '');
+  if (!/^https:\/\/[^/]*bitchute\.com\/.+\.mp4(?:[?#]|$)/i.test(url)) {
+    return { ok: false, error: 'BitChute did not return an MP4 link.' };
+  }
+  return { ok: true, url };
+}
+
+async function resolveOdyseeMedia(pageUrl) {
+  let path;
+  try {
+    path = decodeURIComponent(new URL(pageUrl).pathname);
+  } catch (_) {
+    return { ok: false, error: 'Not an Odysee link.' };
+  }
+  const parts = path.split('/').filter(Boolean);
+  if (!parts.length || parts.length > 2) return { ok: false, error: 'Not an Odysee video link.' };
+  const lbry = 'lbry://' + parts.map((p) => p.replace(':', '#')).join('/');
+  const res = await fetch('https://api.na-backend.odysee.com/api/v1/proxy?m=resolve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json-rpc' },
+    body: JSON.stringify({ jsonrpc: '2.0', method: 'resolve', params: { urls: [lbry] } }),
+  });
+  if (!res.ok) return { ok: false, error: 'Odysee API returned ' + res.status + '.' };
+  const data = await res.json();
+  const claim = Object.values(data && data.result || {})[0] || {};
+  const sd = claim.value && claim.value.source && claim.value.source.sd_hash;
+  if (!claim.claim_id || !sd || !/^[0-9a-f]+$/i.test(claim.claim_id + sd) || claim.value.stream_type !== 'video') {
+    return { ok: false, error: 'Odysee did not return a playable video.' };
+  }
+  const duration = claim.value.video && Number(claim.value.video.duration);
+  return {
+    ok: true,
+    url: 'https://player.odycdn.com/v6/streams/' + claim.claim_id + '/' + sd.slice(0, 6) + '.mp4',
+    title: claim.value.title || null,
+    duration: duration > 0 && duration < 172800 ? Math.round(duration) : null,
+  };
+}
+
+async function resolveDirectMedia(platform, pageUrl) {
+  try {
+    if (platform === 'bitchute') return await resolveBitChuteMedia(pageUrl);
+    if (platform === 'odysee') return await resolveOdyseeMedia(pageUrl);
+  } catch (error) {
+    return { ok: false, error: String(error && error.message || error) };
+  }
+  return { ok: false, error: 'No resolver is available for that site.' };
+}
 // ── auto-queue lock (only one Coolhole tab drains Q+ at a time) ─────
 let lock = { tabId: null, until: 0 };
 
@@ -799,8 +856,11 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const fromReddit = msg.payload && msg.payload.platform === 'reddit' &&
           isRedditUrl(origin) && isRedditUrl(msg.payload.postUrl, true) &&
           isRedditDashUrl(msg.payload.url);
-        if (!fromCoolhole && !fromReddit) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole or a verified Reddit media manifest.' };
+        const fromNico = msg.payload && msg.payload.platform === 'niconico' &&
+          /^https:\/\/(?:www\.)?nicovideo\.jp\//i.test(origin) &&
+          /^https:\/\/(?:www\.)?nicovideo\.jp\/watch\//i.test(String(msg.payload.url || ''));
+        if (!fromCoolhole && !fromReddit && !fromNico) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico watch page.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }
@@ -856,6 +916,8 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
         return checkDirectMediaLink(msg.url);
       }
+      case 'cq:resolve-direct-media':
+        return resolveDirectMedia(msg.platform, msg.postUrl);
       case 'cq:resolve-social-video':
         return resolveSocialVideo(msg.platform, msg.postUrl);
       case 'cq:lock': {

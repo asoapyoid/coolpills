@@ -557,22 +557,78 @@
 
   const bitchute = {
     id: 'bitchute', label: 'BitChute', hosts: /(^|\.)bitchute\.com$/i, supported: 'yes',
-    context(v) {
-      const link = linkIn(v, 'article, li, .video-card, .channel-videos-container, [class*="video-card"]', 'a[href*="/video/"]');
-      const url = /^\/video\//.test(location.pathname) ? location.href : link || location.href;
-      return base(v, isNativeCoolholeUrl(url) ? url : nativeOrDirect(v, url), textOf('h1, #video-title, .video-title') || pageTitle(), 'yes');
+    // The watch player is a cross-origin iframe (no <video> in the page) and cards are plain thumbnails.
+    resolve(stack) {
+      for (const el of stack) {
+        if (!el || !el.tagName) continue;
+        const frame = el.tagName === 'IFRAME' && /\/embed\//i.test(el.getAttribute('src') || el.src || '');
+        const card = !frame && el.tagName !== 'BODY' && el.closest ? el.closest('a[href^="/video/"]') : null;
+        const target = frame ? el : card && card.querySelector('img') ? card : null;
+        if (!target) continue;
+        const r = target.getBoundingClientRect();
+        if (r.width < 120 || r.height < 60) continue;
+        return {
+          key: target,
+          rect: () => target.getBoundingClientRect(),
+          place: 'video-top-right',
+          ctx: () => this.context(frame ? null : target),
+        };
+      }
+      return null;
+    },
+    context(el) {
+      const card = el && el.tagName === 'A' ? el : null;
+      const linkEl = card || (el && el.closest ? el.closest('article, li, .video-card, [class*="video-card"]') : null);
+      const onWatch = /^\/video\//.test(location.pathname);
+      const near = linkEl && linkEl.querySelector ? linkEl.querySelector('a[href*="/video/"]') : null;
+      const url = card ? abs(card.getAttribute('href')) : onWatch ? location.href : near ? abs(near.getAttribute('href')) : location.href;
+      const img = card && card.querySelector('img[alt]');
+      const title = card
+        ? clean(card.getAttribute('title') || (img && img.getAttribute('alt')) || card.textContent)
+        : textOf('h1, #video-title, .video-title') || pageTitle();
+      const ctx = base(null, url, title, 'yes');
+      if (card && img && /^https?:/i.test(img.src)) ctx.thumbnail = img.src;
+      return ctx;
     },
   };
 
   const odysee = {
     id: 'odysee', label: 'Odysee', hosts: /(^|\.)odysee\.com$/i, supported: 'yes',
-    context(v) {
-      const link = linkIn(v, 'article, li, .claim-preview, [class*="claim-preview"]', 'a[href^="/@"], a[href*="odysee.com/@"]');
-      const url = /^\/@[^/]+[/:][^/]+/.test(location.pathname) ? location.href : link || location.href;
-      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    // Listing cards use background-image thumbnails, so there is no <video> to anchor to.
+    resolve(stack) {
+      const viaVideo = resolveVideo(this, stack);
+      if (viaVideo) return viaVideo;
+      for (const el of stack) {
+        const card = el && el.closest ? el.closest('.claim-preview--tile, .claim-preview__wrapper') : null;
+        if (!card || !card.querySelector('a[href^="/@"]')) continue;
+        const thumb = card.querySelector('.media__thumb') || card;
+        const r = thumb.getBoundingClientRect();
+        if (r.width < 120 || r.height < 60) continue;
+        return {
+          key: card,
+          rect: () => thumb.getBoundingClientRect(),
+          place: 'video-top-right',
+          ctx: () => this.context(null, card),
+        };
+      }
+      return null;
+    },
+    context(v, card) {
+      const link = card
+        ? card.querySelector('a[href^="/@"]:not([href$="/"])')
+        : null;
+      const own = /^\/@[^/]+[/:][^/]+/.test(location.pathname);
+      const url = card ? (link ? abs(link.getAttribute('href')) : location.href) : own ? location.href : linkIn(v, 'article, li, .claim-preview, [class*="claim-preview"]', 'a[href^="/@"], a[href*="odysee.com/@"]') || location.href;
+      const title = card
+        ? clean((card.querySelector('.claim-tile__title, [class*="title"]') || link || {}).textContent)
+        : textOf('h1') || pageTitle();
+      const ctx = base(v, url, title, 'yes');
+      const thumb = card && card.querySelector('.media__thumb');
+      const bg = thumb && thumb.getAttribute('data-background-image');
+      if (bg && /^https?:/i.test(bg)) ctx.thumbnail = bg;
+      return ctx;
     },
   };
-
   const rumble = {
     id: 'rumble', label: 'Rumble', hosts: /(^|\.)rumble\.com$/i, supported: 'yes',
     context(v) {
@@ -596,7 +652,7 @@
     context(v) {
       const link = linkIn(v, 'article, li, [class*="VideoItem"], [class*="video-item"]', 'a[href*="/watch/"]');
       const url = /^\/watch\//.test(location.pathname) ? location.href : link || location.href;
-      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+      return base(null, url, textOf('h1') || pageTitle(), 'yes');
     },
   };
 

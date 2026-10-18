@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- BitChute: the pill now appears on the watch-page player (a cross-origin iframe) and on video thumbnails; queues the direct MP4 found via BitChute's media API.
+- Odysee: the pill now appears on listing cards; queues the direct MP4 (built from Odysee's public API) instead of the page link, with real title and duration.
+- Niconico: no raw MP4 exists (encrypted HLS), so the page is sent to Coolhost to download and queue; the player's ad clip is no longer picked up.
+- If a direct link can't be resolved, the page link is sent as before.
+
 ## 3.2.1
 - Streamable and Niconico: dedicated video adapters.
 - Odysee and Rumble: dedicated adapters (video pages and cards, per-site toggles).
