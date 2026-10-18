@@ -94,12 +94,13 @@
   }
 
   // Click the live gold chat line so Coolhole copies the exact text into the chat box, then send it.
-  // Falls back to the stored text if the line has scrolled out of the chat buffer.
+  // If the line has scrolled out, uses the copy captured from Coolhole when the gold was first seen.
   async function sendGoldText(text) {
     const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
     const want = norm(text).toLowerCase();
     const input = document.querySelector('#chatline');
     let msg = '';
+    const stored = G.entries.find((e) => e.key === want);
     const line = [...document.querySelectorAll('#messagebuffer .text-lottery')]
       .reverse().find((n) => norm(n.textContent).toLowerCase() === want);
     if (line && input) {
@@ -108,7 +109,7 @@
       await new Promise((r) => setTimeout(r, 120));
       msg = norm(input.value);
     }
-    const ok = await sendChatText(msg || text);
+    const ok = await sendChatText(msg || (stored && stored.copy) || text);
     if (ok && input && msg) {
       const proto = input.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
       const desc = Object.getOwnPropertyDescriptor(proto, 'value');
@@ -543,6 +544,27 @@
     }
     return item;
   }
+  const isGenericTitle = (t) => !t || /^(raw video|coolhost)$/i.test(String(t).trim());
+  /** The title Coolhole itself shows for an entry in the room queue (e.g. a Coolhost file whose name we can't know). */
+  function roomTitle(mediaUrl) {
+    const key = CQ.mediaKey(mediaUrl);
+    for (const li of queueRows()) {
+      if (!rowKeys(li).includes(key)) continue;
+      const a = Array.from(li.querySelectorAll('a[href]')).find((x) => CQ.mediaKey(x.getAttribute('href') || x.href || '') === key);
+      const node = li.querySelector('.qe_title, .q-title') || a;
+      const t = CQ.cleanTitle(node && node.textContent);
+      if (t && !isGenericTitle(t) && !/^https?:\/\//i.test(t)) return t;
+    }
+    return null;
+  }
+  async function adoptRoomTitle(item) {
+    if (!isGenericTitle(item.title)) return;
+    for (let i = 0; i < 6; i++) {
+      const t = roomTitle(item.mediaUrl);
+      if (t) { item.title = t; return; }
+      await sleep(250);
+    }
+  }
   async function enrichPending(videoId) {
     const it = S.pending.find((x) => x.videoId === videoId);
     if (!it) return;
@@ -629,6 +651,7 @@
         else toast('Still in Q+: Coolhole is at its queue limit.', 'qplus');
         return;
       }
+      await adoptRoomTitle(item);
       if (fromPending) removePending(item.videoId);
       addToHistory(item);
       setTimeout(() => { const c = getMyQueuedCount(); if (c > getRoomLimit()) setRoomLimit(c); updateSlots(); publishSnapshot(); }, 450);
@@ -884,6 +907,22 @@
     if (!G.entries.some((e) => e.mediaKey === key)) store.set(KEYS.gold, { mediaKey: key, mediaTitle: String(curTitle()).trim(), entries: [], savedAt: Date.now() });
     return true;
   }
+  // Let Coolhole's own click handler produce the exact text it would put in the chat box, then restore the box.
+  function captureGoldCopy(line) {
+    const input = document.querySelector('#chatline');
+    if (!input || !line) return null;
+    const prev = input.value;
+    const active = document.activeElement;
+    let copy = null;
+    try {
+      input.value = '';
+      line.click();
+      copy = String(input.value || '').replace(/\s+/g, ' ').trim() || null;
+    } catch (_) { /* ignore */ }
+    input.value = prev;
+    try { if (active && active !== document.body && active.focus) active.focus(); else input.blur(); } catch (_) { /* ignore */ }
+    return copy;
+  }
   function ingestGold(node, fromRescan) {
     if (!goldOn() || !G.restored || !node || node.nodeType !== 1) return;
     noteGoldMedia();
@@ -905,7 +944,7 @@
         continue;
       }
       G.seen.add(key);
-      G.entries.unshift({ id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, key, at: Date.now(), mediaKey: G.mediaKey || curKey(), mediaTitle: String(curTitle()).trim() || 'Unknown video', count: 1 });
+      G.entries.unshift({ copy: captureGoldCopy(n), id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, key, at: Date.now(), mediaKey: G.mediaKey || curKey(), mediaTitle: String(curTitle()).trim() || 'Unknown video', count: 1 });
       if (G.entries.length > 80) { const d = G.entries.pop(); if (d) G.seen.delete(d.key); }
       changed = true;
       if (!fromRescan && G.armed && Date.now() >= G.quietUntil) goldToast(text);
@@ -923,6 +962,14 @@
         setTimeout(() => t.classList.remove('show'), 2200);
       },
     });
+  }
+  async function sendLatestGold() {
+    if (!goldOn()) { toast('Gold Collector is off', 'error'); return; }
+    const key = curKey();
+    const e = G.entries.find((x) => x.mediaKey === key) || G.entries[0];
+    if (!e) { toast('★ There\'s no gold yet', 'gold'); return; }
+    const ok = await sendGoldText(e.text);
+    toast(ok ? '★ Gold sent' : '★ Could not send gold', ok ? 'gold' : 'error');
   }
   const rescanGold = () => { const b = $('#messagebuffer'); if (b && goldOn()) ingestGold(b, true); };
   function startGold() {
@@ -1633,6 +1680,7 @@
       case 'cq:custom': doCustom(msg.payload || {}); respond({ ok: true }); break;
       case 'cq:work': doWork(); respond({ ok: true }); break;
       case 'cq:try-auto': scheduleAutoCheck(); respond({ ok: true }); break;
+      case 'cq:send-gold': sendLatestGold(); respond({ ok: true }); break;
       case 'cq:toggle-panel': setCollapsed(!cfg().collapsed); respond({ ok: true }); break;
       default: break;
     }

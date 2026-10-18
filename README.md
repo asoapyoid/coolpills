@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Browser support** | Chrome, Edge, Brave and Firefox |
-| **Current release** | [v3.1.10](https://github.com/asoapyoid/coolpills/releases/tag/v3.1.10) |
+| **Current release** | [v3.2.1](https://github.com/asoapyoid/coolpills/releases/tag/v3.2.1) |
 | **Queue controls** | CH to queue or remove; CP to go Fishing, add to Q+, or schedule |
 | **Media recovery** | Coolhost processing for links Coolhole rejects |
 
@@ -17,8 +17,8 @@ See the [Cool Pills wiki](https://github.com/asoapyoid/coolpills/wiki) for the f
 
 ## Download
 
-- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.1.10.zip)
-- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.1.10.zip)
+- [Download for Chrome, Edge or Brave](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-chrome-3.2.1.zip)
+- [Download for Firefox](https://github.com/asoapyoid/coolpills/releases/latest/download/cool-pills-firefox-3.2.1.zip)
 - [View all releases](https://github.com/asoapyoid/coolpills/releases)
 
 ## Install
@@ -79,6 +79,7 @@ Use **Settings → Keyboard shortcuts** to turn shortcut actions on or off. Fire
 | `Ctrl+Shift+Q` | Queue the current or hovered video |
 | `Ctrl+Shift+W` | Focus Coolhole and go Fishing |
 | `Ctrl+Shift+H` | Toggle the Hist / Q+ panel |
+| `Ctrl+Shift+G` | Send the latest gold to Coolhole chat |
 
 Browsers may reserve a shortcut. Remap it in the browser's extension shortcut settings.
 

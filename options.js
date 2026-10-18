@@ -161,6 +161,7 @@
     ['queue-current', 'Queue current or hovered video'],
     ['work', 'Focus Coolhole and go Fishing'],
     ['toggle-panel', 'Toggle the Hist / Q+ panel'],
+    ['send-gold', 'Send the latest gold to chat'],
   ];
   const canUpdateShortcuts = typeof api.commands.update === 'function';
   let recordingHandler = null;

@@ -901,6 +901,9 @@ api.commands.onCommand.addListener(async (cmd) => {
     } else if (cmd === 'toggle-panel') {
       const tab = await pickHoleTab();
       if (tab) await api.tabs.sendMessage(tab.id, { type: 'cq:toggle-panel' }).catch(() => null);
+    } else if (cmd === 'send-gold') {
+      const tab = await pickHoleTab();
+      if (tab) await api.tabs.sendMessage(tab.id, { type: 'cq:send-gold' }).catch(() => null);
     }
   } catch (e) {
     console.warn('[CoolPills] command failed', e);

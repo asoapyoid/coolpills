@@ -555,6 +555,51 @@
     },
   };
 
+  const bitchute = {
+    id: 'bitchute', label: 'BitChute', hosts: /(^|\.)bitchute\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .video-card, .channel-videos-container, [class*="video-card"]', 'a[href*="/video/"]');
+      const url = /^\/video\//.test(location.pathname) ? location.href : link || location.href;
+      return base(v, isNativeCoolholeUrl(url) ? url : nativeOrDirect(v, url), textOf('h1, #video-title, .video-title') || pageTitle(), 'yes');
+    },
+  };
+
+  const odysee = {
+    id: 'odysee', label: 'Odysee', hosts: /(^|\.)odysee\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .claim-preview, [class*="claim-preview"]', 'a[href^="/@"], a[href*="odysee.com/@"]');
+      const url = /^\/@[^/]+[/:][^/]+/.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
+  const rumble = {
+    id: 'rumble', label: 'Rumble', hosts: /(^|\.)rumble\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, .videostream, [class*="video-item"]', 'a[href^="/v"], a[href*="rumble.com/v"]');
+      const url = /^\/v[^/]+/.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
+  const streamable = {
+    id: 'streamable', label: 'Streamable', hosts: /(^|\.)streamable\.com$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li', 'a[href^="/"]');
+      const url = /^\/[a-z0-9]+\/?$/i.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
+  const niconico = {
+    id: 'niconico', label: 'Niconico', hosts: /(^|\.)nicovideo\.jp$/i, supported: 'yes',
+    context(v) {
+      const link = linkIn(v, 'article, li, [class*="VideoItem"], [class*="video-item"]', 'a[href*="/watch/"]');
+      const url = /^\/watch\//.test(location.pathname) ? location.href : link || location.href;
+      return base(v, nativeOrDirect(v, url), textOf('h1') || pageTitle(), 'yes');
+    },
+  };
+
   const kick = {
     id: 'kick', label: 'Kick', hosts: /(^|\.)kick\.com$/i, supported: 'no',
     context(v) {
@@ -596,6 +641,63 @@
     },
   };
 
+  // Coolhost: finished uploads are cards/rows (not <video>), so the pill targets the row under the pointer.
+  const coolhostMp4 = (value) => {
+    try {
+      const url = new URL(String(value || ''), location.origin);
+      return url.protocol === 'https:' && /^(?:www\.)?coolhost\.ca$/i.test(url.hostname) &&
+        /^\/f\/[^/]+\.mp4$/i.test(url.pathname) ? url.href : null;
+    } catch (_) {
+      return null;
+    }
+  };
+  const coolhostEntry = (el) => {
+    const card = closestDeep(el, '.history-card');
+    if (card) {
+      if (card.querySelector('.history-status.expired')) return null;
+      const copy = card.querySelector('.history-copy-btn');
+      const url = coolhostMp4(copy && copy.dataset.url || card.dataset.url);
+      return url ? { el: card, url, title: textOf('.history-name', card) } : null;
+    }
+    const row = closestDeep(el, '.upload-row');
+    if (row) {
+      const link = row.querySelector('.upload-row-link');
+      const url = link && coolhostMp4(link.textContent.trim());
+      return url ? { el: row, url, title: textOf('.upload-row-filename', row) } : null;
+    }
+    return null;
+  };
+  const coolhost = {
+    id: 'coolhost', label: 'Coolhost', hosts: /^coolhost\.ca$/i, supported: 'yes',
+    resolve(stack) {
+      for (const el of stack) {
+        const entry = coolhostEntry(el);
+        if (!entry) continue;
+        return {
+          key: entry.el,
+          rect: () => entry.el.getBoundingClientRect(),
+          place: 'video-top-right',
+          ctx: () => {
+            const live = coolhostEntry(entry.el) || entry;
+            const title = CQ.cleanTitle(live.title);
+            return {
+              url: live.url,
+              title: title && !/^raw video$/i.test(title) ? title : null,
+              duration: null,
+              durationLabel: null,
+              thumbnail: null,
+              supported: 'yes',
+            };
+          },
+        };
+      }
+      return null;
+    },
+    context() {
+      return null;
+    },
+  };
+
   const generic = {
     id: 'generic', label: 'Any HTML5 video', hosts: /./, supported: 'maybe',
     context(v) {
@@ -604,7 +706,7 @@
     },
   };
 
-  const list = [youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, kick, facebook, threads];
+  const list = [coolhost, youtube, vimeo, twitch, tiktok, instagram, twitter, reddit, dailymotion, bitchute, odysee, rumble, streamable, niconico, kick, facebook, threads];
   const socialAdapters = new Set([tiktok, instagram, twitter, reddit, kick, facebook, threads]);
   list.forEach((a) => {
     if (!a.resolve) {

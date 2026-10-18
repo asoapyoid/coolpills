@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cool Pills",
-  "version": "3.1.10",
+  "version": "3.2.1",
   "description": "Queue videos from any site to Coolhole. CH/CP pills, Coolhost recovery, Q+ auto-queue, history and themes.",
   "permissions": [
     "storage",
@@ -91,6 +91,10 @@
         "https://www.coolhost.ca/*"
       ],
       "js": [
+        "storage.js",
+        "adapters.js",
+        "ui.js",
+        "detector.js",
         "coolhost.js"
       ],
       "run_at": "document_idle"
@@ -121,6 +125,13 @@
         "mac": "MacCtrl+Shift+H"
       },
       "description": "Show/hide the Coolhole Hist / Q+ panel"
+    },
+    "send-gold": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "MacCtrl+Shift+G"
+      },
+      "description": "Send the latest Coolhole gold to chat"
     }
   },
   "icons": {
