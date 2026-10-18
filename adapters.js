@@ -4,14 +4,12 @@
  *   resolve(stack)  → { key, rect(), place, ctx() } | null   (optional; default = <video> under pointer)
  *   context(video)  → { url, title, duration, thumbnail, supported, ... }
  *
- * FUTURE: when supported === 'no', CQ.hooks.uploadUnsupported(ctx) may upload to coolhost.ca.
  */
 (() => {
   'use strict';
   const CQ = (self.CQ = self.CQ || {});
   if (CQ.adapters) return;
-  CQ.hooks = CQ.hooks || { uploadUnsupported: null };
-
+  
   const clean = CQ.cleanTitle;
   const meta = (sel) => {
     const el = document.querySelector(sel);
@@ -453,7 +451,7 @@
   };
 
   const instagram = {
-    id: 'instagram', label: 'Instagram', hosts: /(^|\.)(instagram|kkinstagram|ddinstagram)\.com$/i, supported: 'no',
+    id: 'instagram', label: 'Instagram', hosts: /(^|\.)instagram\.com$/i, supported: 'no',
     context(v) {
       const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]');
       const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cool Pills",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "Queue videos from any site to Coolhole. CH/CP pills, Coolhost recovery, Q+ auto-queue, history and themes.",
   "permissions": [
     "storage",
@@ -128,8 +128,8 @@
     },
     "send-gold": {
       "suggested_key": {
-        "default": "Ctrl+Shift+G",
-        "mac": "MacCtrl+Shift+G"
+        "default": "Alt+Shift+G",
+        "mac": "Alt+Shift+G"
       },
       "description": "Send the latest Coolhole gold to chat"
     }
