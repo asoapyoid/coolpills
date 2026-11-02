@@ -453,8 +453,23 @@
   const instagram = {
     id: 'instagram', label: 'Instagram', hosts: /(^|\.)instagram\.com$/i, supported: 'no',
     context(v) {
-      const link = linkIn(v, 'article', 'a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]');
-      const url = /\/(p|reel|reels)\//.test(location.pathname) ? location.href : link || location.href;
+      const postHref = /\/(?:p|reel|reels|tv)\/[\w-]{5,}/;
+      const linkSel = 'a[href*="/p/"], a[href*="/reel/"], a[href*="/reels/"], a[href*="/tv/"]';
+      // The Reels feed and profile Reels tab have no shortcode in the page URL, so find the reel's own link.
+      const nearbyLink = () => {
+        let node = v && v.parentElement;
+        for (let depth = 0; node && depth < 12; depth++, node = node.parentElement) {
+          const hrefs = Array.from(new Set(Array.from(node.querySelectorAll(linkSel))
+            .map((a) => abs(a.getAttribute('href'))).filter((h) => h && postHref.test(h))));
+          if (hrefs.length === 1) return hrefs[0];
+          if (hrefs.length > 1) return null;
+        }
+        return null;
+      };
+      const articleLink = linkIn(v, 'article', linkSel);
+      const url = postHref.test(location.pathname) ? location.href
+        : articleLink && postHref.test(articleLink) ? articleLink
+        : nearbyLink() || articleLink || location.href;
       const direct = directVideoUrl(v);
       const context = base(v, nativeOrDirect(v, url), pageTitle(), direct ? 'yes' : 'no');
       if (!direct) {

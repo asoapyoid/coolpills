@@ -299,10 +299,10 @@ async function resolveXVideo(postUrl) {
   } catch (_) {
     return { ok: false, error: 'Invalid X post URL.' };
   }
-  if (!['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'].includes(post.hostname)) {
+  if (!['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com', 'mobile.twitter.com'].includes(post.hostname)) {
     return { ok: false, error: 'Only X/Twitter post links can be resolved.' };
   }
-  const match = post.pathname.match(/^\/([^/]+)\/status\/(\d+)/i);
+  const match = post.pathname.match(/^\/([^/]+)\/status\/(\d+)/i) || post.pathname.match(/^\/(i)\/(?:web\/)?status\/(\d+)/i);
   if (!match) return { ok: false, error: 'Could not find a post ID in the X link.' };
 
   const postPath = '/' + encodeURIComponent(match[1]) + '/status/' + match[2];
@@ -324,6 +324,10 @@ async function resolveXVideo(postUrl) {
       });
       if (!response.ok) {
         failures.push(provider.name + ' returned HTTP ' + response.status);
+        continue;
+      }
+      if (!/json/i.test(response.headers.get('content-type') || '')) {
+        failures.push(provider.name + ' was blocked by a bot check');
         continue;
       }
 
@@ -382,6 +386,46 @@ async function resolveXVideo(postUrl) {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  // X's own embed endpoint: no third party involved, so it still works when the mirror APIs are blocked or down.
+  try {
+    const token = ((Number(match[2]) / 1e15) * Math.PI).toString(36).replace(/(0+|\.)/g, '');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch('https://cdn.syndication.twimg.com/tweet-result?id=' + match[2] + '&token=' + token + '&lang=en', {
+        credentials: 'omit', cache: 'no-store', signal: controller.signal,
+      });
+      if (!response.ok || !/json/i.test(response.headers.get('content-type') || '')) {
+        failures.push('X embed returned HTTP ' + response.status);
+      } else {
+        const data = await response.json();
+        const tweets = [data, data.quoted_tweet, data.parent].filter((t) => t && typeof t === 'object');
+        for (const tweet of tweets) {
+          for (const detail of Array.isArray(tweet.mediaDetails) ? tweet.mediaDetails : []) {
+            const variants = detail && detail.video_info && Array.isArray(detail.video_info.variants) ? detail.video_info.variants : [];
+            const best = variants
+              .filter((v) => v && v.content_type === 'video/mp4' && trustedXVideoUrl(v.url))
+              .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+            if (!best) continue;
+            const millis = Number(detail.video_info.duration_millis);
+            return {
+              ok: true,
+              url: trustedXVideoUrl(best.url),
+              title: typeof tweet.text === 'string' ? tweet.text.replace(/\s*https:\/\/t\.co\/\w+\s*$/, '').slice(0, 120) || null : null,
+              thumbnail: detail.media_url_https || null,
+              duration: Number.isFinite(millis) && millis > 0 ? Math.round(millis / 1000) : null,
+            };
+          }
+        }
+        failures.push('X embed found no downloadable MP4');
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  } catch (error) {
+    failures.push('X embed failed (' + (error && error.name === 'AbortError' ? 'timed out' : 'network or response error') + ')');
   }
 
   return {
@@ -892,8 +936,21 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const fromInstagram = msg.payload && msg.payload.platform === 'instagram' &&
           /^https:\/\/(?:www\.)?instagram\.com\//i.test(origin) &&
           /^https:\/\/(?:www\.)?instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/[\w-]+/i.test(String(msg.payload.url || ''));
-        if (!fromCoolhole && !fromReddit && !fromNico && !fromInstagram) {
-          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico or Instagram video page.' };
+        const socialHosts = {
+          x: /^https:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/[\w]+\/(?:web\/)?status\/\d+/i,
+          facebook: /^https:\/\/(?:(?:www|m|web|mbasic)\.)?facebook\.com\//i,
+          tiktok: /^https:\/\/(?:(?:www|m)\.)?tiktok\.com\/@[\w.]+\/video\/\d+/i,
+        };
+        const originHosts = {
+          x: /^https:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\//i,
+          facebook: /^https:\/\/(?:(?:www|m|web|mbasic)\.)?facebook\.com\//i,
+          tiktok: /^https:\/\/(?:(?:www|m)\.)?tiktok\.com\//i,
+        };
+        const socialPlatform = msg.payload && msg.payload.platform;
+        const fromX = !!socialHosts[socialPlatform] && originHosts[socialPlatform].test(origin) &&
+          socialHosts[socialPlatform].test(String(msg.payload.url || ''));
+        if (!fromCoolhole && !fromReddit && !fromNico && !fromInstagram && !fromX) {
+          return { ok: false, error: 'Coolhost recovery can only be started from Coolhole, a verified Reddit media manifest, or a Niconico, Instagram, X, Facebook or TikTok video page.' };
         }
         return startCoolhostUpload(msg.payload || {});
       }
