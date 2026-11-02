@@ -36,6 +36,7 @@ def build(browser):
             "gecko": {
                 "id": "cool-pills@asoapyoid.local",
                 "strict_min_version": "128.0",
+                "data_collection_permissions": {"required": ["none"]},
             }
         }
 

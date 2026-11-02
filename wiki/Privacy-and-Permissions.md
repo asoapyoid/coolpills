@@ -7,7 +7,7 @@ Cool Pills runs on websites so it can detect video players and place controls ne
 - **Coolhole:** when you queue or schedule an item, Cool Pills sends the selected media URL and available title, duration, and thumbnail to Coolhole.
 - **Metadata lookup:** the extension may request public page metadata so a queued item can show a useful title, duration, or thumbnail.
 - **Q+ link check:** before sending a direct media-file link, the extension sends a one-byte range request to that media URL to check whether it is still reachable. It does not send your source-site cookies. Provider page URLs are not pre-checked.
-- **Social resolvers:** when a resolver is used, it receives the public social post URL to locate a playable media link. This may include VxTwitter/FxTwitter, RapidSave, TikWM/MusicalDown, FBDown, or the ddinstagram mirror.
+- **Social resolvers:** when a resolver is used, it receives the public social post URL to locate a playable media link. This may include VxTwitter/FxTwitter, RapidSave, TikWM/MusicalDown, or X's embed endpoint. Facebook and Instagram lookups use your own signed-in session on their own sites.
 - **Coolhost:** for an eligible rejected link, Coolhost receives the submitted source URL for processing. The browser may use your Coolhost login session. Cool Pills does not forward login cookies from the original video site.
 
 For Reddit's gated-media path, the signed-in Reddit page reads its own post metadata and returns an accepted `v.redd.it` DASH manifest to the extension. Coolhost receives that manifest, not the Reddit post page or Reddit login cookies.
