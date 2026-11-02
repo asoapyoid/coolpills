@@ -77,6 +77,61 @@
       return null;
     }
   };
+  // Reads the video URL from the visitor's own signed-in Facebook page (same-origin, so cookies apply).
+  const requestFacebookMedia = async (postUrl) => {
+    try {
+      if (!/(^|\.)facebook\.com$/i.test(location.hostname)) return null;
+      const post = new URL(postUrl);
+      if (!/(^|\.)facebook\.com$/i.test(post.hostname)) return null;
+      const id = (post.pathname.match(/\/(?:reel|videos)\/(?:[^/]+\/)?(\d{6,})/) || [])[1] || post.searchParams.get('v');
+      const target = id && /^\d{6,}$/.test(id) ? location.origin + '/watch/?v=' + id : post.href;
+      const response = await fetch(target, { credentials: 'include', headers: { Accept: 'text/html' } });
+      if (!response.ok) return null;
+      const html = (await response.text()).slice(0, 6000000);
+      const unescape = (s) => s.replace(/\\u0025/g, '%').replace(/\\u0026/g, '&').replace(/\\\//g, '/').replace(/&amp;/g, '&');
+      const pick = (key) => {
+        const re = new RegExp('"' + key + '"\\s*:\\s*"(https:[^"]+)"', 'g');
+        for (const m of html.matchAll(re)) {
+          try {
+            const u = new URL(unescape(m[1]));
+            if (u.protocol === 'https:' && /(?:^|\.)(?:fbcdn\.net|facebook\.com)$/i.test(u.hostname) && /\.mp4$/i.test(u.pathname)) return u.href;
+          } catch (_) { /* skip malformed */ }
+        }
+        return null;
+      };
+      const trusted = (raw) => {
+        try {
+          const u = new URL(unescape(raw));
+          return u.protocol === 'https:' && /(?:^|\.)(?:fbcdn\.net|facebook\.com)$/i.test(u.hostname) && /\.mp4$/i.test(u.pathname) ? u.href : null;
+        } catch (_) { return null; }
+      };
+      // Current Facebook pages list per-video "progressive_urls" (SD/HD) next to a dash manifest URL holding the video id.
+      const progressive = () => {
+        const blocks = [];
+        for (const m of html.matchAll(/"progressive_urls":\[(.*?)\]/g)) {
+          const around = html.slice(Math.max(0, m.index - 400), m.index + m[0].length + 400);
+          const near = [...around.matchAll(/mpd\?v=(\d+)/g)].map((x) => x[1]);
+          const files = {};
+          for (const e of m[1].matchAll(/"progressive_url":"([^"]+)".*?"quality":"(\w+)"/g)) {
+            const href = trusted(e[1]);
+            if (href) files[e[2].toUpperCase()] = href;
+          }
+          if (files.HD || files.SD) blocks.push({ near, url: files.HD || files.SD });
+        }
+        const hit = id && blocks.find((b) => b.near.includes(id));
+        return hit ? hit.url : null;
+      };
+      const url = progressive() || (id ? null : pick('browser_native_hd_url') || pick('browser_native_sd_url') || pick('playable_url_quality_hd') || pick('playable_url'));
+      if (!url) return null;
+      const og = (prop) => {
+        const m = html.match(new RegExp('<meta[^>]+property="' + prop + '"[^>]+content="([^"]*)"', 'i'));
+        return m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"') : null;
+      };
+      return { url, title: CQ.cleanTitle(og('og:title') || ''), thumbnail: og('og:image') };
+    } catch (_) {
+      return null;
+    }
+  };
   const compareVersions = (left, right) => {
     const a = String(left || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
     const b = String(right || '0').split('.').map((part) => Number.parseInt(part, 10) || 0);
@@ -278,6 +333,30 @@
           ui.toast('Direct link lookup failed; sending the page link instead. ' + String(found && found.error || ''), 'queue');
         }
       }
+      if (c.platform === 'facebook' && c.postUrl && !c.facebookPostLink && !/\/(?:reel|videos|watch|share\/[rv])\b|[?&]v=\d|fb\.watch/i.test(c.postUrl)) {
+        ui.toast('Facebook does not share this video\'s link in the feed. Click the comment bubble to open the post first, then queue it.', 'error');
+        return { ok: false, error: 'No Facebook post link found.' };
+      }
+      if (c.platform === 'facebook' && c.postUrl && /^https:\/\/(?:[\w-]+\.)?(?:facebook\.com|fb\.watch)\//i.test(c.postUrl)) {
+        const cacheKeyFb = 'facebook:' + c.postUrl;
+        const found = this.resolvedMedia.get(cacheKeyFb) || await requestFacebookMedia(c.postUrl);
+        if (found) {
+          this.resolvedMedia.set(cacheKeyFb, found);
+          c = { ...c, url: found.url, title: found.title || c.title, thumbnail: found.thumbnail || c.thumbnail, supported: 'yes' };
+        } else {
+          ui.toast('Facebook has no public direct link. Sending it to Coolhost to download, then it will be queued…', 'queue');
+          let upload;
+          try {
+            upload = await CQ.send({ type: 'cq:coolhost-upload', payload: { url: c.postUrl, title: c.title, platform: 'facebook' } });
+          } catch (error) {
+            upload = { ok: false, error: String(error && error.message || error) };
+          }
+          if (!upload || upload.ok === false) {
+            ui.toast('Could not start the Coolhost upload: ' + String(upload && upload.error || 'the extension did not respond.'), 'error');
+          }
+          return upload;
+        }
+      }
       if (c.platform === 'instagram' && c.postUrl && /^https:\/\/(?:www\.)?instagram\.com\//i.test(c.postUrl)) {
         if (!/\/(?:p|reel|reels|tv)\/[\w-]{5,}/i.test(new URL(c.postUrl).pathname)) {
           ui.toast('Could not tell which Instagram post this is. Open the reel or post on its own page and try again.', 'error');
@@ -315,12 +394,11 @@
         }
       }
       const cacheKey = c.platform + ':' + c.postUrl;
-      if (c.postUrl && ['x', 'reddit', 'facebook', 'tiktok'].includes(c.platform) &&
+      if (c.postUrl && ['x', 'reddit', 'tiktok'].includes(c.platform) &&
         !CQ.isNativeCoolholeUrl(c.postUrl) &&
         !this.resolvedMedia.has(cacheKey)) {
         const siteName = {
-          x: 'X', reddit: 'Reddit', facebook: 'Facebook',
-          tiktok: 'TikTok',
+          x: 'X', reddit: 'Reddit', tiktok: 'TikTok',
         }[c.platform];
         let pending = this.resolvingMedia.get(cacheKey);
         if (!pending) {
@@ -376,7 +454,7 @@
             }
             return fallback;
           }
-          if (['x', 'facebook', 'tiktok'].includes(c.platform)) {
+          if (['x', 'tiktok'].includes(c.platform)) {
             // Coolhole can't play these page links, so let Coolhost (yt-dlp) download the post's video instead.
             ui.toast(siteName + ' direct-link lookup failed; sending the post to Coolhost to download, then it will be queued…', 'queue');
             let upload;

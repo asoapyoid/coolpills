@@ -583,17 +583,6 @@ async function resolveRedditVideo(postUrl) {
   return { ok: false, error: 'Reddit video lookup failed: ' + failures.join('; ') + '.' };
 }
 
-function trustedFacebookVideoUrl(value) {
-  try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    return url.protocol === 'https:' && (host === 'fbcdn.net' || host.endsWith('.fbcdn.net')) &&
-      /\.mp4$/i.test(url.pathname) ? url.href : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 function trustedTikTokVideoUrl(value) {
   try {
     const url = new URL(value);
@@ -655,39 +644,9 @@ function validPublicPost(value, platform) {
   if (url.protocol !== 'https:' || url.username || url.password) return null;
   const host = url.hostname.toLowerCase();
   const matches = {
-    facebook: ['facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'mbasic.facebook.com', 'fb.watch'].includes(host),
     tiktok: ['tiktok.com', 'www.tiktok.com', 'm.tiktok.com', 'vm.tiktok.com', 'vt.tiktok.com'].includes(host),
   };
   return matches[platform] ? url : null;
-}
-
-async function resolveFacebookVideo(postUrl) {
-  const post = validPublicPost(postUrl, 'facebook');
-  if (!post) return { ok: false, error: 'Only public Facebook video links can be resolved.' };
-  const failures = [];
-  try {
-    const { response, text } = await fetchSocialText('https://fbdown.net/download.php', {
-      method: 'POST',
-      headers: {
-        Accept: 'text/html',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Referer: 'https://fbdown.net/',
-      },
-      body: new URLSearchParams({ URLz: post.href }),
-    });
-    if (!response.ok) {
-      failures.push('FBDown returned HTTP ' + response.status);
-    } else {
-      const url = linksFromHtml(text).map(trustedFacebookVideoUrl).find(Boolean);
-      if (url) return { ok: true, url };
-      failures.push('FBDown did not return a direct MP4');
-    }
-  } catch (error) {
-    failures.push('FBDown request failed (' + (
-      error && error.name === 'AbortError' ? 'timed out' : 'service unavailable'
-    ) + ')');
-  }
-  return { ok: false, error: 'Facebook video lookup failed: ' + failures.join('; ') + '.' };
 }
 
 async function resolveTikTokVideo(postUrl) {
@@ -779,7 +738,6 @@ async function resolveTikTokVideo(postUrl) {
 async function resolveSocialVideo(platform, postUrl) {
   if (platform === 'x') return resolveXVideo(postUrl);
   if (platform === 'reddit') return resolveRedditVideo(postUrl);
-  if (platform === 'facebook') return resolveFacebookVideo(postUrl);
   if (platform === 'tiktok') return resolveTikTokVideo(postUrl);
   return { ok: false, error: 'No resolver is available for that site.' };
 }

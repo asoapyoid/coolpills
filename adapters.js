@@ -746,14 +746,20 @@
     id: 'facebook', label: 'Facebook', hosts: /(^|\.)facebook\.com$|^fb\.watch$/i, supported: 'no',
     context(v) {
       const post = closestDeep(v, '[role="article"], article');
-      const link = post && post.querySelector(
-        'a[href*="/reel/"], a[href*="/watch/"], a[href*="/videos/"], a[href*="/posts/"], ' +
-        'a[href*="/permalink/"], a[href*="/share/v/"], a[href*="story.php"], a[href*="fb.watch"]'
-      );
+      const linkSelector =
+        'a[href*="/reel/"], a[href*="/watch/?v="], a[href*="/videos/"], a[href*="/posts/"], ' +
+        'a[href*="/permalink/"], a[href*="/share/v/"], a[href*="/share/r/"], a[href*="story.php"], a[href*="fb.watch"]';
+      let link = post && post.querySelector(linkSelector);
+      // Feed videos are often outside the article's link area, so climb until a post link turns up.
+      for (let node = v.parentElement, depth = 0; !link && node && depth < 14; node = node.parentElement, depth++) {
+        if (node.querySelectorAll('video').length > 1) break;
+        link = node.querySelector(linkSelector);
+      }
       const direct = directVideoUrl(v);
       const title = post && textOf('[data-ad-preview="message"]', post);
       const url = (link && abs(link.getAttribute('href'))) || location.href;
       const context = base(v, nativeOrDirect(v, url), title, direct ? 'yes' : 'no');
+      context.facebookPostLink = !!link;
       if (!direct) {
         context.platform = 'facebook';
         context.postUrl = url;

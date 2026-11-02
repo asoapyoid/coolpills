@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.5
+- Facebook: queueing reads the video from your signed-in Facebook page (its HD/SD MP4 list, matched to the clicked video's id) instead of the dead FBDown service, and falls back to Coolhost. It never queues a different video than the one clicked.
+- Facebook: the pill finds the post's own reel/watch/video link around the video. In the home feed, where Facebook doesn't expose it, you're told to click the comment bubble to open the post first.
+- Firefox: added the required `data_collection_permissions` (none) to the manifest.
+- Cleanup: removed the unused FBDown resolver; privacy wiki and supported-sites wiki updated.
+
 ## 3.2.4
 - X / Twitter: added X's own embed endpoint as a third video source (picks the highest-quality MP4), so queueing still works when VxTwitter or FxTwitter are down or serve a bot check. If every source fails, the post is now sent to Coolhost to download and queue instead of queueing an x.com link Coolhole can't play.
 - Facebook: FBDown's domain no longer exists, so lookups always failed and queued an unplayable page link. Failed Facebook, TikTok and X lookups now go to Coolhost to download and queue instead.
