@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.4
+- X / Twitter: added X's own embed endpoint as a third video source (picks the highest-quality MP4), so queueing still works when VxTwitter or FxTwitter are down or serve a bot check. If every source fails, the post is now sent to Coolhost to download and queue instead of queueing an x.com link Coolhole can't play.
+- Facebook: FBDown's domain no longer exists, so lookups always failed and queued an unplayable page link. Failed Facebook, TikTok and X lookups now go to Coolhost to download and queue instead.
+- X / Twitter: `mobile.twitter.com` and `/i/status/` links are recognised.
+- Instagram: the pill finds the reel's own link on the Reels feed and profile Reels tab, and shows a clear message if it can't tell which post it is.
+
 ## 3.2.3
 - Send-gold shortcut default is now `Alt+Shift+G` (`Ctrl+Shift+G` is Find Previous in Chrome/Firefox). Only new installs get the new default; existing users keep their binding and can rebind in the browser's shortcut settings.
 - Instagram: the old ddinstagram mirror is dead, so it was removed. Queueing now reads the video from your own signed-in Instagram session when possible (untested while signed in), otherwise sends the post to Coolhost to download and queue.

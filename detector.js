@@ -279,6 +279,10 @@
         }
       }
       if (c.platform === 'instagram' && c.postUrl && /^https:\/\/(?:www\.)?instagram\.com\//i.test(c.postUrl)) {
+        if (!/\/(?:p|reel|reels|tv)\/[\w-]{5,}/i.test(new URL(c.postUrl).pathname)) {
+          ui.toast('Could not tell which Instagram post this is. Open the reel or post on its own page and try again.', 'error');
+          return { ok: false, error: 'No Instagram post link found.' };
+        }
         const cached = this.resolvedMedia.get('instagram:' + c.postUrl);
         const found = cached || await requestInstagramMedia(c.postUrl);
         if (found) {
@@ -371,6 +375,23 @@
               ui.toast('Coolhost is processing the Reddit video in the background.', 'queue');
             }
             return fallback;
+          }
+          if (['x', 'facebook', 'tiktok'].includes(c.platform)) {
+            // Coolhole can't play these page links, so let Coolhost (yt-dlp) download the post's video instead.
+            ui.toast(siteName + ' direct-link lookup failed; sending the post to Coolhost to download, then it will be queued…', 'queue');
+            let upload;
+            try {
+              upload = await CQ.send({
+                type: 'cq:coolhost-upload',
+                payload: { url: c.postUrl, title: c.title, platform: c.platform },
+              });
+            } catch (uploadError) {
+              upload = { ok: false, error: String(uploadError && uploadError.message || uploadError) };
+            }
+            if (!upload || upload.ok === false) {
+              ui.toast('Could not start the Coolhost upload: ' + String(upload && upload.error || 'the extension did not respond.') + ' ' + error, 'error');
+            }
+            return upload;
           }
           ui.toast(siteName + ' direct-link lookup failed; trying the original post link. ' + error, 'queue');
           c = { ...c, url: c.postUrl, supported: 'maybe' };

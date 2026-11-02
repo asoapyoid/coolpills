@@ -37,10 +37,10 @@ When a social post does not expose a usable MP4, Cool Pills may try a site-speci
 
 | Site | Resolver flow |
 | --- | --- |
-| X / Twitter | VxTwitter, then FxTwitter |
+| X / Twitter | VxTwitter, then FxTwitter, then X's own embed endpoint; if all fail, Coolhost download |
 | Reddit | Reddit post metadata and RapidSave; gated-video recovery may use the signed-in Reddit page and Coolhost |
-| TikTok | TikWM, then MusicalDown |
-| Facebook | FBDown |
+| TikTok | TikWM, then MusicalDown, then Coolhost download |
+| Facebook | FBDown (service is currently offline), then Coolhost download |
 | Instagram | Your own signed-in Instagram session (in-page lookup), otherwise Coolhost download |
 | BitChute / Odysee / Rumble / Picarto | Site APIs resolved by the extension (MP4/WebM, or HLS for Rumble and Picarto live) |
 | Niconico | Coolhost download |
